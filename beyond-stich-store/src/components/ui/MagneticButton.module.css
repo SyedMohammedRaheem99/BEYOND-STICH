@@ -1,0 +1,77 @@
+.button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4) var(--space-10);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  transition: box-shadow var(--duration-normal) var(--ease-out);
+}
+
+.label {
+  position: relative;
+  z-index: 1;
+}
+
+.glow {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-out);
+  border-radius: inherit;
+}
+
+.button:hover .glow {
+  opacity: 1;
+}
+
+/* Primary */
+.primary {
+  background: var(--color-text-primary);
+  color: var(--color-bg);
+}
+
+.primary .glow {
+  background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+}
+
+.primary:hover {
+  box-shadow: 0 8px 30px rgba(248, 248, 248, 0.25);
+}
+
+/* Secondary */
+.secondary {
+  background: transparent;
+  color: var(--color-text-primary);
+  border: 1.5px solid var(--color-border);
+}
+
+.secondary .glow {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.secondary:hover {
+  border-color: var(--color-text-primary);
+}
+
+/* Accent */
+.accent {
+  background: var(--accent);
+  color: var(--color-bg);
+}
+
+.accent .glow {
+  background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+}
+
+.accent:hover {
+  box-shadow: 0 8px 30px var(--accent-glow);
+}

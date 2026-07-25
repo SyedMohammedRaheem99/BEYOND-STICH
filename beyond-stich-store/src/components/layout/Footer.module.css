@@ -1,0 +1,220 @@
+.footer {
+  background: var(--color-bg-secondary);
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-24);
+}
+
+/* --- Newsletter --- */
+.newsletter {
+  padding: var(--space-16) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.newsletterInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+}
+
+.newsletterTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.newsletterForm {
+  display: flex;
+  gap: 0;
+  max-width: 400px;
+  width: 100%;
+}
+
+.newsletterInput {
+  flex: 1;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-right: none;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+}
+
+.newsletterInput:focus {
+  border-color: var(--accent);
+}
+
+.newsletterBtn {
+  padding: var(--space-3) var(--space-6);
+  background: var(--color-text-primary);
+  color: var(--color-bg);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  transition: background var(--duration-fast);
+  white-space: nowrap;
+}
+
+.newsletterBtn:hover {
+  background: var(--accent);
+}
+
+/* --- Main Grid --- */
+.main {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: var(--space-12);
+  padding-top: var(--space-16);
+  padding-bottom: var(--space-16);
+}
+
+/* --- Brand Column --- */
+.brandCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.brandLogo {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.brandName {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.brandAccent {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+}
+
+.brandTagline {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.socials {
+  display: flex;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.socials a {
+  color: var(--color-text-muted);
+  transition: color var(--duration-fast), transform var(--duration-fast);
+}
+
+.socials a:hover {
+  color: var(--color-text-primary);
+  transform: translateY(-2px);
+}
+
+/* --- Links Columns --- */
+.linksCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.colTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--color-text-muted);
+}
+
+.linksList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.linksList a {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  transition: color var(--duration-fast), padding-left var(--duration-normal) var(--ease-out);
+}
+
+.linksList a:hover {
+  color: var(--color-text-primary);
+  padding-left: var(--space-2);
+}
+
+/* --- Bottom Bar --- */
+.bottom {
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-6) 0;
+}
+
+.bottomInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.copyright {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.legal {
+  display: flex;
+  gap: var(--space-6);
+}
+
+.legal a {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  transition: color var(--duration-fast);
+}
+
+.legal a:hover {
+  color: var(--color-text-primary);
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .newsletterInner {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .newsletterTitle {
+    font-size: var(--text-xl);
+  }
+
+  .newsletterForm {
+    max-width: 100%;
+  }
+
+  .main {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-8);
+  }
+
+  .brandCol {
+    grid-column: 1 / -1;
+  }
+
+  .bottomInner {
+    flex-direction: column;
+    gap: var(--space-3);
+    text-align: center;
+  }
+}

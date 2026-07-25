@@ -1,0 +1,17 @@
+.heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.3em;
+}
+
+.wordWrap {
+  display: inline-block;
+  overflow: hidden;
+  perspective: 600px;
+}
+
+.word {
+  display: inline-block;
+  transform-origin: center bottom;
+  will-change: transform;
+}

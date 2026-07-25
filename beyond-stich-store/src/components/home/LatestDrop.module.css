@@ -1,0 +1,131 @@
+.section {
+  padding: var(--space-20) 0;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--container-padding);
+  max-width: var(--container-max);
+  margin: 0 auto var(--space-10);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--text-5xl);
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  color: var(--color-text-primary);
+}
+
+.viewAll {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--color-text-secondary);
+  transition: color var(--duration-fast);
+}
+
+.viewAll:hover {
+  color: var(--color-text-primary);
+}
+
+/* Horizontal Scroll Area */
+.scrollContainer {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 var(--container-padding) var(--space-6);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.scrollContainer::-webkit-scrollbar {
+  display: none;
+}
+
+.track {
+  display: flex;
+  gap: var(--space-6);
+  min-width: max-content;
+}
+
+.item {
+  width: 400px;
+}
+
+.card {
+  display: block;
+  width: 100%;
+  text-decoration: none;
+}
+
+.imageWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/5;
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.image {
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+
+.card:hover .image {
+  transform: scale(1.05);
+}
+
+.card:hover .overlay {
+  opacity: 1;
+}
+
+.info {
+  margin-top: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.segment {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--color-text-primary);
+  transition: color var(--duration-normal) var(--ease-out);
+}
+
+.card:hover .name {
+  color: var(--color-text-accent);
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: var(--text-3xl);
+  }
+  
+  .item {
+    width: 280px;
+  }
+}
