@@ -1,0 +1,104 @@
+.gallery {
+  width: 100%;
+}
+
+/* Desktop Stack */
+.desktopView {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.imageBlock {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/5;
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: none;
+}
+
+.image {
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.imageZoomed {
+  transform: scale(1.5);
+}
+
+.mobileView {
+  display: none;
+}
+
+/* Fullscreen Zoom */
+.zoomOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(10, 10, 10, 0.95);
+  backdrop-filter: blur(10px);
+  cursor: zoom-out;
+}
+
+.closeZoom {
+  position: absolute;
+  top: var(--space-6);
+  right: var(--space-6);
+  font-size: var(--text-2xl);
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 1024px) {
+  .desktopView {
+    display: none;
+  }
+
+  .mobileView {
+    display: block;
+    position: relative;
+  }
+
+  .swipeContainer {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .swipeContainer::-webkit-scrollbar {
+    display: none;
+  }
+
+  .swipeItem {
+    width: 100vw;
+    flex-shrink: 0;
+    aspect-ratio: 4/5;
+    position: relative;
+    scroll-snap-align: start;
+    background: var(--color-bg-card);
+  }
+
+  .dots {
+    position: absolute;
+    bottom: var(--space-6);
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: var(--space-2);
+    z-index: 10;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .dotActive {
+    background: var(--color-text-primary);
+  }
+}
