@@ -103,3 +103,28 @@
   color: var(--color-text-primary);
   font-weight: 600;
 }
+
+/* Matches the old motion.h1: opacity + a 20px rise over 0.6s with the same
+   easing curve, but as CSS so this heading no longer requires a client
+   component. Respects prefers-reduced-motion directly, same as MotionConfig
+   does for the framer-motion components elsewhere in the app. */
+.titleAnimated {
+  animation: infoTitleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes infoTitleIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .titleAnimated {
+    animation: none;
+  }
+}

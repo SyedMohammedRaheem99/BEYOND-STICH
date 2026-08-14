@@ -73,12 +73,16 @@ export default function ProductGallery({ images, name }) {
             onMouseLeave={handleMouseLeave}
             onClick={() => handleImageClick(i)}
           >
+            {/* `priority` is deprecated in Next 16 in favour of `preload`.
+                Unlike ProductCard, this genuinely is the single LCP
+                candidate — the first PDP image, not one of several — so
+                `preload` is the case the docs recommend it for. */}
             <Image
               src={img}
               alt={`${name} - View ${i + 1}`}
               fill
               sizes="50vw"
-              priority={i === 0}
+              preload={i === 0}
               className={`${styles.image} ${isZoomed && activeIndex === i ? styles.imageZoomed : ''}`}
             />
           </div>

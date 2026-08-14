@@ -64,12 +64,19 @@ export default function ProductCard({ product, index = 0 }) {
       >
         <div className={`${styles.imageContainer} ${soldOut ? styles.soldOutImage : ''}`}>
           {/* Default Image */}
+          {/* `priority` is deprecated in Next 16 in favour of `preload`, and
+              the docs specifically warn against `preload` when several
+              images could each be the LCP element depending on viewport —
+              exactly this case: at 1-up mobile only the first card is above
+              the fold, but index<4 was preloading 4. `loading="eager"` still
+              tells the browser to fetch immediately without that hint. */}
           <Image
             src={images[0]}
             alt={product.name}
             fill
             sizes="(max-width: 600px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            priority={index < 4}
+            loading={index < 2 ? 'eager' : 'lazy'}
+            fetchPriority={index === 0 ? 'high' : 'auto'}
             className={`${styles.primaryImage} ${!images[1] ? styles.onlyImage : ''}`}
           />
 

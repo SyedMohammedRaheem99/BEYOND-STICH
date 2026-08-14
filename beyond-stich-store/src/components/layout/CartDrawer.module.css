@@ -226,6 +226,13 @@
   .crossSellRow {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  /* 36px is below the 44px minimum tap target; the checkout CTA already
+     bumps to 48px on mobile, these were missed. */
+  .quantityControl button {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 /* --- Footer --- */

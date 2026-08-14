@@ -1,11 +1,14 @@
-'use client';
-
-import { motion } from 'framer-motion';
 import styles from './InfoPageLayout.module.css';
 
 /**
  * Shared premium wrapper for static content pages (About, FAQ, policies…).
  * Pass plain semantic children (h2/h3/p/ul) — they are styled automatically.
+ *
+ * A server component: the heading's fade-in used to be the only reason this
+ * (and every page using it — About, FAQ, Privacy, Returns, Shipping, Size
+ * Guide, Terms, Contact) shipped React + framer-motion to the client. It's a
+ * CSS animation now, so those 8 pages are fully static — exactly the pages
+ * Google reads most closely for E-E-A-T.
  */
 export default function InfoPageLayout({ eyebrow = 'BEYOND STICH', title, intro, children }) {
   return (
@@ -13,14 +16,7 @@ export default function InfoPageLayout({ eyebrow = 'BEYOND STICH', title, intro,
       <header className={`${styles.hero} noise-overlay`}>
         <div className="container">
           <p className={styles.eyebrow}>{eyebrow}</p>
-          <motion.h1
-            className={styles.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          >
-            {title}
-          </motion.h1>
+          <h1 className={`${styles.title} ${styles.titleAnimated}`}>{title}</h1>
           {intro && <p className={styles.intro}>{intro}</p>}
         </div>
       </header>
