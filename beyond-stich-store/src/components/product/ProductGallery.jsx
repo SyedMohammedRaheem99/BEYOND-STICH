@@ -90,12 +90,17 @@ export default function ProductGallery({ images, name }) {
         <div ref={swipeRef} className={styles.swipeContainer}>
           {images.map((img, i) => (
             <div key={i} data-index={i} className={styles.swipeItem}>
+              {/* Both gallery copies are in the DOM (one hidden by CSS).
+                  Preloading here too made the browser fetch the first image
+                  twice at two sizes on every PDP — a preload is issued
+                  regardless of display:none. The desktop copy above carries
+                  the priority for the LCP image. */}
               <Image
                 src={img}
                 alt={`${name} - View ${i + 1}`}
                 fill
                 sizes="100vw"
-                priority={i === 0}
+                loading={i === 0 ? 'eager' : 'lazy'}
                 className={styles.image}
               />
             </div>

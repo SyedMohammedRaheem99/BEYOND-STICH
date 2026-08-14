@@ -31,6 +31,8 @@ function ShopContent({ initialProducts }) {
   const [query, setQuery] = useState(() => searchParams.get('q') || '');
   const [allProducts, setAllProducts] = useState(initialProducts);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     setQuery(searchParams.get('q') || '');
@@ -42,14 +44,20 @@ function ShopContent({ initialProducts }) {
     if (activeSegment === 'ALL' && sortBy === 'newest') return;
 
     setLoading(true);
+    setLoadError(false);
     const params = new URLSearchParams({ sort: sortBy });
     if (activeSegment !== 'ALL') params.set('segment', activeSegment);
     fetch(`/api/products?${params}`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Request failed');
+        return res.json();
+      })
       .then(data => { setAllProducts(Array.isArray(data) ? data : []); })
-      .catch(() => {})
+      // Swallowing this showed "NO DROPS FOUND" on a flaky connection,
+      // which reads as "this segment is empty" rather than "try again".
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
-  }, [activeSegment, sortBy]);
+  }, [activeSegment, sortBy, retryCount]);
 
   // Client-side text search filter
   const filteredProducts = (() => {
@@ -203,15 +211,23 @@ function ShopContent({ initialProducts }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <h2>NO DROPS FOUND</h2>
+              <h2>{loadError ? "COULDN'T LOAD DROPS" : 'NO DROPS FOUND'}</h2>
               <p>
-                {query
-                  ? `Nothing matches "${query}". Try a different search or segment.`
-                  : 'Try switching to a different segment world.'}
+                {loadError
+                  ? 'Check your connection and try again.'
+                  : query
+                    ? `Nothing matches "${query}". Try a different search or segment.`
+                    : 'Try switching to a different segment world.'}
               </p>
-              <button className={styles.resetBtn} onClick={resetAll}>
-                RESET FILTERS
-              </button>
+              {loadError ? (
+                <button className={styles.resetBtn} onClick={() => setRetryCount((c) => c + 1)}>
+                  RETRY
+                </button>
+              ) : (
+                <button className={styles.resetBtn} onClick={resetAll}>
+                  RESET FILTERS
+                </button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

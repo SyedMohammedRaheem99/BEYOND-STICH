@@ -15,6 +15,10 @@ export default function AddressesPage() {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({ ...EMPTY_ADDR });
   const [saving, setSaving] = useState(false);
+  // Native alert()/confirm() are blocking OS dialogs that read as spam on
+  // mobile; show the message in the page instead.
+  const [pageError, setPageError] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   useEffect(() => {
     if (session) fetchAddresses();
@@ -75,17 +79,18 @@ export default function AddressesPage() {
         setModalOpen(false);
       } else {
         const data = await res.json();
-        alert(data.error || 'Failed to save');
+        setPageError(data.error || 'Failed to save');
       }
     } catch {
-      alert('Network error');
+      setPageError('Network error. Please try again.');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this address?')) return;
+    if (confirmDeleteId !== id) { setConfirmDeleteId(id); return; }
+    setConfirmDeleteId(null);
     try {
       const res = await fetch(`/api/user/addresses?id=${id}`, { method: 'DELETE' });
       if (res.ok) {
@@ -93,7 +98,7 @@ export default function AddressesPage() {
         setAddresses(data.addresses);
       }
     } catch {
-      alert('Network error');
+      setPageError('Network error. Please try again.');
     }
   };
 
@@ -109,7 +114,7 @@ export default function AddressesPage() {
         setAddresses(data.addresses);
       }
     } catch {
-      alert('Network error');
+      setPageError('Network error. Please try again.');
     }
   };
 
@@ -128,6 +133,10 @@ export default function AddressesPage() {
         MY ADDRESSES
       </motion.h1>
       <p>Manage your saved shipping addresses.</p>
+
+      {pageError && (
+        <p className={styles.pageError} role="alert">{pageError}</p>
+      )}
 
       <button className={styles.addBtn} onClick={openAdd}>+ ADD NEW ADDRESS</button>
 
@@ -152,7 +161,13 @@ export default function AddressesPage() {
               </div>
               <div className={styles.addrActions}>
                 <button className={styles.editAddrBtn} onClick={() => openEdit(addr)}>EDIT</button>
-                <button className={styles.deleteAddrBtn} onClick={() => handleDelete(addr._id)}>DELETE</button>
+                <button
+                  className={styles.deleteAddrBtn}
+                  onClick={() => handleDelete(addr._id)}
+                  onBlur={() => confirmDeleteId === addr._id && setConfirmDeleteId(null)}
+                >
+                  {confirmDeleteId === addr._id ? 'TAP AGAIN TO CONFIRM' : 'DELETE'}
+                </button>
                 {!addr.isDefault && (
                   <button className={styles.setDefaultBtn} onClick={() => setDefault(addr._id)}>SET DEFAULT</button>
                 )}

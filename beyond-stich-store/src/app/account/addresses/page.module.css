@@ -245,3 +245,14 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Replaces the native alert() that used to report save/delete failures. */
+.pageError {
+  margin: var(--space-4) 0;
+  padding: var(--space-3) var(--space-4);
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  border-radius: var(--radius-sm);
+  color: #FCA5A5;
+  font-size: var(--text-sm);
+}

@@ -427,3 +427,27 @@
     height: 62px;
   }
 }
+
+/* Account / help links below the segment list in the mobile menu. Visually
+   secondary so the segments stay the primary navigation. */
+.sideMenuSecondary {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-4) 0 var(--space-8);
+  margin-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+
+.sideMenuSecondary a {
+  padding: var(--space-3) var(--space-6);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary, #A0A0A0);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.sideMenuSecondary a:hover {
+  color: var(--color-text-primary);
+}

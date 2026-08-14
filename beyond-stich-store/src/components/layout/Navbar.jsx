@@ -342,6 +342,24 @@ export default function Navbar() {
                   RANDOMS
                 </Link>
               </nav>
+
+              {/* The account icon is hidden on mobile, so without these there
+                  is no path to order tracking or support on a phone — and
+                  "where is my order" is the main query for a COD store. */}
+              <nav className={styles.sideMenuSecondary} aria-label="Account and help">
+                <Link href="/track" onClick={() => setMobileMenuOpen(false)}>
+                  TRACK ORDER
+                </Link>
+                <Link href="/account" onClick={() => setMobileMenuOpen(false)}>
+                  MY ACCOUNT
+                </Link>
+                <Link href="/contact" onClick={() => setMobileMenuOpen(false)}>
+                  CONTACT
+                </Link>
+                <Link href="/returns" onClick={() => setMobileMenuOpen(false)}>
+                  RETURNS
+                </Link>
+              </nav>
             </motion.div>
           </>
         )}

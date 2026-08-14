@@ -11,6 +11,7 @@ export default function Footer() {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
   const [subError, setSubError] = useState('');
+  const [subLoading, setSubLoading] = useState(false);
 
   const handleMouseEnter = () => setCursorVariant('hover');
   const handleMouseLeave = () => resetCursor();
@@ -24,6 +25,8 @@ export default function Footer() {
       setSubError('Enter a valid email address');
       return;
     }
+    if (subLoading) return;
+    setSubLoading(true);
     try {
       const res = await fetch('/api/newsletter', {
         method: 'POST',
@@ -39,6 +42,8 @@ export default function Footer() {
       }
     } catch {
       setSubError('Network error. Try again.');
+    } finally {
+      setSubLoading(false);
     }
   };
 
@@ -71,8 +76,9 @@ export default function Footer() {
                   className={styles.newsletterBtn}
                   onMouseEnter={handleMouseEnter}
                   onMouseLeave={handleMouseLeave}
+                  disabled={subLoading}
                 >
-                  NOTIFY ME
+                  {subLoading ? 'SIGNING UP…' : 'NOTIFY ME'}
                 </button>
               </form>
               {subError && <p style={{ color: '#EF4444', fontSize: '12px', marginTop: '8px' }}>{subError}</p>}

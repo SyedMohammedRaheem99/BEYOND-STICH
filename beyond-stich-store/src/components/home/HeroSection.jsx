@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import { HERO_SLIDES } from '@/lib/banners';
 import styles from './HeroSection.module.css';
 
@@ -104,16 +105,23 @@ export default function HeroSection() {
           exit="exit"
           transition={{ duration: 0.7, ease: [0.32, 0.72, 0, 1] }}
         >
-          <picture>
-            <source media="(max-width: 768px)" srcSet={slide.mobile} />
-            <img
-              src={slide.desktop}
-              alt={slide.headline.replace(/\n/g, ' ')}
-              className={styles.heroImg}
-              loading={current === 0 ? 'eager' : 'lazy'}
-              fetchPriority={current === 0 ? 'high' : 'auto'}
-            />
-          </picture>
+          {/* Every slide's mobile/desktop asset is currently the same file
+              (see HERO_SLIDES in lib/banners.js), so the old <picture>'s
+              media query never actually swapped anything — mobile was
+              already getting the "desktop" image. next/image at least
+              re-encodes to AVIF/WebP and serves a viewport-appropriate size
+              from the one source. Distinct mobile crops are a design task,
+              not a code one. */}
+          <Image
+            src={slide.desktop}
+            alt={slide.headline.replace(/\n/g, ' ')}
+            fill
+            sizes="100vw"
+            className={styles.heroImg}
+            priority={current === 0}
+            loading={current === 0 ? 'eager' : 'lazy'}
+            fetchPriority={current === 0 ? 'high' : 'auto'}
+          />
           <div className={styles.bgOverlay} />
         </motion.div>
       </AnimatePresence>
