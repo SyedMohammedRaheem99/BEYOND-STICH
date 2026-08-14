@@ -5,6 +5,7 @@ import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import PasswordInput from '@/components/ui/PasswordInput';
 import styles from './page.module.css';
 
 export default function LoginPage() {
@@ -81,9 +82,8 @@ export default function LoginPage() {
 
           <div className={styles.fieldGroup}>
             <label className={styles.label} htmlFor="password">PASSWORD</label>
-            <input
+            <PasswordInput
               id="password"
-              type="password"
               className={styles.input}
               value={password}
               onChange={(e) => setPassword(e.target.value)}

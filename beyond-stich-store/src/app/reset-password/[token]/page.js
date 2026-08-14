@@ -4,6 +4,7 @@ import { useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import PasswordInput from '@/components/ui/PasswordInput';
 import styles from '../../login/page.module.css';
 
 export default function ResetPasswordPage(props) {
@@ -74,9 +75,9 @@ export default function ResetPasswordPage(props) {
           <form className={styles.form} onSubmit={handleSubmit}>
             <div className={styles.fieldGroup}>
               <label className={styles.label} htmlFor="password">NEW PASSWORD</label>
-              <input
+              <PasswordInput
                 id="password"
-                type="password"
+                
                 className={styles.input}
                 value={form.password}
                 onChange={(e) => setForm(f => ({ ...f, password: e.target.value }))}
@@ -88,9 +89,9 @@ export default function ResetPasswordPage(props) {
 
             <div className={styles.fieldGroup}>
               <label className={styles.label} htmlFor="confirmPassword">CONFIRM PASSWORD</label>
-              <input
+              <PasswordInput
                 id="confirmPassword"
-                type="password"
+                
                 className={styles.input}
                 value={form.confirmPassword}
                 onChange={(e) => setForm(f => ({ ...f, confirmPassword: e.target.value }))}

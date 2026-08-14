@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import PasswordInput from '@/components/ui/PasswordInput';
 import styles from '../login/page.module.css';
 
 export default function RegisterPage() {
@@ -101,9 +102,9 @@ export default function RegisterPage() {
 
           <div className={styles.fieldGroup}>
             <label className={styles.label} htmlFor="password">PASSWORD</label>
-            <input
+            <PasswordInput
               id="password"
-              type="password"
+              
               className={styles.input}
               value={form.password}
               onChange={update('password')}
@@ -115,9 +116,9 @@ export default function RegisterPage() {
 
           <div className={styles.fieldGroup}>
             <label className={styles.label} htmlFor="confirmPassword">CONFIRM PASSWORD</label>
-            <input
+            <PasswordInput
               id="confirmPassword"
-              type="password"
+              
               className={styles.input}
               value={form.confirmPassword}
               onChange={update('confirmPassword')}
