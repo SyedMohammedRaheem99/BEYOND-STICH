@@ -18,7 +18,7 @@
 }
 
 .checkIcon {
-  color: #22C55E;
+  color: var(--color-success);
   margin-bottom: var(--space-6);
   display: flex;
   justify-content: center;
@@ -96,6 +96,18 @@
   color: var(--color-text-primary);
 }
 
+.codNote {
+  font-size: var(--text-sm);
+  color: #F5C518;
+  background: rgba(245, 197, 24, 0.08);
+  border: 1px solid rgba(245, 197, 24, 0.2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  line-height: 1.5;
+  font-weight: 600;
+}
+
 .emailNote {
   font-size: var(--text-sm);
   color: var(--color-text-muted);
@@ -149,5 +161,13 @@
 @media (max-width: 600px) {
   .actions {
     flex-direction: column;
+  }
+
+  .primaryBtn, .secondaryBtn {
+    padding: var(--space-3) var(--space-4);
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }

@@ -1,3 +1,8 @@
+import dns from 'node:dns';
+// Force public DNS resolvers — local/private network DNS often blocks
+// the SRV lookups needed by mongodb+srv:// connection strings.
+try { dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']); } catch (_) {}
+
 import mongoose from 'mongoose';
 
 /**

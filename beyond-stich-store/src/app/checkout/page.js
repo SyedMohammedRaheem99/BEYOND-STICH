@@ -52,6 +52,7 @@ export default function CheckoutPage() {
   const [coupon, setCoupon] = useState(null); // { code, discount, freeShipping, label }
   const [couponMsg, setCouponMsg] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('online'); // 'online' | 'cod'
 
   // Restore a previously used address (nicer for returning customers).
   useEffect(() => {
@@ -121,71 +122,159 @@ export default function CheckoutPage() {
     setStep(STEPS.SUMMARY);
   };
 
+  const buildOrderPayload = () => ({
+    email: formData.email,
+    items: items.map((i) => ({
+      productSlug: i.slug,
+      name: i.name,
+      image: i.image,
+      size: i.size,
+      color: i.color,
+      segment: i.segment,
+      quantity: i.quantity,
+      price: i.price,
+    })),
+    shippingAddress: {
+      fullName: `${formData.firstName} ${formData.lastName}`.trim(),
+      phone: formData.phone,
+      street: formData.address,
+      city: formData.city,
+      state: formData.state,
+      pincode: formData.pin,
+    },
+    subtotal,
+    discount: couponDiscount,
+    shipping,
+    total,
+    couponCode: coupon?.code || '',
+  });
+
+  const saveOrderAndRedirect = (dbOrder) => {
+    const order = {
+      id: dbOrder.orderNumber,
+      items, address: formData,
+      subtotal, savings, couponCode: coupon?.code || null,
+      couponDiscount, shipping, total,
+      placedAt: dbOrder.createdAt,
+      paymentMethod,
+    };
+    try { sessionStorage.setItem(ORDER_KEY, JSON.stringify(order)); } catch {}
+    router.push(`/checkout/success?orderId=${dbOrder.orderNumber}`);
+  };
+
   const handlePay = async () => {
     setStep(STEPS.PAYMENT);
+    const orderPayload = buildOrderPayload();
 
-    // Persist the order to the database. Payment is still mocked — when real
-    // Razorpay lands, verify the signature before this call.
-    const payload = {
-      email: formData.email,
-      items: items.map((i) => ({
-        productSlug: i.slug,
-        name: i.name,
-        image: i.image,
-        size: i.size,
-        color: i.color,
-        segment: i.segment,
-        quantity: i.quantity,
-        price: i.price,
-      })),
-      shippingAddress: {
-        fullName: `${formData.firstName} ${formData.lastName}`.trim(),
-        phone: formData.phone,
-        street: formData.address,
-        city: formData.city,
-        state: formData.state,
-        pincode: formData.pin,
-      },
-      subtotal,
-      discount: couponDiscount,
-      shipping,
-      total,
-      couponCode: coupon?.code || '',
-    };
-
-    try {
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-
-      if (res.ok && data.order) {
-        // Save a snapshot for the success page display.
-        const order = {
-          id: data.order.orderNumber,
-          items,
-          address: formData,
-          subtotal,
-          savings,
-          couponCode: coupon?.code || null,
-          couponDiscount,
-          shipping,
-          total,
-          placedAt: data.order.createdAt,
-        };
-        try { sessionStorage.setItem(ORDER_KEY, JSON.stringify(order)); } catch {}
-        router.push(`/checkout/success?orderId=${data.order.orderNumber}`);
-      } else {
-        alert(data.error || 'Could not place your order. Please try again.');
+    // COD: skip payment gateway entirely
+    if (paymentMethod === 'cod') {
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...orderPayload, paymentMethod: 'cod' }),
+        });
+        const data = await res.json();
+        if (res.ok && data.order) {
+          saveOrderAndRedirect(data.order);
+        } else {
+          alert(data.error || 'Could not place your order. Please try again.');
+          setStep(STEPS.SUMMARY);
+        }
+      } catch {
+        alert('Network error. Please try again.');
         setStep(STEPS.SUMMARY);
       }
-    } catch {
-      alert('Network error placing your order. Please try again.');
+      return;
+    }
+
+    // ONLINE: Razorpay flow
+    try {
+      const rzpOrderRes = await fetch('/api/razorpay/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: total, currency: 'INR', notes: { email: formData.email } }),
+      });
+      const rzpOrderData = await rzpOrderRes.json();
+
+      if (!rzpOrderData.success) throw new Error('Could not initiate payment.');
+
+      const rzpOrder = rzpOrderData.order;
+
+      // Mock mode (no real Razorpay keys)
+      if (rzpOrder.mock) {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...orderPayload, paymentMethod: 'online' }),
+        });
+        const data = await res.json();
+        if (res.ok && data.order) {
+          saveOrderAndRedirect(data.order);
+        } else {
+          alert(data.error || 'Could not place your order. Please try again.');
+          setStep(STEPS.SUMMARY);
+        }
+        return;
+      }
+
+      // Real Razorpay modal
+      const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+
+      const options = {
+        key: razorpayKey,
+        amount: rzpOrder.amount,
+        currency: rzpOrder.currency,
+        name: 'Beyond Stich',
+        description: `Order of ${items.length} item${items.length !== 1 ? 's' : ''}`,
+        order_id: rzpOrder.id,
+        prefill: {
+          name: `${formData.firstName} ${formData.lastName}`.trim(),
+          email: formData.email,
+          contact: formData.phone,
+        },
+        theme: { color: '#C6A14A' },
+        handler: async (response) => {
+          try {
+            const verifyRes = await fetch('/api/razorpay/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                ...orderPayload,
+              }),
+            });
+            const verifyData = await verifyRes.json();
+
+            if (verifyRes.ok && verifyData.success) {
+              saveOrderAndRedirect(verifyData.order);
+            } else {
+              alert(verifyData.error || 'Payment verification failed. Contact support with your payment ID.');
+              setStep(STEPS.SUMMARY);
+            }
+          } catch {
+            alert('Network error during verification. Please contact support.');
+            setStep(STEPS.SUMMARY);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setStep(STEPS.SUMMARY);
+          },
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+
+    } catch (err) {
+      alert(err.message || 'Something went wrong. Please try again.');
       setStep(STEPS.SUMMARY);
     }
   };
+
 
   if (items.length === 0 && step !== STEPS.PAYMENT) {
     return (
@@ -281,8 +370,41 @@ export default function CheckoutPage() {
                   <p>{formData.city}, {formData.state} - {formData.pin}</p>
                 </div>
 
+                {/* Payment Method Selection */}
+                <div className={styles.paymentMethodBlock}>
+                  <h3>PAYMENT METHOD</h3>
+                  <label className={`${styles.paymentOption} ${paymentMethod === 'online' ? styles.paymentOptionActive : ''}`}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="online"
+                      checked={paymentMethod === 'online'}
+                      onChange={() => setPaymentMethod('online')}
+                      className={styles.paymentRadio}
+                    />
+                    <div>
+                      <span className={styles.paymentLabel}>PAY ONLINE</span>
+                      <span className={styles.paymentDesc}>UPI, Cards, Net Banking via Razorpay</span>
+                    </div>
+                  </label>
+                  <label className={`${styles.paymentOption} ${paymentMethod === 'cod' ? styles.paymentOptionActive : ''}`}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="cod"
+                      checked={paymentMethod === 'cod'}
+                      onChange={() => setPaymentMethod('cod')}
+                      className={styles.paymentRadio}
+                    />
+                    <div>
+                      <span className={styles.paymentLabel}>CASH ON DELIVERY</span>
+                      <span className={styles.paymentDesc}>Pay when your order arrives</span>
+                    </div>
+                  </label>
+                </div>
+
                 <button onClick={handlePay} className={styles.mockPayBtn}>
-                  PROCEED TO SECURE PAYMENT — ₹{total}
+                  {paymentMethod === 'cod' ? `PLACE ORDER — ₹${total}` : `PROCEED TO SECURE PAYMENT — ₹${total}`}
                 </button>
               </motion.div>
             )}

@@ -68,7 +68,7 @@
 .newsletterSuccess {
   font-size: var(--text-sm);
   font-weight: 600;
-  color: #22C55E;
+  color: var(--color-success);
   line-height: 1.6;
 }
 
@@ -109,6 +109,12 @@
   color: var(--color-text-muted);
 }
 
+.footerLogoImage {
+  height: 104px;
+  width: auto;
+  display: block;
+}
+
 .brandTagline {
   font-size: var(--text-sm);
   color: var(--color-text-muted);
@@ -129,6 +135,13 @@
 .socials a:hover {
   color: var(--color-text-primary);
   transform: translateY(-2px);
+}
+
+.businessInfo {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-2);
+  line-height: 1.5;
 }
 
 /* --- Links Columns --- */
@@ -223,5 +236,40 @@
     flex-direction: column;
     gap: var(--space-3);
     text-align: center;
+  }
+
+  .footerLogoImage {
+    height: 72px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+
+  .newsletterForm {
+    flex-direction: column;
+  }
+
+  .newsletterInput {
+    border-right: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+  }
+
+  .newsletterBtn {
+    border-radius: var(--radius-md);
+    min-height: 44px;
+  }
+
+  .footerLogoImage {
+    height: 56px;
+  }
+
+  .legal {
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }

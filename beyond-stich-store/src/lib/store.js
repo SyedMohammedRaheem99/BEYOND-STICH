@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { SHIPPING } from '@/lib/constants';
 
 // ============================================
 // Cart Store
@@ -108,7 +109,7 @@ export const useCartStore = create(
 
       getShipping: () => {
         const subtotal = get().getSubtotal();
-        return subtotal >= 999 ? 0 : 79;
+        return subtotal >= SHIPPING.FREE_THRESHOLD ? 0 : SHIPPING.FLAT_RATE;
       },
 
       getTotal: () => {
@@ -139,13 +140,18 @@ export const useWishlistStore = create(
                 _id: product._id,
                 name: product.name,
                 slug: product.slug,
-                image: product.images[0],
+                images: product.images,
                 price: product.price,
                 mrp: product.mrp,
                 segment: product.segment,
+                sizes: product.sizes,
+                colors: product.colors,
+                averageRating: product.averageRating,
+                tags: product.tags,
               },
             ],
           });
+          get().syncToServer();
         }
       },
 
@@ -153,6 +159,7 @@ export const useWishlistStore = create(
         set({
           items: get().items.filter((item) => item._id !== productId),
         });
+        get().syncToServer();
       },
 
       isInWishlist: (productId) => {
@@ -160,6 +167,36 @@ export const useWishlistStore = create(
       },
 
       clearWishlist: () => set({ items: [] }),
+
+      // Sync local wishlist slugs to server (fire-and-forget)
+      syncToServer: () => {
+        const slugs = get().items.map(item => item.slug).filter(Boolean);
+        fetch('/api/user/wishlist', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slugs }),
+        }).catch(() => {});
+      },
+
+      // Load wishlist from server (called after login)
+      loadFromServer: async () => {
+        try {
+          const res = await fetch('/api/user/wishlist');
+          if (res.ok) {
+            const data = await res.json();
+            if (data.wishlist?.length > 0) {
+              // Merge server wishlist with local (server wins for dupes)
+              const localItems = get().items;
+              const serverSlugs = new Set(data.wishlist.map(p => p.slug));
+              const merged = [
+                ...data.wishlist,
+                ...localItems.filter(item => !serverSlugs.has(item.slug)),
+              ];
+              set({ items: merged });
+            }
+          }
+        } catch {}
+      },
     }),
     {
       name: 'beyond-stich-wishlist',

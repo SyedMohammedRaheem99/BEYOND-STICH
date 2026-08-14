@@ -233,7 +233,7 @@
 .discount {
   font-family: var(--font-body);
   font-size: var(--text-xs);
-  color: #22C55E; /* Green for discount */
+  color: var(--color-success);
   font-weight: 600;
 }
 
@@ -241,5 +241,17 @@
   .wishlistBtn {
     opacity: 1;
     transform: scale(1);
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .productName {
+    font-size: var(--text-base);
+  }
+
+  .pricing {
+    flex-wrap: wrap;
   }
 }

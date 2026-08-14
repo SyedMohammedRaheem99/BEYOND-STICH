@@ -10,16 +10,31 @@ export default function Footer() {
   const { setCursorVariant, resetCursor } = useUIStore();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [subError, setSubError] = useState('');
 
   const handleMouseEnter = () => setCursorVariant('hover');
   const handleMouseLeave = () => resetCursor();
 
-  const handleSubscribe = (e) => {
+  const handleSubscribe = async (e) => {
     e.preventDefault();
-    // Basic email check; wiring to a real list happens in the integration phase.
+    setSubError('');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
-    setSubscribed(true);
-    setEmail('');
+    try {
+      const res = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      if (res.ok) {
+        setSubscribed(true);
+        setEmail('');
+      } else {
+        const data = await res.json();
+        setSubError(data.error || 'Something went wrong');
+      }
+    } catch {
+      setSubError('Network error. Try again.');
+    }
   };
 
   return (
@@ -35,25 +50,28 @@ export default function Footer() {
               You're on the list. Watch your inbox for the next drop. ✓
             </p>
           ) : (
-            <form className={styles.newsletterForm} onSubmit={handleSubscribe}>
-              <input
-                type="email"
-                required
-                placeholder="Your email"
-                className={styles.newsletterInput}
-                aria-label="Email address for drop notifications"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <button
-                type="submit"
-                className={styles.newsletterBtn}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-              >
-                NOTIFY ME
-              </button>
-            </form>
+            <>
+              <form className={styles.newsletterForm} onSubmit={handleSubscribe}>
+                <input
+                  type="email"
+                  required
+                  placeholder="Your email"
+                  className={styles.newsletterInput}
+                  aria-label="Email address for drop notifications"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  className={styles.newsletterBtn}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                >
+                  NOTIFY ME
+                </button>
+              </form>
+              {subError && <p style={{ color: '#EF4444', fontSize: '12px', marginTop: '8px' }}>{subError}</p>}
+            </>
           )}
         </div>
       </div>
@@ -63,30 +81,25 @@ export default function Footer() {
         {/* Brand Column */}
         <div className={styles.brandCol}>
           <div className={styles.brandLogo}>
-            <span className={styles.brandName}>BEYOND</span>
-            <span className={styles.brandAccent}>STICH</span>
+            <img 
+              src="/logos/beyond-stich-logo.png" 
+              alt="Beyond Stich" 
+              className={styles.footerLogoImage} 
+            />
           </div>
           <p className={styles.brandTagline}>{BRAND.tagline}</p>
           <div className={styles.socials}>
-            <a href="#" aria-label="Instagram" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+            <a href="https://instagram.com/beyondstich" target="_blank" rel="noopener noreferrer" aria-label="Instagram" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
                 <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
                 <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
               </svg>
             </a>
-            <a href="#" aria-label="Twitter/X" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-              </svg>
-            </a>
-            <a href="#" aria-label="YouTube" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.13c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-1.93 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.45z" />
-                <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
-              </svg>
-            </a>
           </div>
+          <p className={styles.businessInfo}>
+            Beyond Stich — Bangalore, India
+          </p>
         </div>
 
         {/* Segments Column */}
@@ -132,6 +145,7 @@ export default function Footer() {
             <Link href="/returns" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>Returns</Link>
             <Link href="/size-guide" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>Size Guide</Link>
             <Link href="/faq" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>FAQ</Link>
+            <Link href="/stores/bangalore" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>Beyond Stich Bangalore</Link>
           </nav>
         </div>
       </div>

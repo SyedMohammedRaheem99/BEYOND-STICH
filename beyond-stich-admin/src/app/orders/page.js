@@ -24,6 +24,8 @@ export default function AdminOrders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [fulfil, setFulfil] = useState({ orderStatus: 'placed', trackingNumber: '', notes: '' });
   const [savingFulfil, setSavingFulfil] = useState(false);
+  const [refund, setRefund] = useState({ refundAmount: 0, refundReason: '', refundStatus: 'none' });
+  const [savingRefund, setSavingRefund] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -84,6 +86,11 @@ export default function AdminOrders() {
       trackingNumber: order.trackingNumber || '',
       notes: order.notes || '',
     });
+    setRefund({
+      refundAmount: order.refundAmount || order.total || 0,
+      refundReason: order.refundReason || '',
+      refundStatus: order.refundStatus || 'none',
+    });
   };
 
   const saveFulfilment = async () => {
@@ -109,6 +116,33 @@ export default function AdminOrders() {
       alert('Network error');
     } finally {
       setSavingFulfil(false);
+    }
+  };
+
+  const saveRefund = async () => {
+    if (!selectedOrder) return;
+    setSavingRefund(true);
+    try {
+      const res = await fetch(`/api/orders/${selectedOrder._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(refund),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setOrders(prev => prev.map(o =>
+          o._id === selectedOrder._id ? { ...o, ...data.order } : o
+        ));
+        setSelectedOrder(prev => (prev ? { ...prev, ...data.order } : prev));
+        alert(refund.refundStatus === 'processed' ? 'Refund processed & email sent' : 'Refund updated');
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to update refund');
+      }
+    } catch {
+      alert('Network error');
+    } finally {
+      setSavingRefund(false);
     }
   };
 
@@ -189,6 +223,16 @@ export default function AdminOrders() {
                       <span className={styles.segmentBadge} style={{ borderColor: sc.border, color: sc.color }}>
                         {order.orderStatus?.toUpperCase().replace('_', ' ')}
                       </span>
+                      {order.refundStatus && order.refundStatus !== 'none' && (
+                        <span className={styles.segmentBadge} style={{
+                          borderColor: order.refundStatus === 'processed' ? '#22C55E' : order.refundStatus === 'pending' ? '#F5C518' : '#EF4444',
+                          color: order.refundStatus === 'processed' ? '#22C55E' : order.refundStatus === 'pending' ? '#F5C518' : '#EF4444',
+                          marginLeft: '6px',
+                          fontSize: '10px',
+                        }}>
+                          REFUND {order.refundStatus.toUpperCase()}
+                        </span>
+                      )}
                     </td>
                     <td>
                       <div className={styles.actions}>
@@ -242,7 +286,7 @@ export default function AdminOrders() {
                 <h4 style={{ color: '#888', fontSize: '11px', marginBottom: '6px' }}>PAYMENT</h4>
                 <p style={{ color: '#F5F5F5' }}>₹{selectedOrder.total?.toLocaleString('en-IN')}</p>
                 <p style={{ color: '#888', fontSize: '12px' }}>
-                  {selectedOrder.paymentStatus?.toUpperCase()} • {selectedOrder.paymentId || 'N/A'}
+                  {selectedOrder.paymentMethod === 'cod' ? 'COD' : selectedOrder.paymentMethod === 'online' ? 'ONLINE' : selectedOrder.paymentMethod?.toUpperCase() || 'N/A'} • {selectedOrder.paymentStatus?.toUpperCase()} {selectedOrder.paymentId ? `• ${selectedOrder.paymentId}` : ''}
                 </p>
               </div>
               <div>
@@ -290,6 +334,59 @@ export default function AdminOrders() {
                 {savingFulfil ? 'SAVING…' : 'SAVE CHANGES'}
               </button>
             </div>
+
+            {/* Refund controls — visible for returned/cancelled orders */}
+            {['returned', 'cancelled'].includes(selectedOrder.orderStatus) && (
+              <div style={{ background: '#1A1A1A', border: '1px solid #333', borderRadius: '6px', padding: '16px', marginBottom: '20px' }}>
+                <h4 style={{ color: '#EF4444', fontSize: '11px', marginBottom: '12px', letterSpacing: '0.08em' }}>REFUND</h4>
+                {selectedOrder.refundStatus === 'processed' ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <p style={{ color: '#22C55E', fontWeight: 700, fontSize: '14px' }}>REFUND PROCESSED</p>
+                    <p style={{ color: '#888', fontSize: '12px' }}>Amount: ₹{(selectedOrder.refundAmount || 0).toLocaleString('en-IN')}</p>
+                    {selectedOrder.refundReason && <p style={{ color: '#888', fontSize: '12px' }}>Reason: {selectedOrder.refundReason}</p>}
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ color: '#888', fontSize: '11px' }}>Refund Amount (₹)</label>
+                        <input
+                          type="number"
+                          value={refund.refundAmount}
+                          onChange={e => setRefund(r => ({ ...r, refundAmount: parseFloat(e.target.value) || 0 }))}
+                          style={fulfilStyles.input}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ color: '#888', fontSize: '11px' }}>Status</label>
+                        <select
+                          value={refund.refundStatus}
+                          onChange={e => setRefund(r => ({ ...r, refundStatus: e.target.value }))}
+                          style={fulfilStyles.input}
+                        >
+                          <option value="none">None</option>
+                          <option value="pending">Pending</option>
+                          <option value="processed">Processed</option>
+                          <option value="failed">Failed</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '12px' }}>
+                      <label style={{ color: '#888', fontSize: '11px' }}>Reason</label>
+                      <input
+                        value={refund.refundReason}
+                        onChange={e => setRefund(r => ({ ...r, refundReason: e.target.value }))}
+                        placeholder="e.g. Customer requested return"
+                        style={fulfilStyles.input}
+                      />
+                    </div>
+                    <button onClick={saveRefund} disabled={savingRefund} style={{ ...fulfilStyles.saveBtn, background: '#EF4444' }}>
+                      {savingRefund ? 'PROCESSING…' : refund.refundStatus === 'processed' ? 'PROCESS REFUND & NOTIFY' : 'SAVE REFUND'}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
 
             <h4 style={{ color: '#888', fontSize: '11px', marginBottom: '8px' }}>ITEMS ({selectedOrder.items?.length})</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

@@ -1,6 +1,7 @@
 'use client';
 
-import { MotionConfig } from 'framer-motion';
+import { useEffect } from 'react';
+import { SessionProvider } from 'next-auth/react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import CartDrawer from '@/components/layout/CartDrawer';
@@ -8,12 +9,15 @@ import CustomCursor from '@/components/layout/CustomCursor';
 import PageLoader from '@/components/layout/PageLoader';
 import ScrollProgress from '@/components/layout/ScrollProgress';
 import AnnouncementBar from '@/components/layout/AnnouncementBar';
+import WhatsAppWidget from '@/components/ui/WhatsAppWidget';
 
 export default function ClientLayout({ children }) {
+  useEffect(() => {
+    document.documentElement.classList.add('js-loaded');
+  }, []);
+
   return (
-    // reducedMotion="user" makes every framer-motion animation in the app
-    // automatically honor the visitor's prefers-reduced-motion setting.
-    <MotionConfig reducedMotion="user">
+    <SessionProvider>
       <a href="#main-content" className="skip-link">
         Skip to content
       </a>
@@ -30,6 +34,8 @@ export default function ClientLayout({ children }) {
         {children}
       </main>
       <Footer />
-    </MotionConfig>
+      <WhatsAppWidget />
+    </SessionProvider>
   );
 }
+

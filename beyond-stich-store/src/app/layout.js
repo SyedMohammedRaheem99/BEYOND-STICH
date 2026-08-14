@@ -1,6 +1,10 @@
 import './globals.css';
 import { Barlow_Condensed, Space_Grotesk } from 'next/font/google';
+import Script from 'next/script';
 import ClientLayout from './ClientLayout';
+import OrganizationSchema from '@/components/seo/OrganizationSchema';
+import LocalBusinessSchema from '@/components/seo/LocalBusinessSchema';
+import WebSiteSchema from '@/components/seo/WebSiteSchema';
 
 // Self-hosted, optimized fonts. Exposed as CSS variables consumed by the
 // design tokens in globals.css (--font-display / --font-body). Using next/font
@@ -20,17 +24,13 @@ const fontBody = Space_Grotesk({
 });
 
 export const metadata = {
+  metadataBase: new URL('https://beyondstich.com'),
   title: 'Beyond Stich — Wear the thought.',
   description:
     'Premium oversized graphic tees for men. Bold typography, unique designs across 12+ segments — GYM, COFFEE, MUSIC, GAMER & more. Built for those who think different.',
-  keywords: [
-    'oversized tshirts',
-    'graphic tees',
-    'mens streetwear',
-    'beyond stich',
-    'typography tshirts',
-    'premium tees india',
-  ],
+  alternates: {
+    canonical: 'https://beyondstich.com',
+  },
   openGraph: {
     title: 'Beyond Stich — Wear the thought.',
     description:
@@ -58,8 +58,15 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${fontDisplay.variable} ${fontBody.variable}`}>
+    <html lang="en-IN" className={`${fontDisplay.variable} ${fontBody.variable}`}>
       <body>
+        <noscript>
+          <style>{`* { opacity: 1 !important; transform: none !important; }`}</style>
+        </noscript>
+        <OrganizationSchema />
+        <LocalBusinessSchema />
+        <WebSiteSchema />
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>

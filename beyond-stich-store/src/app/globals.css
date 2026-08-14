@@ -31,13 +31,17 @@
   --color-text-muted: #808080; /* WCAG AA on #0A0A0A (~5:1); was #666 (~3.6:1) */
   --color-text-accent: #FFFFFF;
 
+  /* Semantic Colors */
+  --color-success: #22C55E;
+  --color-error: #EF4444;
+
   /* Segment Accent Colors */
   --accent-gym: #F5C518;
-  --accent-coffee: #C4622D;
-  --accent-milliniore: #D4AF37;
-  --accent-music: #7C3AED;
+  --accent-coffee: #D4793E;
+  --accent-millionaire: #D4AF37;
+  --accent-music: #9B5DE5;
   --accent-gamer: #00FF94;
-  --accent-cars: #E63946;
+  --accent-cars: #EF5350;
   --accent-bike: #FF6B35;
   --accent-summer: #06B6D4;
   --accent-floral: #EC4899;
@@ -65,7 +69,7 @@
   --text-4xl: 2.5rem;
   --text-5xl: 3.5rem;
   --text-6xl: 5rem;
-  --text-hero: clamp(4rem, 12vw, 10rem);
+  --text-hero: clamp(4rem, 14vw, 12rem);
 
   /* Spacing */
   --space-1: 0.25rem;
@@ -94,6 +98,10 @@
   --duration-fast: 150ms;
   --duration-normal: 300ms;
   --duration-slow: 500ms;
+
+  /* Overlays */
+  --overlay-bg: rgba(0, 0, 0, 0.7);
+  --overlay-bg-heavy: rgba(0, 0, 0, 0.8);
 
   /* Shadows */
   --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
@@ -128,14 +136,14 @@ body {
 /* Hide default cursor on desktop — but ONLY when the user hasn't asked for
    reduced motion. Reduced-motion users keep their native system cursor. */
 @media (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  * {
+  .js-loaded * {
     cursor: none !important;
   }
   /* Keep a usable cursor on form fields — typing without a caret cursor is
      hostile, especially through checkout. */
-  input,
-  textarea,
-  select {
+  .js-loaded input,
+  .js-loaded textarea,
+  .js-loaded select {
     cursor: auto !important;
   }
 }
@@ -354,4 +362,11 @@ select:focus {
     --text-hero: clamp(2.5rem, 10vw, 5rem);
   }
 
+}
+
+@media (max-width: 480px) {
+  :root {
+    --container-padding: var(--space-3);
+    --text-hero: clamp(2rem, 10vw, 3.5rem);
+  }
 }

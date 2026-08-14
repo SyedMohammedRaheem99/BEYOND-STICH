@@ -3,46 +3,48 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './ToastManager.module.css';
-import { getAllProducts } from '@/lib/data/products';
 
 const NAMES = ["Ravi", "Aman", "Neha", "Priya", "Karan", "Siddharth", "Anjali", "Vikram"];
 const CITIES = ["Mumbai", "Delhi", "Bangalore", "Pune", "Hyderabad", "Goa", "Chennai"];
-const CATALOG = getAllProducts();
 
 export default function ToastManager() {
   const [toast, setToast] = useState(null);
+  const [catalog, setCatalog] = useState([]);
+
+  // Fetch products once on mount
+  useEffect(() => {
+    fetch('/api/products?sort=newest&limit=16')
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data) && data.length) setCatalog(data); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
-    // Fire a random toast every 12 to 25 seconds
+    if (catalog.length === 0) return;
+
     const triggerToast = () => {
       const showFor = 4000;
       const nextIn = Math.floor(Math.random() * 15000) + 10000;
 
       const randomName = NAMES[Math.floor(Math.random() * NAMES.length)];
       const randomCity = CITIES[Math.floor(Math.random() * CITIES.length)];
-      const randomProduct = CATALOG[Math.floor(Math.random() * CATALOG.length)];
+      const randomProduct = catalog[Math.floor(Math.random() * catalog.length)];
       
       setToast({
         id: Date.now(),
         name: randomName,
         city: randomCity,
         productName: randomProduct.name,
-        image: randomProduct.images[0]
+        image: randomProduct.images?.[0]
       });
 
-      // Hide toast
-      setTimeout(() => {
-        setToast(null);
-      }, showFor);
-
-      // Recursive loop
+      setTimeout(() => { setToast(null); }, showFor);
       setTimeout(triggerToast, nextIn + showFor);
     };
 
-    // Initial timeout before first toast
     const initTimer = setTimeout(triggerToast, 5000);
     return () => clearTimeout(initTimer);
-  }, []);
+  }, [catalog]);
 
   return (
     <div className={styles.toastContainer}>

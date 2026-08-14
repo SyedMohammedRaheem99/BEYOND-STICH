@@ -1,17 +1,45 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/mongodb';
 import Order from '@/lib/models/Order';
 import Coupon from '@/lib/models/Coupon';
 import Product from '@/lib/models/Product';
+import { sendOrderConfirmation } from '@/lib/email';
 
-// POST /api/orders — create an order (guest checkout).
+// GET /api/orders — fetch orders for the logged-in user
+export async function GET(request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    await connectDB();
+
+    const { searchParams } = new URL(request.url);
+    const limit = parseInt(searchParams.get('limit')) || 20;
+
+    const orders = await Order.find({ user: session.user.id })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+
+    return NextResponse.json({ orders });
+  } catch (error) {
+    console.error('Orders GET error:', error);
+    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
+  }
+}
+
+// POST /api/orders — create an order (guest or logged-in checkout).
 // NOTE: payment is still mocked (paymentMethod: 'mock', paymentStatus: 'pending').
 // When real Razorpay lands, verify the signature here before creating the order
 // and set paymentStatus: 'paid'.
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { items, shippingAddress, email, subtotal, discount = 0, shipping = 0, total, couponCode } = body;
+    const { items, shippingAddress, email, subtotal, discount = 0, shipping = 0, total, couponCode, paymentMethod: reqPaymentMethod } = body;
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'Your cart is empty' }, { status: 400 });
@@ -25,7 +53,15 @@ export async function POST(request) {
 
     await connectDB();
 
+    // Attach user if logged in
+    let userId = null;
+    try {
+      const session = await getServerSession(authOptions);
+      if (session?.user?.id) userId = session.user.id;
+    } catch {}
+
     const order = await Order.create({
+      user: userId,
       email: email || '',
       items: items.map((i) => ({
         productSlug: i.productSlug || i.slug || '',
@@ -43,12 +79,8 @@ export async function POST(request) {
       shipping,
       total,
       couponCode: couponCode || '',
-      paymentMethod: 'mock',
-      // The mock checkout always "succeeds", so the order counts as paid (this
-      // is what makes it show in dashboard revenue). When real Razorpay lands,
-      // set this to 'paid' only after verifying the payment signature; COD
-      // orders would stay 'pending' until delivery.
-      paymentStatus: 'paid',
+      paymentMethod: reqPaymentMethod || 'mock',
+      paymentStatus: reqPaymentMethod === 'cod' ? 'pending' : 'paid',
       orderStatus: 'placed',
     });
 
@@ -69,6 +101,11 @@ export async function POST(request) {
           { $inc: { 'sizes.$.stock': -i.quantity } }
         );
       } catch {}
+    }
+
+    // Send confirmation email (fire-and-forget, don't block response)
+    if (order.email) {
+      sendOrderConfirmation(order).catch(() => {});
     }
 
     return NextResponse.json({

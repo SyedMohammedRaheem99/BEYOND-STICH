@@ -20,7 +20,7 @@ export default function AnnouncementBar() {
   }, []);
 
   return (
-    <div className={styles.bar} role="status" aria-live="off">
+    <div className={styles.bar} role="status" aria-live="polite">
       <span className={styles.static}>★</span>
       <div className={styles.track}>
         <AnimatePresence mode="wait">

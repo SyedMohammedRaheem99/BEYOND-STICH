@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUIStore } from '@/lib/store';
@@ -8,7 +8,28 @@ import styles from './ProductGallery.module.css';
 
 export default function ProductGallery({ images, name }) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [mobileIndex, setMobileIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
+  const swipeRef = useRef(null);
+
+  // Sync mobile pagination dots with scroll position
+  useEffect(() => {
+    const container = swipeRef.current;
+    if (!container) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const idx = Number(entry.target.dataset.index);
+            if (!isNaN(idx)) setMobileIndex(idx);
+          }
+        });
+      },
+      { root: container, threshold: 0.5 }
+    );
+    container.querySelectorAll('[data-index]').forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [images]);
   const { setCursorVariant, setCursorText, resetCursor } = useUIStore();
 
   const handleMouseEnter = () => {
@@ -66,9 +87,9 @@ export default function ProductGallery({ images, name }) {
 
       {/* Mobile Swipe View */}
       <div className={styles.mobileView}>
-        <div className={styles.swipeContainer}>
+        <div ref={swipeRef} className={styles.swipeContainer}>
           {images.map((img, i) => (
-            <div key={i} className={styles.swipeItem}>
+            <div key={i} data-index={i} className={styles.swipeItem}>
               <Image
                 src={img}
                 alt={`${name} - View ${i + 1}`}
@@ -86,7 +107,7 @@ export default function ProductGallery({ images, name }) {
           {images.map((_, i) => (
             <span 
               key={i} 
-              className={`${styles.dot} ${i === 0 ? styles.dotActive : ''}`}
+              className={`${styles.dot} ${i === mobileIndex ? styles.dotActive : ''}`}
             />
           ))}
         </div>

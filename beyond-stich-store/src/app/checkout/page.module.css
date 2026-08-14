@@ -120,18 +120,27 @@
   transition: border-color var(--duration-fast);
 }
 
+.input:hover {
+  border-color: var(--color-border-hover);
+}
+
 .input:focus {
   outline: none;
   border-color: var(--color-text-primary);
 }
 
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .inputError {
-  border-color: #EF4444;
+  border-color: var(--color-error);
 }
 
 .errorText {
   font-size: var(--text-xs);
-  color: #EF4444;
+  color: var(--color-error);
   padding-left: var(--space-1);
 }
 
@@ -187,6 +196,62 @@
 .deliverTo p {
   color: var(--color-text-muted);
   line-height: 1.6;
+}
+
+/* Payment Method */
+.paymentMethodBlock {
+  margin-bottom: var(--space-2);
+}
+
+.paymentMethodBlock h3 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-4);
+  color: var(--color-text-secondary);
+}
+
+.paymentOption {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-3);
+  cursor: pointer;
+  transition: border-color var(--duration-fast);
+}
+
+.paymentOption:hover {
+  border-color: var(--color-border-hover);
+}
+
+.paymentOptionActive {
+  border-color: var(--color-text-primary);
+}
+
+.paymentRadio {
+  accent-color: var(--color-text-primary);
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.paymentLabel {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  letter-spacing: 0.08em;
+}
+
+.paymentDesc {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
 }
 
 /* Processing */
@@ -351,11 +416,11 @@
 }
 
 .couponMsgOk {
-  color: #22C55E;
+  color: var(--color-success);
 }
 
 .couponMsgErr {
-  color: #EF4444;
+  color: var(--color-error);
 }
 
 .totals {
@@ -400,5 +465,32 @@
   .container {
     grid-template-columns: 1fr;
     gap: var(--space-12);
+  }
+}
+
+@media (max-width: 640px) {
+  .formRow {
+    flex-direction: column;
+  }
+
+  .steps {
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  .stepIndicator {
+    font-size: var(--text-xs);
+  }
+
+  .input {
+    font-size: 16px; /* prevents iOS zoom on focus */
+  }
+
+  .ctaBtn, .mockPayBtn {
+    min-height: 48px;
+  }
+
+  .backBtn {
+    min-height: 44px;
   }
 }

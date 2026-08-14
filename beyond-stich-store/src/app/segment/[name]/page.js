@@ -1,80 +1,66 @@
-'use client';
-
-import { use } from 'react';
 import { notFound } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import connectDB from '@/lib/mongodb';
+import Product from '@/lib/models/Product';
+import { DUMMY_PRODUCTS } from '@/lib/dummyData';
 import { SEGMENTS } from '@/lib/constants';
-import { getProductsBySegment } from '@/lib/data/products';
-import SegmentHero from '@/components/segment/SegmentHero';
-import ProductCard from '@/components/product/ProductCard';
-import { RevealOnScroll } from '@/components/ui/AnimatedText';
-import styles from './page.module.css';
+import SegmentClient from './SegmentClient';
 
-export default function SegmentWorldPage(props) {
-  const params = use(props.params);
-  const segmentName = params?.name?.toUpperCase();
-  
-  const segmentData = SEGMENTS.find(s => s.name === segmentName);
-  
+export default async function SegmentWorldPage({ params }) {
+  const { name } = await params;
+  const segmentName = name?.toUpperCase();
+
+  const segmentData = SEGMENTS.find((s) => s.name === segmentName);
+
   if (!segmentData) {
     notFound();
   }
 
-  // Products for this segment via the data-access layer
-  const segmentProducts = getProductsBySegment(segmentData.name);
+  let products = [];
+
+  try {
+    await connectDB();
+    const docs = await Product.find({ isActive: true, segment: segmentData.name })
+      .sort({ createdAt: -1 })
+      .lean();
+    products = docs.map((doc) => ({
+      ...doc,
+      _id: doc._id.toString(),
+    }));
+  } catch {
+    // Fallback to dummy data filtered by segment
+    products = DUMMY_PRODUCTS
+      .filter((p) => p.segment === segmentData.name)
+      .map((p) => ({
+        ...p,
+        _id: p._id || p.slug,
+      }));
+  }
+
+  // CollectionPage / ItemList structured data for SEO
+  const collectionSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: `${segmentData.name} Collection`,
+    description: segmentData.description,
+    url: `https://beyondstich.com/segment/${segmentData.id}`,
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: products.map((p, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `https://beyondstich.com/product/${p.slug}`,
+        name: p.name,
+      })),
+    },
+  };
 
   return (
-    <div 
-      className={styles.segmentWorld}
-      style={{ '--world-accent': segmentData.accent }}
-    >
-      <SegmentHero segmentData={segmentData} />
-
-      <main className={`${styles.mainContent} container noise-overlay`}>
-        
-        {/* Curated Editorial Section */}
-        <RevealOnScroll className={styles.editorialGrid}>
-          <div className={styles.editorialQuote}>
-            <div className={styles.verticalAccent} />
-            <blockquote>
-              "IN THIS WORLD, BASIC DOESN'T EXIST. WE BUILT THIS COLLECTION TO REFLECT THE MINDSET OF THE {segmentData.name} HUSTLE."
-            </blockquote>
-          </div>
-          <div className={styles.editorialStats}>
-            <div className={styles.stat}>
-              <span className={styles.statValue}>{segmentProducts.length}</span>
-              <span className={styles.statLabel}>EXCLUSIVE DROPS</span>
-            </div>
-            <div className={styles.stat}>
-              <span className={styles.statValue}>100%</span>
-              <span className={styles.statLabel}>PREMIUM FIT</span>
-            </div>
-          </div>
-        </RevealOnScroll>
-
-        {/* Drops Display */}
-        <section className={styles.dropsSection}>
-          <div className={styles.sectionHeader}>
-            <h2>THE {segmentData.name} ARSENAL</h2>
-            <div className={styles.headerLine} />
-          </div>
-
-          <AnimatePresence mode="popLayout">
-            {segmentProducts.length > 0 ? (
-              <div className={styles.productGrid}>
-                {segmentProducts.map((product, index) => (
-                  <ProductCard key={product._id} product={product} index={index} />
-                ))}
-              </div>
-            ) : (
-              <div className={styles.emptyState}>
-                <h3>DROPS INCOMING.</h3>
-                <p>The {segmentData.name} collection is currently being forged. Check back soon.</p>
-              </div>
-            )}
-          </AnimatePresence>
-        </section>
-      </main>
-    </div>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
+      />
+      <SegmentClient segmentData={segmentData} initialProducts={products} />
+    </>
   );
 }

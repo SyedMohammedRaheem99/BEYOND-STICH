@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Order from '@/lib/models/Order';
 import { getAdminFromRequest } from '@/lib/auth';
+import { sendShippingUpdate, sendRefundEmail } from '@/lib/email';
 
 // GET /api/orders/[id] — Fetch single order with full details
 export async function GET(request, { params }) {
@@ -44,6 +45,19 @@ export async function PUT(request, { params }) {
     if (body.trackingNumber) allowedUpdates.trackingNumber = body.trackingNumber;
     if (body.notes) allowedUpdates.notes = body.notes;
 
+    // Refund fields
+    if (body.refundAmount !== undefined) allowedUpdates.refundAmount = body.refundAmount;
+    if (body.refundReason !== undefined) allowedUpdates.refundReason = body.refundReason;
+    if (body.refundStatus && ['none', 'pending', 'processed', 'failed'].includes(body.refundStatus)) {
+      allowedUpdates.refundStatus = body.refundStatus;
+      if (body.refundStatus === 'pending') {
+        allowedUpdates.refundInitiatedAt = new Date();
+      }
+      if (body.refundStatus === 'processed') {
+        allowedUpdates.paymentStatus = 'refunded';
+      }
+    }
+
     const order = await Order.findByIdAndUpdate(
       id,
       { $set: allowedUpdates },
@@ -52,6 +66,16 @@ export async function PUT(request, { params }) {
 
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    // Send shipping email when status changes to shipped
+    if (allowedUpdates.orderStatus === 'shipped') {
+      sendShippingUpdate(order).catch(() => {});
+    }
+
+    // Send refund email when refund is processed
+    if (allowedUpdates.refundStatus === 'processed') {
+      sendRefundEmail(order).catch(() => {});
     }
 
     return NextResponse.json({ order });

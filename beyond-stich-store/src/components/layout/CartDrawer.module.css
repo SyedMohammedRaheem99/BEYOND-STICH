@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--overlay-bg);
   z-index: 2000;
 }
 
@@ -176,8 +176,8 @@
 }
 
 .quantityControl button {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -191,7 +191,7 @@
 }
 
 .quantityControl span {
-  width: 28px;
+  width: 32px;
   text-align: center;
   font-size: var(--text-sm);
   font-weight: 600;
@@ -209,12 +209,23 @@
   right: 0;
   font-size: var(--text-xs);
   color: var(--color-text-muted);
-  padding: var(--space-1);
+  padding: var(--space-2);
   transition: color var(--duration-fast);
 }
 
 .removeBtn:hover {
-  color: #EF4444;
+  color: var(--color-error);
+}
+
+@media (max-width: 480px) {
+  .drawer {
+    max-width: 100vw;
+    width: 100vw;
+  }
+
+  .crossSellRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* --- Footer --- */
@@ -233,7 +244,7 @@
 }
 
 .savingsAmount {
-  color: #22C55E;
+  color: var(--color-success);
   font-weight: 600;
 }
 
@@ -254,7 +265,7 @@
 .freeShipping {
   display: block;
   font-size: var(--text-xs);
-  color: #22C55E;
+  color: var(--color-success);
   font-weight: 500;
 }
 

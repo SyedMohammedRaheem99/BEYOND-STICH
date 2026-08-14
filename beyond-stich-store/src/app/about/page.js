@@ -43,6 +43,14 @@ export default function AboutPage() {
         <li>Free shipping on orders above ₹999, dispatched within 24 hours.</li>
       </ul>
 
+      <h2>Who we are</h2>
+      <p>
+        Beyond Stich was founded by <strong>Mohammed Raheem</strong> in
+        Bangalore, India — driven by a belief that streetwear should mean
+        something. What started as a one-person idea has grown into a label that
+        designs, produces, and ships premium graphic tees across India.
+      </p>
+
       <p>
         Wear the thought. — <strong>Team Beyond Stich</strong>
       </p>

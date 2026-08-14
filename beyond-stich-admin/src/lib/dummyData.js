@@ -55,7 +55,7 @@ export const DUMMY_PRODUCTS = [
     _id: 'p3',
     name: 'SILENT MOVES',
     slug: 'silent-moves',
-    segment: 'MILLINIORE',
+    segment: 'MILLIONAIRE',
     price: 999,
     mrp: 1599,
     images: [

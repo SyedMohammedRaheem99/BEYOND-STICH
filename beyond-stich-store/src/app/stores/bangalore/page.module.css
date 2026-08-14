@@ -1,0 +1,275 @@
+/* Beyond Stich — Bangalore Landing Page */
+
+.page {
+  background: var(--color-bg);
+  min-height: 100vh;
+  padding-top: var(--header-height);
+  padding-bottom: var(--space-24);
+}
+
+.container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--container-padding);
+}
+
+/* Hero */
+.hero {
+  text-align: center;
+  padding: var(--space-24) 0 var(--space-16);
+}
+
+.h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-5xl);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+  line-height: 1;
+  margin-bottom: var(--space-8);
+}
+
+.intro {
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  color: var(--color-text-secondary);
+  max-width: 720px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* Sections */
+.section {
+  padding: var(--space-16) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-8);
+}
+
+.sectionText {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  max-width: 640px;
+  line-height: 1.7;
+  margin-bottom: var(--space-8);
+}
+
+/* Appeal Grid */
+.appealGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-6);
+}
+
+.appealCard {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+}
+
+.appealTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-3);
+}
+
+.appealText {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: 1.7;
+}
+
+/* Areas Grid */
+.areasGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.areaTag {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: var(--space-2) var(--space-5);
+  white-space: nowrap;
+}
+
+/* Offer Grid */
+.offerGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-6);
+}
+
+.offerItem {
+  text-align: center;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8) var(--space-4);
+}
+
+.offerValue {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.offerLabel {
+  display: block;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Segment Grid */
+.segmentGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+}
+
+.segmentLink {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+  transition: border-color var(--duration-normal) var(--ease-out),
+              transform var(--duration-normal) var(--ease-out);
+}
+
+.segmentLink:hover {
+  border-color: var(--seg-accent, var(--color-text-primary));
+  transform: translateY(-2px);
+}
+
+.segmentName {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-1);
+}
+
+.segmentTagline {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* CTA */
+.ctaSection {
+  text-align: center;
+  padding: var(--space-16) 0;
+}
+
+.ctaButton {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-bg);
+  background: var(--color-text-primary);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-12);
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+
+.ctaButton:hover {
+  opacity: 0.85;
+}
+
+/* Contact */
+.contactInfo {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.contactLink {
+  color: var(--color-text-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.contactLink:hover {
+  opacity: 0.8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .h1 {
+    font-size: var(--text-3xl);
+  }
+
+  .h2 {
+    font-size: var(--text-2xl);
+  }
+
+  .appealGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .offerGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .segmentGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hero {
+    padding: var(--space-16) 0 var(--space-10);
+  }
+}
+
+@media (max-width: 480px) {
+  .h1 {
+    font-size: var(--text-2xl);
+  }
+
+  .offerGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
+
+  .segmentGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
+}

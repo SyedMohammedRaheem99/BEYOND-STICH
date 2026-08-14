@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import useFocusTrap from '@/hooks/useFocusTrap';
 import styles from './SizeGuideModal.module.css';
 
 // Measurements in inches for the oversized fit (garment, laid flat = half-chest x2).
@@ -15,6 +16,7 @@ const SIZE_CHART = [
 
 export default function SizeGuideModal({ open, onClose, accentColor = '#F8F8F8' }) {
   const closeBtnRef = useRef(null);
+  const trapRef = useFocusTrap(open);
 
   useEffect(() => {
     if (!open) return;
@@ -45,6 +47,7 @@ export default function SizeGuideModal({ open, onClose, accentColor = '#F8F8F8' 
             aria-hidden="true"
           />
           <motion.div
+            ref={trapRef}
             className={styles.modal}
             role="dialog"
             aria-modal="true"

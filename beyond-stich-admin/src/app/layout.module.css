@@ -42,6 +42,12 @@
   border-radius: var(--radius-sm);
 }
 
+.adminLogoImage {
+  height: 74px;
+  width: auto;
+  display: block;
+}
+
 .nav {
   display: flex;
   flex-direction: column;

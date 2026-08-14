@@ -49,6 +49,14 @@ const OrderSchema = new mongoose.Schema(
     },
     trackingNumber: { type: String, default: '' },
     notes: { type: String, default: '' },
+    refundAmount: { type: Number, default: 0 },
+    refundReason: { type: String, default: '' },
+    refundStatus: {
+      type: String,
+      enum: ['none', 'pending', 'processed', 'failed'],
+      default: 'none',
+    },
+    refundInitiatedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

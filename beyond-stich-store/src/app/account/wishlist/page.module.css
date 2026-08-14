@@ -93,4 +93,19 @@
     column-gap: var(--space-4);
     row-gap: var(--space-8);
   }
+
+  .header {
+    padding: var(--space-16) 0 var(--space-6);
+  }
+
+  .browseBtn {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid {
+    column-gap: var(--space-3);
+    row-gap: var(--space-6);
+  }
 }

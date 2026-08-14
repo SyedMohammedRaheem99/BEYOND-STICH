@@ -87,7 +87,7 @@ function getTileSize(index) {
   const pattern = [
     styles.tileLarge,   // GYM
     styles.tileMedium,  // COFFEE
-    styles.tileMedium,  // MILLINIORE
+    styles.tileMedium,  // MILLIONAIRE
     styles.tileLarge,   // MUSIC
     styles.tileMedium,  // GAMER
     styles.tileLarge,   // CARS

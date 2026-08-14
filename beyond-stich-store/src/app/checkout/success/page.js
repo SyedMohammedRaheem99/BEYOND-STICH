@@ -43,8 +43,12 @@ function CheckoutSuccessContent() {
   const itemCount = order?.items?.reduce((s, i) => s + i.quantity, 0) || 0;
   const deliveryEstimate = (() => {
     const base = order?.placedAt ? new Date(order.placedAt) : new Date();
-    base.setDate(base.getDate() + 5);
-    return base.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    const early = new Date(base);
+    const late = new Date(base);
+    early.setDate(early.getDate() + 3);
+    late.setDate(late.getDate() + 6);
+    const fmt = (d) => d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    return `${fmt(early)} – ${fmt(late)}`;
   })();
 
   return (
@@ -77,7 +81,7 @@ function CheckoutSuccessContent() {
               <span className={styles.detailValue}>{itemCount}</span>
             </div>
             <div className={styles.detailItem}>
-              <span className={styles.detailLabel}>TOTAL PAID</span>
+              <span className={styles.detailLabel}>{order.paymentMethod === 'cod' ? 'TOTAL (COD)' : 'TOTAL PAID'}</span>
               <span className={styles.detailValue}>₹{order.total}</span>
             </div>
             <div className={styles.detailItem}>
@@ -85,6 +89,12 @@ function CheckoutSuccessContent() {
               <span className={styles.detailValue}>{deliveryEstimate}</span>
             </div>
           </div>
+        )}
+
+        {order?.paymentMethod === 'cod' && (
+          <p className={styles.codNote}>
+            This is a Cash on Delivery order. Please keep ₹{order.total} ready at the time of delivery.
+          </p>
         )}
 
         <p className={styles.emailNote}>

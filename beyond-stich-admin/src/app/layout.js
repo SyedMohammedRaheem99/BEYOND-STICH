@@ -11,6 +11,9 @@ const ADMIN_NAV = [
   { label: 'ORDERS', href: '/orders', icon: '📦' },
   { label: 'INVENTORY', href: '/inventory', icon: '⚡' },
   { label: 'COUPONS', href: '/coupons', icon: '🎟️' },
+  { label: 'REVIEWS', href: '/reviews', icon: '⭐' },
+  { label: 'ANALYTICS', href: '/analytics', icon: '📈' },
+  { label: 'USERS', href: '/users', icon: '👥' },
 ];
 
 export default function RootLayout({ children }) {
@@ -38,10 +41,14 @@ export default function RootLayout({ children }) {
         <div className={styles.adminLayout}>
           {/* Sidebar Navigation */}
           <aside className={styles.sidebar}>
-            <div className={styles.logo}>
-              <Link href="/">BEYOND STICH.</Link>
+            <Link href="/" className={styles.logo}>
+              <img 
+                src="/logos/beyond-stich-logo.png" 
+                alt="Beyond Stich" 
+                className={styles.adminLogoImage} 
+              />
               <span className={styles.badge}>ADMIN</span>
-            </div>
+            </Link>
 
             <nav className={styles.nav}>
               {ADMIN_NAV.map((item) => {

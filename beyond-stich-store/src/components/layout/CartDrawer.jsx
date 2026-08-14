@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCartStore, useUIStore } from '@/lib/store';
-import { getFeaturedProducts } from '@/lib/data/products';
+import { SHIPPING } from '@/lib/constants';
+import useFocusTrap from '@/hooks/useFocusTrap';
 import styles from './CartDrawer.module.css';
 
 export default function CartDrawer() {
@@ -23,6 +24,8 @@ export default function CartDrawer() {
 
   const { setCursorVariant, resetCursor } = useUIStore();
   const closeBtnRef = useRef(null);
+  const trapRef = useFocusTrap(isOpen);
+  const [suggestions, setSuggestions] = useState([]);
 
   // Close on Escape, lock body scroll, and move focus into the drawer on open.
   useEffect(() => {
@@ -45,16 +48,24 @@ export default function CartDrawer() {
     };
   }, [isOpen, closeCart]);
 
+  // Cross-sell: fetch featured products not already in the bag.
+  useEffect(() => {
+    if (!isOpen) return;
+    fetch('/api/products?featured=true&limit=6')
+      .then(res => res.json())
+      .then(data => {
+        const list = Array.isArray(data) ? data : [];
+        const inCart = new Set(items.map(i => i.productId));
+        setSuggestions(list.filter(p => !inCart.has(p._id)).slice(0, 3));
+      })
+      .catch(() => {});
+  }, [isOpen, items]);
+
   const subtotal = getSubtotal();
   const savings = getSavings();
   const shipping = getShipping();
   const total = getTotal();
-  const freeShippingThreshold = 999;
-  const freeShippingProgress = Math.min((subtotal / freeShippingThreshold) * 100, 100);
-
-  // Cross-sell: featured products not already in the bag.
-  const inCart = new Set(items.map((i) => i.productId));
-  const suggestions = getFeaturedProducts(6).filter((p) => !inCart.has(p._id)).slice(0, 3);
+  const freeShippingProgress = Math.min((subtotal / SHIPPING.FREE_THRESHOLD) * 100, 100);
 
   return (
     <AnimatePresence>
@@ -72,6 +83,7 @@ export default function CartDrawer() {
 
           {/* Drawer */}
           <motion.div
+            ref={trapRef}
             className={styles.drawer}
             role="dialog"
             aria-modal="true"
@@ -98,10 +110,10 @@ export default function CartDrawer() {
             </div>
 
             {/* Free Shipping Progress */}
-            {items.length > 0 && subtotal < freeShippingThreshold && (
+            {items.length > 0 && subtotal < SHIPPING.FREE_THRESHOLD && (
               <div className={styles.shippingProgress}>
                 <p className={styles.shippingText}>
-                  Add ₹{freeShippingThreshold - subtotal} more for{' '}
+                  Add ₹{SHIPPING.FREE_THRESHOLD - subtotal} more for{' '}
                   <strong>FREE shipping</strong>
                 </p>
                 <div className={styles.progressBar}>
@@ -139,11 +151,12 @@ export default function CartDrawer() {
                   >
                     <div className={styles.itemImage}>
                       <Image
-                        src={item.image || '/images/placeholder.jpg'}
+                        src={item.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="100" fill="%23202020"%3E%3Crect width="80" height="100"/%3E%3C/svg%3E'}
                         alt={item.name}
                         width={80}
                         height={100}
                         style={{ objectFit: 'cover' }}
+                        onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }}
                       />
                     </div>
                     <div className={styles.itemInfo}>

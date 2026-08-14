@@ -22,12 +22,12 @@ export const SEGMENTS = [
     id: 'coffee',
     name: 'COFFEE',
     tagline: 'Brew your vibe.',
-    accent: '#C4622D',
+    accent: '#D4793E',
     description: 'Slow mornings, strong coffee, bold prints.',
   },
   {
-    id: 'milliniore',
-    name: 'MILLINIORE',
+    id: 'millionaire',
+    name: 'MILLIONAIRE',
     tagline: 'Success is the only option.',
     accent: '#D4AF37',
     description: 'Hustle culture meets luxury mindset.',
@@ -36,7 +36,7 @@ export const SEGMENTS = [
     id: 'music',
     name: 'MUSIC',
     tagline: 'Feel the frequency.',
-    accent: '#7C3AED',
+    accent: '#9B5DE5',
     description: 'Melodies you can wear. Rhythm you can feel.',
   },
   {
@@ -50,7 +50,7 @@ export const SEGMENTS = [
     id: 'cars',
     name: 'CARS',
     tagline: 'Built for speed.',
-    accent: '#E63946',
+    accent: '#EF5350',
     description: 'Horsepower on your chest. Speed in your DNA.',
   },
   {

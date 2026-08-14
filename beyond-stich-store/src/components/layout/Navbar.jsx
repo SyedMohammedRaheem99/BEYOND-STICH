@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore, useUIStore } from '@/lib/store';
 import { SEGMENTS } from '@/lib/constants';
+import useFocusTrap from '@/hooks/useFocusTrap';
 import styles from './Navbar.module.css';
 
 export default function Navbar() {
@@ -15,6 +17,8 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [worldsOpen, setWorldsOpen] = useState(false);
+  const { data: session } = useSession();
+  const menuTrapRef = useFocusTrap(mobileMenuOpen);
   const { items, openCart } = useCartStore();
   const { setCursorVariant, resetCursor } = useUIStore();
 
@@ -144,8 +148,11 @@ export default function Navbar() {
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
-            <span className={styles.logoText}>BEYOND</span>
-            <span className={styles.logoAccent}>STICH</span>
+            <img 
+              src="/logos/beyond-stich-logo.png" 
+              alt="Beyond Stich" 
+              className={styles.logoImage} 
+            />
           </Link>
 
           {/* Right — Actions */}
@@ -178,16 +185,22 @@ export default function Navbar() {
             </Link>
 
             <Link
-              href="/track"
+              href={session ? '/account' : '/login'}
               className={`${styles.actionBtn} ${styles.hideOnMobile}`}
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
-              aria-label="Track your order"
+              aria-label={session ? `Account — ${session.user?.name}` : 'Sign in'}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
+              {session ? (
+                <span className={styles.userInitial}>
+                  {session.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                </span>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              )}
             </Link>
 
             <button
@@ -262,6 +275,7 @@ export default function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
             />
             <motion.div
+              ref={menuTrapRef}
               className={styles.sideMenu}
               id="mobile-menu"
               role="dialog"
@@ -292,8 +306,8 @@ export default function Navbar() {
                 <Link href="/segment/coffee" onClick={() => setMobileMenuOpen(false)}>
                   COFFEE
                 </Link>
-                <Link href="/segment/milliniore" onClick={() => setMobileMenuOpen(false)}>
-                  MILLINIORE
+                <Link href="/segment/millionaire" onClick={() => setMobileMenuOpen(false)}>
+                  MILLIONAIRE
                 </Link>
                 <Link href="/segment/music" onClick={() => setMobileMenuOpen(false)}>
                   MUSIC

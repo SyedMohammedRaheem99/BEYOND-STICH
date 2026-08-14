@@ -91,7 +91,7 @@
   align-items: center;
   gap: var(--space-1);
   font-size: 11px;
-  color: #22C55E;
+  color: var(--color-success);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 600;
@@ -269,8 +269,8 @@
   font-size: var(--text-sm);
   margin: 0;
 }
-.msgOk { color: #22C55E; }
-.msgErr { color: #EF4444; }
+.msgOk { color: var(--color-success); }
+.msgErr { color: var(--color-error); }
 
 @media (max-width: 600px) {
   .formRow { flex-direction: column; }

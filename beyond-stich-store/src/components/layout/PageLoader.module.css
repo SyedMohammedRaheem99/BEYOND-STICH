@@ -38,6 +38,12 @@
   color: var(--color-text-muted);
 }
 
+.loaderLogoImage {
+  height: clamp(6.5rem, 20vw, 13rem);
+  width: auto;
+  display: block;
+}
+
 .progressBar {
   width: 120px;
   height: 2px;

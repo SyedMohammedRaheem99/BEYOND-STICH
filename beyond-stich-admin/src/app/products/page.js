@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import styles from './page.module.css';
 
-const SEGMENTS = ['GYM', 'COFFEE', 'MILLINIORE', 'MUSIC', 'GAMER', 'CARS', 'BIKE', 'SUMMER', 'FLORAL', 'SPORTS', 'VALENTINE', 'TYPOGRAPHY', 'RANDOMS'];
+const SEGMENTS = ['GYM', 'COFFEE', 'MILLIONAIRE', 'MUSIC', 'GAMER', 'CARS', 'BIKE', 'SUMMER', 'FLORAL', 'SPORTS', 'VALENTINE', 'TYPOGRAPHY', 'RANDOMS'];
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);

@@ -1,30 +1,38 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, useInView } from 'framer-motion';
 import { useUIStore } from '@/lib/store';
-import { getLatestDrops } from '@/lib/data/products';
 import { getSegmentAccent } from '@/lib/constants';
 import styles from './LatestDrop.module.css';
 
-// Real, newest drops from the data-access layer (links resolve to real PDPs).
-const LATEST_DROPS = getLatestDrops(6).map((p) => ({
-  id: p._id,
-  slug: p.slug,
-  name: p.name,
-  segment: p.segment,
-  image: p.images[0],
-  color: getSegmentAccent(p.segment),
-  price: p.price,
-  mrp: p.mrp,
-}));
-
-export default function LatestDrop() {
+export default function LatestDrop({ initialDrops = [] }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
   const { setCursorVariant, setCursorText, resetCursor } = useUIStore();
+  const [drops, setDrops] = useState(initialDrops);
+
+  useEffect(() => {
+    if (initialDrops.length > 0) return;
+    fetch('/api/products?sort=newest&limit=6')
+      .then(res => res.json())
+      .then(data => {
+        const list = Array.isArray(data) ? data : [];
+        setDrops(list.map(p => ({
+          id: p._id,
+          slug: p.slug,
+          name: p.name,
+          segment: p.segment,
+          image: p.images?.[0],
+          color: getSegmentAccent(p.segment),
+          price: p.price,
+          mrp: p.mrp,
+        })));
+      })
+      .catch(() => {});
+  }, [initialDrops]);
 
   const handleMouseEnter = () => {
     setCursorVariant('text');
@@ -34,6 +42,8 @@ export default function LatestDrop() {
   const handleMouseLeave = () => {
     resetCursor();
   };
+
+  if (drops.length === 0) return null;
 
   return (
     <section className={styles.section} ref={ref}>
@@ -59,7 +69,7 @@ export default function LatestDrop() {
 
       <div className={styles.scrollContainer}>
         <div className={styles.track}>
-          {LATEST_DROPS.map((item, index) => (
+          {drops.map((item, index) => (
             <motion.div
               key={item.id}
               className={styles.item}

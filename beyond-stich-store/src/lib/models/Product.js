@@ -31,7 +31,7 @@ const ProductSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Segment is required'],
       enum: [
-        'GYM', 'COFFEE', 'MILLINIORE', 'MUSIC', 'GAMER',
+        'GYM', 'COFFEE', 'MILLIONAIRE', 'MUSIC', 'GAMER',
         'CARS', 'BIKE', 'SUMMER', 'FLORAL', 'SPORTS',
         'VALENTINE', 'TYPOGRAPHY', 'RANDOMS',
       ],

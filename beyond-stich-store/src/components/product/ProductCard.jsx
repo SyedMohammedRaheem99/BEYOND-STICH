@@ -5,7 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWishlistStore, useCartStore, useUIStore } from '@/lib/store';
-import { getSegmentAccent, getColorHex } from '@/lib/constants';
+import { getSegmentAccent, getColorHex, LOW_STOCK_THRESHOLD } from '@/lib/constants';
+import { discountPercent } from '@/lib/utils';
 import styles from './ProductCard.module.css';
 
 export default function ProductCard({ product, index = 0 }) {
@@ -16,14 +17,16 @@ export default function ProductCard({ product, index = 0 }) {
 
   const isWishlisted = wishlistItems.some(i => i._id === product._id);
   const accentColor = getSegmentAccent(product.segment);
-  const discountPercent = Math.round(((product.mrp - product.price) / product.mrp) * 100);
+  const discount = discountPercent(product);
+  // Normalise image shape — wishlist items may carry legacy `image` (string)
+  const images = product.images ?? (product.image ? [product.image] : []);
 
   // Optional fields (wishlist items carry a trimmed product, so guard everything).
   const totalStock = product.sizes
     ? product.sizes.reduce((sum, s) => sum + (s.stock || 0), 0)
     : null;
   const soldOut = totalStock === 0;
-  const lowStock = totalStock !== null && totalStock > 0 && totalStock <= 6;
+  const lowStock = totalStock !== null && totalStock > 0 && totalStock <= LOW_STOCK_THRESHOLD;
   const colors = product.colors || [];
   const rating = product.averageRating;
   
@@ -62,17 +65,18 @@ export default function ProductCard({ product, index = 0 }) {
         <div className={`${styles.imageContainer} ${soldOut ? styles.soldOutImage : ''}`}>
           {/* Default Image */}
           <Image
-            src={product.images[0]}
+            src={images[0]}
             alt={product.name}
             fill
             sizes="(max-width: 600px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className={`${styles.primaryImage} ${!product.images[1] ? styles.onlyImage : ''}`}
+            priority={index < 4}
+            className={`${styles.primaryImage} ${!images[1] ? styles.onlyImage : ''}`}
           />
 
           {/* Hover Image */}
-          {product.images[1] && (
+          {images[1] && (
              <Image
-             src={product.images[1]}
+             src={images[1]}
              alt={`${product.name} alternate view`}
              fill
              sizes="(max-width: 600px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -139,7 +143,7 @@ export default function ProductCard({ product, index = 0 }) {
             {product.mrp > product.price && (
               <>
                 <span className={styles.mrp}>₹{product.mrp}</span>
-                <span className={styles.discount}>({discountPercent}% OFF)</span>
+                <span className={styles.discount}>({discount}% OFF)</span>
               </>
             )}
           </div>

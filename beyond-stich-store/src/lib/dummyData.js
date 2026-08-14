@@ -6,16 +6,102 @@
 // the data-access layer at `@/lib/data/products` so that swapping to the
 // real database later is a one-file change. See that file for details.
 
-// Shared pool of known-good apparel imagery so nothing renders broken.
+// Segment-specific apparel imagery — each product gets 3-5 images from its own segment.
 const IMG = {
+  // GYM — gym/fitness tee vibes
   gym1: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&q=80',
   gym2: 'https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=800&q=80',
+  gym3: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=800&q=80',
+  gym4: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80',
+  gym5: 'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=800&q=80',
+  gym6: 'https://images.unsplash.com/photo-1605296867424-35fc25c9212a?w=800&q=80',
+  gym7: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=800&q=80',
+
+  // COFFEE — café culture, warm tones, coffee aesthetics
   coffee1: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&q=80',
-  neutral1: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80',
-  dark1: 'https://images.unsplash.com/photo-1516762689617-e1cffcef479d?w=800&q=80',
-  neon1: 'https://images.unsplash.com/photo-1512327428889-607eeb19efe8?w=800&q=80',
+  coffee2: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&q=80',
+  coffee3: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefda?w=800&q=80',
+  coffee4: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80',
+  coffee5: 'https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=800&q=80',
+  coffee6: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&q=80',
+
+  // MILLIONAIRE — luxury, hustle, dark premium
+  mill1: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80',
+  mill2: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=800&q=80',
+  mill3: 'https://images.unsplash.com/photo-1611312449408-fcece27cdbb7?w=800&q=80',
+  mill4: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80',
+  mill5: 'https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=800&q=80',
+
+  // BIKE — motorcycle culture, riding
+  bike1: 'https://images.unsplash.com/photo-1558981359-219d6364c9c8?w=800&q=80',
+  bike2: 'https://images.unsplash.com/photo-1558980394-4c7c9299fe96?w=800&q=80',
+  bike3: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=800&q=80',
+  bike4: 'https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=800&q=80',
+  bike5: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&q=80',
+
+  // MUSIC — neon, audio, concert vibes
+  music1: 'https://images.unsplash.com/photo-1512327428889-607eeb19efe8?w=800&q=80',
+  music2: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=800&q=80',
+  music3: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=80',
+  music4: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&q=80',
+  music5: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80',
+  music6: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800&q=80',
+
+  // GAMER — gaming setups, neon controllers
   gamer1: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&q=80',
-  portrait1: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80',
+  gamer2: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80',
+  gamer3: 'https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?w=800&q=80',
+  gamer4: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=800&q=80',
+  gamer5: 'https://images.unsplash.com/photo-1625805866449-3589fe3f71a3?w=800&q=80',
+
+  // CARS — automotive, speed, motorsport
+  cars1: 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&q=80',
+  cars2: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&q=80',
+  cars3: 'https://images.unsplash.com/photo-1514316454349-750a7fd3da3a?w=800&q=80',
+  cars4: 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&q=80',
+  cars5: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=80',
+
+  // SUMMER — beach, coastal, tropical
+  summer1: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80',
+  summer2: 'https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?w=800&q=80',
+  summer3: 'https://images.unsplash.com/photo-1506953823976-52e1fdc0149a?w=800&q=80',
+  summer4: 'https://images.unsplash.com/photo-1484804959297-65e7c19d7c9f?w=800&q=80',
+  summer5: 'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80',
+
+  // FLORAL — botanical, flowers, nature patterns
+  floral1: 'https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=800&q=80',
+  floral2: 'https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=800&q=80',
+  floral3: 'https://images.unsplash.com/photo-1462275646964-a0e3c11f18a6?w=800&q=80',
+  floral4: 'https://images.unsplash.com/photo-1487530811176-3780de880c2d?w=800&q=80',
+  floral5: 'https://images.unsplash.com/photo-1471696035578-3d8c78d99571?w=800&q=80',
+
+  // SPORTS — athletics, jerseys, playing fields
+  sports1: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800&q=80',
+  sports2: 'https://images.unsplash.com/photo-1461896836934-bd45ba688b4a?w=800&q=80',
+  sports3: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&q=80',
+  sports4: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=800&q=80',
+  sports5: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&q=80',
+
+  // VALENTINE — love, hearts, romantic
+  val1: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=800&q=80',
+  val2: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=800&q=80',
+  val3: 'https://images.unsplash.com/photo-1518568814500-bf0f8d125f46?w=800&q=80',
+  val4: 'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?w=800&q=80',
+  val5: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=800&q=80',
+
+  // TYPOGRAPHY — minimal text, type design
+  typo1: 'https://images.unsplash.com/photo-1516414447565-b14be0adf13e?w=800&q=80',
+  typo2: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=800&q=80',
+  typo3: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80',
+  typo4: 'https://images.unsplash.com/photo-1503342394128-c104d54dba01?w=800&q=80',
+  typo5: 'https://images.unsplash.com/photo-1523381294911-8d3cead13b03?w=800&q=80',
+
+  // RANDOMS — abstract, wildcard, experimental
+  rand1: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=800&q=80',
+  rand2: 'https://images.unsplash.com/photo-1550684376-efcbd6e3f031?w=800&q=80',
+  rand3: 'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=800&q=80',
+  rand4: 'https://images.unsplash.com/photo-1567095761054-7a02e69e5b2b?w=800&q=80',
+  rand5: 'https://images.unsplash.com/photo-1553356084-58ef4a67b2a7?w=800&q=80',
 };
 
 const fullStock = [
@@ -34,7 +120,7 @@ export const DUMMY_PRODUCTS = [
     segment: 'GYM',
     price: 799,
     mrp: 1299,
-    images: [IMG.gym1, IMG.gym2],
+    images: [IMG.gym1, IMG.gym2, IMG.gym3, IMG.gym4, IMG.gym5],
     sizes: [
       { size: 'S', stock: 5 },
       { size: 'M', stock: 12 },
@@ -60,7 +146,7 @@ export const DUMMY_PRODUCTS = [
     segment: 'COFFEE',
     price: 899,
     mrp: 1499,
-    images: [IMG.coffee1, IMG.neutral1],
+    images: [IMG.coffee1, IMG.coffee2, IMG.coffee3, IMG.coffee4],
     sizes: fullStock,
     colors: ['White', 'Mocha'],
     description:
@@ -77,10 +163,10 @@ export const DUMMY_PRODUCTS = [
     _id: 'p3',
     name: 'SILENT MOVES',
     slug: 'silent-moves',
-    segment: 'MILLINIORE',
+    segment: 'MILLIONAIRE',
     price: 999,
     mrp: 1599,
-    images: [IMG.neutral1, IMG.coffee1],
+    images: [IMG.mill1, IMG.mill2, IMG.mill3, IMG.mill4, IMG.mill5],
     sizes: [
       { size: 'S', stock: 0 },
       { size: 'M', stock: 3 },
@@ -106,7 +192,7 @@ export const DUMMY_PRODUCTS = [
     segment: 'BIKE',
     price: 799,
     mrp: 1299,
-    images: [IMG.dark1, IMG.gym1],
+    images: [IMG.bike1, IMG.bike2, IMG.bike3, IMG.bike4],
     sizes: fullStock,
     colors: ['Black', 'Grey'],
     description:
@@ -126,7 +212,7 @@ export const DUMMY_PRODUCTS = [
     segment: 'MUSIC',
     price: 849,
     mrp: 1399,
-    images: [IMG.neon1, IMG.neutral1],
+    images: [IMG.music1, IMG.music2, IMG.music3, IMG.music4, IMG.music5],
     sizes: [
       { size: 'M', stock: 12 },
       { size: 'L', stock: 10 },
@@ -150,7 +236,7 @@ export const DUMMY_PRODUCTS = [
     segment: 'GAMER',
     price: 899,
     mrp: 1499,
-    images: [IMG.gamer1, IMG.dark1],
+    images: [IMG.gamer1, IMG.gamer2, IMG.gamer3, IMG.gamer4],
     sizes: fullStock,
     colors: ['Black', 'Green'],
     description:
@@ -170,7 +256,7 @@ export const DUMMY_PRODUCTS = [
     segment: 'CARS',
     price: 949,
     mrp: 1599,
-    images: [IMG.dark1, IMG.gym2],
+    images: [IMG.cars1, IMG.cars2, IMG.cars3, IMG.cars4, IMG.cars5],
     sizes: fullStock,
     colors: ['Black', 'Red'],
     description:
@@ -190,7 +276,7 @@ export const DUMMY_PRODUCTS = [
     segment: 'SUMMER',
     price: 749,
     mrp: 1199,
-    images: [IMG.neutral1, IMG.coffee1],
+    images: [IMG.summer1, IMG.summer2, IMG.summer3, IMG.summer4],
     sizes: fullStock,
     colors: ['Sand', 'White'],
     description:
@@ -210,7 +296,7 @@ export const DUMMY_PRODUCTS = [
     segment: 'FLORAL',
     price: 899,
     mrp: 1499,
-    images: [IMG.portrait1, IMG.neutral1],
+    images: [IMG.floral1, IMG.floral2, IMG.floral3, IMG.floral4, IMG.floral5],
     sizes: fullStock,
     colors: ['Off-White'],
     description:
@@ -230,7 +316,7 @@ export const DUMMY_PRODUCTS = [
     segment: 'SPORTS',
     price: 799,
     mrp: 1299,
-    images: [IMG.gym1, IMG.gamer1],
+    images: [IMG.sports1, IMG.sports2, IMG.sports3, IMG.sports4],
     sizes: fullStock,
     colors: ['Navy', 'Black'],
     description:
@@ -250,7 +336,7 @@ export const DUMMY_PRODUCTS = [
     segment: 'VALENTINE',
     price: 849,
     mrp: 1399,
-    images: [IMG.portrait1, IMG.dark1],
+    images: [IMG.val1, IMG.val2, IMG.val3, IMG.val4, IMG.val5],
     sizes: fullStock,
     colors: ['Black', 'Red'],
     description:
@@ -270,7 +356,7 @@ export const DUMMY_PRODUCTS = [
     segment: 'TYPOGRAPHY',
     price: 699,
     mrp: 1199,
-    images: [IMG.neutral1, IMG.gym2],
+    images: [IMG.typo1, IMG.typo2, IMG.typo3, IMG.typo4],
     sizes: fullStock,
     colors: ['White', 'Black'],
     description:
@@ -290,7 +376,7 @@ export const DUMMY_PRODUCTS = [
     segment: 'RANDOMS',
     price: 899,
     mrp: 1499,
-    images: [IMG.gamer1, IMG.neon1],
+    images: [IMG.rand1, IMG.rand2, IMG.rand3, IMG.rand4, IMG.rand5],
     sizes: fullStock,
     colors: ['Black'],
     description:
@@ -310,7 +396,7 @@ export const DUMMY_PRODUCTS = [
     segment: 'GYM',
     price: 849,
     mrp: 1399,
-    images: [IMG.gym2, IMG.gym1],
+    images: [IMG.gym5, IMG.gym6, IMG.gym7, IMG.gym3],
     sizes: fullStock,
     colors: ['Black', 'Charcoal'],
     description:
@@ -330,7 +416,7 @@ export const DUMMY_PRODUCTS = [
     segment: 'MUSIC',
     price: 799,
     mrp: 1299,
-    images: [IMG.neon1, IMG.dark1],
+    images: [IMG.music3, IMG.music4, IMG.music5, IMG.music6],
     sizes: fullStock,
     colors: ['Black'],
     description:
@@ -350,7 +436,7 @@ export const DUMMY_PRODUCTS = [
     segment: 'COFFEE',
     price: 749,
     mrp: 1199,
-    images: [IMG.coffee1, IMG.neutral1],
+    images: [IMG.coffee3, IMG.coffee4, IMG.coffee5, IMG.coffee6],
     sizes: fullStock,
     colors: ['Cream', 'Mocha'],
     description:
@@ -378,8 +464,8 @@ const REVIEW_LIBRARY = [
     date: '2 months ago',
     title: 'Crazy fit and quality',
     body: "The 240 GSM feels premium. The print quality is insane and hasn't faded after 5 washes. Definitely ordering more.",
-    verified: true,
-    image: IMG.portrait1,
+    verified: false,
+    image: IMG.gym1,
   },
   {
     id: 'r2',
@@ -388,7 +474,7 @@ const REVIEW_LIBRARY = [
     date: '1 week ago',
     title: 'Best oversized tee',
     body: 'The drop shoulder is perfect. Fits exactly how I wanted it to. Packaging was also very premium.',
-    verified: true,
+    verified: false,
   },
   {
     id: 'r3',
@@ -397,7 +483,7 @@ const REVIEW_LIBRARY = [
     date: '3 days ago',
     title: 'Good, but stock runs out fast',
     body: 'Love the design and the material. Only giving 4 stars because the restock takes too long. Otherwise perfect.',
-    verified: true,
+    verified: false,
   },
   {
     id: 'r4',
@@ -406,7 +492,7 @@ const REVIEW_LIBRARY = [
     date: '3 weeks ago',
     title: 'Worth every rupee',
     body: 'Heavyweight and structured — sits exactly like the photos. Got two compliments the first day I wore it.',
-    verified: true,
+    verified: false,
   },
 ];
 

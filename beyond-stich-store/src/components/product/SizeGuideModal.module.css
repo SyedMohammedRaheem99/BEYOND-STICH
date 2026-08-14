@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--overlay-bg);
   backdrop-filter: blur(4px);
   z-index: 998;
 }
@@ -125,4 +125,27 @@
 
 .tipsList strong {
   color: var(--color-text-primary);
+}
+
+@media (max-width: 480px) {
+  .modal {
+    padding: var(--space-4);
+    width: calc(100% - var(--space-4));
+    max-height: 90vh;
+  }
+
+  .title {
+    font-size: var(--text-lg);
+  }
+
+  .closeBtn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .table th,
+  .table td {
+    padding: var(--space-2);
+    font-size: var(--text-xs);
+  }
 }
