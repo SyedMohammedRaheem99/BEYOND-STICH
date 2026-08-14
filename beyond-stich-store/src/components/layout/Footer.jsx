@@ -18,7 +18,12 @@ export default function Footer() {
   const handleSubscribe = async (e) => {
     e.preventDefault();
     setSubError('');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+    // Tell the user why nothing happened — a bare return left the button
+    // looking broken.
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setSubError('Enter a valid email address');
+      return;
+    }
     try {
       const res = await fetch('/api/newsletter', {
         method: 'POST',
@@ -82,9 +87,11 @@ export default function Footer() {
         <div className={styles.brandCol}>
           <div className={styles.brandLogo}>
             <img 
-              src="/logos/beyond-stich-logo.png" 
-              alt="Beyond Stich" 
-              className={styles.footerLogoImage} 
+              src="/logos/beyond-stich-logo.png"
+              alt="Beyond Stich"
+              className={styles.footerLogoImage}
+              width={312}
+              height={312}
             />
           </div>
           <p className={styles.brandTagline}>{BRAND.tagline}</p>

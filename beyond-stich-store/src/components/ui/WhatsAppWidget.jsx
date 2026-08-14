@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { BRAND } from '@/lib/constants';
 import styles from './WhatsAppWidget.module.css';
 
 export default function WhatsAppWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const phoneNumber = '919876543210'; // Replace with brand WhatsApp number
+  const phoneNumber = BRAND.phoneE164;
   const defaultMsg = encodeURIComponent('Hi Beyond Stich team, I have a question about my order / products.');
 
   return (

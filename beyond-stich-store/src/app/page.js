@@ -10,6 +10,10 @@ import Product from '@/lib/models/Product';
 import { DUMMY_PRODUCTS } from '@/lib/dummyData';
 import { getSegmentAccent } from '@/lib/constants';
 
+// Serve catalog pages from cache for 5 minutes. Without this every
+// visit blocks on a MongoDB round trip before any HTML ships.
+export const revalidate = 300;
+
 export const metadata = {
   title: 'Beyond Stich | Wear the thought.',
   description: 'Premium oversized graphic tees for men. GYM, COFFEE, MUSIC, GAMER & more.',

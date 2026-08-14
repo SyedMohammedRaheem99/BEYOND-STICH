@@ -149,9 +149,11 @@ export default function Navbar() {
             onMouseLeave={handleMouseLeave}
           >
             <img 
-              src="/logos/beyond-stich-logo.png" 
-              alt="Beyond Stich" 
-              className={styles.logoImage} 
+              src="/logos/beyond-stich-logo.png"
+              alt="Beyond Stich"
+              className={styles.logoImage}
+              width={312}
+              height={312}
             />
           </Link>
 

@@ -4,12 +4,19 @@ import Product from '@/lib/models/Product';
 import { DUMMY_PRODUCTS } from '@/lib/dummyData';
 import ShopClient from './ShopClient';
 
+// Serve catalog pages from cache for 5 minutes. Without this every
+// visit blocks on a MongoDB round trip before any HTML ships.
+export const revalidate = 300;
+
 export default async function ShopPage() {
   let products = [];
 
   try {
     await connectDB();
+    // Only the fields ProductCard renders. Without this the full description,
+    // material and viewCount of every product were serialised into the HTML.
     const docs = await Product.find({ isActive: true })
+      .select('name slug price mrp images segment fitType colors sizes tags averageRating reviewCount createdAt')
       .sort({ createdAt: -1 })
       .lean();
     products = docs.map((doc) => ({

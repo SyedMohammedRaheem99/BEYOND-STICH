@@ -52,8 +52,14 @@ export default function CheckoutPage() {
   const [coupon, setCoupon] = useState(null); // { code, discount, freeShipping, label }
   const [couponMsg, setCouponMsg] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('online'); // 'online' | 'cod'
+  // COD is the default until Razorpay keys are live. With placeholder keys the
+  // gateway runs in mock mode, so an "online" order would be recorded as paid
+  // without the customer ever paying.
+  const [paymentMethod, setPaymentMethod] = useState('cod'); // 'online' | 'cod'
   const [placingOrder, setPlacingOrder] = useState(false);
+  // Checkout failures used to fire setOrderError(), which is easy to dismiss by
+  // accident on mobile and loses the reason the order failed.
+  const [orderError, setOrderError] = useState('');
 
   // Restore a previously used address (nicer for returning customers).
   useEffect(() => {
@@ -169,6 +175,7 @@ export default function CheckoutPage() {
     // parcel the customer never asked for.
     if (placingOrder) return;
     setPlacingOrder(true);
+    setOrderError('');
 
     setStep(STEPS.PAYMENT);
     const orderPayload = buildOrderPayload();
@@ -185,12 +192,12 @@ export default function CheckoutPage() {
         if (res.ok && data.order) {
           saveOrderAndRedirect(data.order);
         } else {
-          alert(data.error || 'Could not place your order. Please try again.');
+          setOrderError(data.error || 'Could not place your order. Please try again.');
           setStep(STEPS.SUMMARY);
           setPlacingOrder(false);
         }
       } catch {
-        alert('Network error. Please try again.');
+        setOrderError('Network error. Please try again.');
         setStep(STEPS.SUMMARY);
         setPlacingOrder(false);
       }
@@ -221,7 +228,7 @@ export default function CheckoutPage() {
         if (res.ok && data.order) {
           saveOrderAndRedirect(data.order);
         } else {
-          alert(data.error || 'Could not place your order. Please try again.');
+          setOrderError(data.error || 'Could not place your order. Please try again.');
           setStep(STEPS.SUMMARY);
           setPlacingOrder(false);
         }
@@ -261,12 +268,12 @@ export default function CheckoutPage() {
             if (verifyRes.ok && verifyData.success) {
               saveOrderAndRedirect(verifyData.order);
             } else {
-              alert(verifyData.error || 'Payment verification failed. Contact support with your payment ID.');
+              setOrderError(verifyData.error || 'Payment verification failed. Contact support with your payment ID.');
               setStep(STEPS.SUMMARY);
               setPlacingOrder(false);
             }
           } catch {
-            alert('Network error during verification. Please contact support.');
+            setOrderError('Network error during verification. Please contact support.');
             setStep(STEPS.SUMMARY);
             setPlacingOrder(false);
           }
@@ -283,7 +290,7 @@ export default function CheckoutPage() {
       razorpay.open();
 
     } catch (err) {
-      alert(err.message || 'Something went wrong. Please try again.');
+      setOrderError(err.message || 'Something went wrong. Please try again.');
       setStep(STEPS.SUMMARY);
       setPlacingOrder(false);
     }
@@ -416,6 +423,12 @@ export default function CheckoutPage() {
                     </div>
                   </label>
                 </div>
+
+                {orderError && (
+                  <p className={styles.orderError} role="alert">
+                    {orderError}
+                  </p>
+                )}
 
                 <button onClick={handlePay} className={styles.mockPayBtn} disabled={placingOrder}>
                   {placingOrder

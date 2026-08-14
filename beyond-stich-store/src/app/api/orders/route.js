@@ -127,7 +127,11 @@ export async function POST(request) {
         total: serverTotal,
         couponCode: appliedCouponCode,
         paymentMethod: reqPaymentMethod || 'mock',
-        paymentStatus: reqPaymentMethod === 'cod' ? 'pending' : 'paid',
+        // Never mark an order paid here. This route takes no payment: real
+        // online payments are confirmed in /api/razorpay/verify after the
+        // signature check. Trusting the client's paymentMethod meant an
+        // "online" order was recorded as paid without a rupee changing hands.
+        paymentStatus: 'pending',
         orderStatus: 'placed',
       });
     } catch (err) {

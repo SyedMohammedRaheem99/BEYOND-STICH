@@ -5,6 +5,10 @@ import { DUMMY_PRODUCTS } from '@/lib/dummyData';
 import { SEGMENTS } from '@/lib/constants';
 import SegmentClient from './SegmentClient';
 
+// Serve catalog pages from cache for 5 minutes. Without this every
+// visit blocks on a MongoDB round trip before any HTML ships.
+export const revalidate = 300;
+
 export default async function SegmentWorldPage({ params }) {
   const { name } = await params;
   const segmentName = name?.toUpperCase();
@@ -19,7 +23,9 @@ export default async function SegmentWorldPage({ params }) {
 
   try {
     await connectDB();
+    // Only the fields ProductCard renders — see the same note in shop/page.js.
     const docs = await Product.find({ isActive: true, segment: segmentData.name })
+      .select('name slug price mrp images segment fitType colors sizes tags averageRating reviewCount createdAt')
       .sort({ createdAt: -1 })
       .lean();
     products = docs.map((doc) => ({

@@ -8,6 +8,11 @@ export const BRAND = {
   description: 'Premium oversized graphic tees for men who think different.',
   url: 'https://beyondstich.com',
   email: 'hello@beyondstich.com',
+  // Single source of truth for the contact number. The WhatsApp widget used
+  // to carry a placeholder while the contact page had the real number, so
+  // every chat from the floating button went nowhere.
+  phone: '+91 83102 73670',
+  phoneE164: '918310273670', // wa.me / tel: format, digits only
 };
 
 export const SEGMENTS = [

@@ -29,9 +29,14 @@ export const useCartStore = create(
         );
 
         if (existingIndex > -1) {
-          // Update quantity
+          // Replace the item rather than mutating it. Copying only the array
+          // left the item object identical, so components subscribed to it
+          // could keep showing the old quantity and subtotal.
           const updatedItems = [...items];
-          updatedItems[existingIndex].quantity += 1;
+          updatedItems[existingIndex] = {
+            ...items[existingIndex],
+            quantity: items[existingIndex].quantity + 1,
+          };
           set({ items: updatedItems, isOpen: true });
         } else {
           // Add new item

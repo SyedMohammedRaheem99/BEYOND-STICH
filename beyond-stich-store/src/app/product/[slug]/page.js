@@ -7,6 +7,10 @@ import ProductSchema from '@/components/seo/ProductSchema';
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema';
 import ProductDetailClient from './ProductDetailClient';
 
+// Serve catalog pages from cache for 5 minutes. Without this every
+// visit blocks on a MongoDB round trip before any HTML ships.
+export const revalidate = 300;
+
 // Server-side product fetch (direct DB, no HTTP round-trip)
 async function getProduct(slug) {
   // If the database answers, its answer is final — a missing product must 404
