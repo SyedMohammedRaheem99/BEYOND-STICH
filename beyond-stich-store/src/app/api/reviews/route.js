@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Review from '@/lib/models/Review';
+import Order from '@/lib/models/Order';
+import { rateLimit, clientKey, tooManyRequests } from '@/lib/rateLimit';
 
 // GET /api/reviews?slug=mind-over-matter
 // Returns approved reviews + summary (average, count, 5→1 distribution).
@@ -14,7 +16,10 @@ export async function GET(request) {
 
     await connectDB();
 
+    // Never project authorEmail — this endpoint is public, and returning whole
+    // documents previously disclosed every reviewer's email address.
     const reviews = await Review.find({ productSlug: slug, approved: true })
+      .select('productSlug authorName rating title body verified createdAt')
       .sort({ createdAt: -1 })
       .lean();
 
@@ -37,8 +42,15 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const data = await request.json();
-    const slug = (data.slug || '').toLowerCase().trim();
+    const slug = (typeof data.slug === 'string' ? data.slug : '').toLowerCase().trim();
     const rating = Number(data.rating);
+
+    // Review text feeds the AggregateRating schema Google reads, so unlimited
+    // anonymous submissions would let anyone manufacture star ratings.
+    const wait = rateLimit('review-submit', clientKey(request), 5, 60 * 60 * 1000);
+    if (wait) {
+      return tooManyRequests(wait, 'You have submitted several reviews already. Please try again later.');
+    }
 
     if (!slug) return NextResponse.json({ error: 'Missing product' }, { status: 400 });
     if (!(rating >= 1 && rating <= 5)) {
@@ -50,20 +62,57 @@ export async function POST(request) {
 
     await connectDB();
 
+    const authorEmail = (typeof data.authorEmail === 'string' ? data.authorEmail : '')
+      .trim()
+      .toLowerCase();
+
+    // A review is auto-published only when we can match it to a real order for
+    // this product from the same email. Everything else waits for admin
+    // approval, so anonymous submissions can't manufacture star ratings.
+    let verified = false;
+    if (authorEmail) {
+      try {
+        const matchingOrder = await Order.findOne({
+          email: authorEmail,
+          'items.productSlug': slug,
+        })
+          .select('_id')
+          .lean();
+        verified = Boolean(matchingOrder);
+      } catch (err) {
+        console.error('[reviews] purchase verification failed', err);
+      }
+    }
+
     const review = await Review.create({
       productSlug: slug,
       authorName: data.authorName.trim().slice(0, 60),
-      authorEmail: (data.authorEmail || '').trim().toLowerCase(),
+      authorEmail,
       rating,
       title: data.title.trim().slice(0, 100),
       body: data.body.trim().slice(0, 1000),
-      // verified is set by the admin (or, later, automatically from a matching
-      // delivered order). Never self-claimed by the submitter.
-      verified: false,
-      approved: true,
+      verified,
+      approved: verified,
     });
 
-    return NextResponse.json({ review }, { status: 201 });
+    return NextResponse.json(
+      {
+        review: {
+          productSlug: review.productSlug,
+          authorName: review.authorName,
+          rating: review.rating,
+          title: review.title,
+          body: review.body,
+          verified: review.verified,
+          createdAt: review.createdAt,
+        },
+        pending: !review.approved,
+        message: review.approved
+          ? 'Thanks for your review!'
+          : 'Thanks! Your review will appear once our team approves it.',
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('Review CREATE error:', error);
     if (error.name === 'ValidationError') {

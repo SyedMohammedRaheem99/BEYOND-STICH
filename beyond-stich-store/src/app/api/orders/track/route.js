@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Order from '@/lib/models/Order';
+import { rateLimit, clientKey, tooManyRequests } from '@/lib/rateLimit';
 
 // POST /api/orders/track  { orderNumber, contact }
 // Guest order lookup. Requires the order number AND the email or phone used at
@@ -9,9 +10,15 @@ export async function POST(request) {
   try {
     const { orderNumber, contact } = await request.json();
 
-    if (!orderNumber?.trim() || !contact?.trim()) {
+    if (typeof orderNumber !== 'string' || typeof contact !== 'string'
+        || !orderNumber.trim() || !contact.trim()) {
       return NextResponse.json({ error: 'Enter your order number and email or phone' }, { status: 400 });
     }
+
+    // Order number + contact is guessable at volume; this endpoint returns
+    // customer PII, so cap the attempt rate.
+    const wait = rateLimit('order-track', clientKey(request), 20, 15 * 60 * 1000);
+    if (wait) return tooManyRequests(wait);
 
     await connectDB();
 

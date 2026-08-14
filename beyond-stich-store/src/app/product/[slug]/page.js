@@ -9,12 +9,16 @@ import ProductDetailClient from './ProductDetailClient';
 
 // Server-side product fetch (direct DB, no HTTP round-trip)
 async function getProduct(slug) {
+  // If the database answers, its answer is final — a missing product must 404
+  // rather than fall back to seed data, or the store advertises tees it does
+  // not stock. The seed fallback now only covers a genuine DB outage.
   try {
     await connectDB();
     const doc = await Product.findOne({ slug, isActive: true }).lean();
-    if (doc) return { ...doc, _id: doc._id.toString() };
-  } catch {}
-  return DUMMY_PRODUCTS.find((p) => p.slug === slug) || null;
+    return doc ? { ...doc, _id: doc._id.toString() } : null;
+  } catch {
+    return DUMMY_PRODUCTS.find((p) => p.slug === slug) || null;
+  }
 }
 
 // Server-side related products fetch
@@ -25,9 +29,12 @@ async function getRelated(slug, segment) {
       .sort({ createdAt: -1 })
       .limit(4)
       .lean();
-    if (docs.length > 0) return docs.map((d) => ({ ...d, _id: d._id.toString() }));
-  } catch {}
-  return DUMMY_PRODUCTS.filter((p) => p.segment === segment && p.slug !== slug).slice(0, 4);
+    // An empty result is a valid answer (no siblings in this segment yet) —
+    // don't paper over it with seed products that aren't for sale.
+    return docs.map((d) => ({ ...d, _id: d._id.toString() }));
+  } catch {
+    return DUMMY_PRODUCTS.filter((p) => p.segment === segment && p.slug !== slug).slice(0, 4);
+  }
 }
 
 // Server-side reviews fetch — pre-renders review content for Google indexing
@@ -49,17 +56,12 @@ async function getReviews(slug) {
       count,
       distribution,
     };
-  } catch {}
-  // Fallback: dummy reviews keyed by product._id
-  const dummyProduct = DUMMY_PRODUCTS.find((p) => p.slug === slug);
-  const dummyProductReviews = dummyProduct ? (DUMMY_REVIEWS?.[dummyProduct._id] || []) : [];
-  const count = dummyProductReviews.length;
-  const average = count
-    ? Math.round((dummyProductReviews.reduce((s, r) => s + r.rating, 0) / count) * 10) / 10
-    : 0;
-  const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-  for (const r of dummyProductReviews) distribution[r.rating] = (distribution[r.rating] || 0) + 1;
-  return { reviews: dummyProductReviews, average, count, distribution };
+  } catch {
+    // Never invent reviews. Seeded testimonials carry real-looking names and
+    // feed the AggregateRating schema sent to Google, so showing them on a
+    // live store would be fabricated social proof. An outage shows none.
+  }
+  return { reviews: [], average: 0, count: 0, distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } };
 }
 
 export default async function ProductDetailPage({ params }) {

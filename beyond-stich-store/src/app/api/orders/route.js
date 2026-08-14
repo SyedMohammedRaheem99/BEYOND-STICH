@@ -4,8 +4,18 @@ import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/mongodb';
 import Order from '@/lib/models/Order';
 import Coupon from '@/lib/models/Coupon';
-import Product from '@/lib/models/Product';
 import { sendOrderConfirmation } from '@/lib/email';
+import {
+  MAX_ITEMS,
+  OrderError,
+  isValidEmail,
+  validateShippingAddress,
+  pickShippingAddress,
+  repriceItems,
+  computeTotals,
+  reserveStock,
+  releaseStock,
+} from '@/lib/orderIntegrity';
 
 // GET /api/orders — fetch orders for the logged-in user
 export async function GET(request) {
@@ -44,11 +54,22 @@ export async function POST(request) {
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'Your cart is empty' }, { status: 400 });
     }
-    if (!shippingAddress?.fullName || !shippingAddress?.pincode) {
-      return NextResponse.json({ error: 'Shipping address is incomplete' }, { status: 400 });
+    // Cap basket size: each line costs a DB lookup plus a stock update, so an
+    // oversized payload would otherwise tie up the connection pool.
+    if (items.length > MAX_ITEMS) {
+      return NextResponse.json({ error: 'Too many items in one order' }, { status: 400 });
     }
-    if (typeof total !== 'number') {
-      return NextResponse.json({ error: 'Invalid order total' }, { status: 400 });
+
+    // Server-side address validation. The checkout page validates too, but the
+    // API is reachable directly — and an unreachable phone or a malformed
+    // pincode means a COD parcel that can't be delivered and can't be traced
+    // back to a customer, at our cost.
+    const addressError = validateShippingAddress(shippingAddress);
+    if (addressError) {
+      return NextResponse.json({ error: addressError }, { status: 400 });
+    }
+    if (email && !isValidEmail(email)) {
+      return NextResponse.json({ error: 'Enter a valid email address' }, { status: 400 });
     }
 
     await connectDB();
@@ -60,74 +81,68 @@ export async function POST(request) {
       if (session?.user?.id) userId = session.user.id;
     } catch {}
 
-    // Re-price every line from the database. The client sends prices, but a
-    // tampered request could otherwise buy a ₹799 tee for ₹1 — especially on
-    // COD, where no payment gateway re-checks the amount. Products that only
-    // exist in the local seed fall back to the submitted price.
-    const pricedItems = await Promise.all(
-      items.map(async (i) => {
-        const slug = i.productSlug || i.slug || '';
-        const quantity = Math.max(1, parseInt(i.quantity, 10) || 1);
-        let price = Number(i.price) || 0;
+    // Re-price and stock-check every line against the database (see
+    // src/lib/orderIntegrity.js). The client sends prices, but a tampered
+    // request could otherwise buy a ₹799 tee for ₹1 — especially on COD,
+    // where no payment gateway re-checks the amount.
+    let pricedItems;
+    try {
+      pricedItems = await repriceItems(items);
+    } catch (err) {
+      if (err instanceof OrderError) {
+        return NextResponse.json({ error: err.message }, { status: 409 });
+      }
+      throw err;
+    }
 
-        if (slug) {
-          try {
-            const dbProduct = await Product.findOne({ slug }).select('price').lean();
-            if (dbProduct && typeof dbProduct.price === 'number') price = dbProduct.price;
-          } catch {}
-        }
-
-        return {
-          productSlug: slug,
-          name: i.name,
-          image: i.image || '',
-          size: i.size || '',
-          color: i.color || '',
-          segment: i.segment || '',
-          quantity,
-          price,
-        };
-      })
-    );
-
-    const serverSubtotal = pricedItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
-    // Never let a client-supplied discount exceed the real subtotal.
-    const serverDiscount = Math.min(Math.max(Number(discount) || 0, 0), serverSubtotal);
-    const serverShipping = Math.max(Number(shipping) || 0, 0);
-    const serverTotal = serverSubtotal - serverDiscount + serverShipping;
-
-    const order = await Order.create({
-      user: userId,
-      email: email || '',
-      items: pricedItems,
-      shippingAddress,
+    // Discounts and shipping are business rules, never client inputs.
+    const {
       subtotal: serverSubtotal,
       discount: serverDiscount,
       shipping: serverShipping,
       total: serverTotal,
-      couponCode: couponCode || '',
-      paymentMethod: reqPaymentMethod || 'mock',
-      paymentStatus: reqPaymentMethod === 'cod' ? 'pending' : 'paid',
-      orderStatus: 'placed',
-    });
+      appliedCouponCode,
+    } = await computeTotals(pricedItems, couponCode);
 
-    // Increment coupon usage (best-effort).
-    if (couponCode) {
-      try {
-        await Coupon.updateOne({ code: couponCode.toUpperCase() }, { $inc: { usedCount: 1 } });
-      } catch {}
+    // Reserve stock BEFORE creating the order so concurrent checkouts for the
+    // last tee can't both succeed.
+    const soldOut = await reserveStock(pricedItems);
+    if (soldOut) {
+      return NextResponse.json(
+        { error: `${soldOut.name} (${soldOut.size}) just sold out. Please review your cart.` },
+        { status: 409 }
+      );
     }
 
-    // Decrement stock for any items that exist as real DB products (no-op for
-    // local seed products). Best-effort so an order is never blocked by this.
-    for (const i of order.items) {
-      if (!i.productSlug) continue;
+    let order;
+    try {
+      order = await Order.create({
+        user: userId,
+        email: email || '',
+        items: pricedItems,
+        shippingAddress: pickShippingAddress(shippingAddress),
+        subtotal: serverSubtotal,
+        discount: serverDiscount,
+        shipping: serverShipping,
+        total: serverTotal,
+        couponCode: appliedCouponCode,
+        paymentMethod: reqPaymentMethod || 'mock',
+        paymentStatus: reqPaymentMethod === 'cod' ? 'pending' : 'paid',
+        orderStatus: 'placed',
+      });
+    } catch (err) {
+      // Don't strand the reserved stock if the order write fails.
+      await releaseStock(pricedItems);
+      throw err;
+    }
+
+    // Increment coupon usage. Only counts a coupon that actually applied.
+    if (appliedCouponCode) {
       try {
-        await Product.updateOne(
-          { slug: i.productSlug, 'sizes.size': i.size },
-          { $inc: { 'sizes.$.stock': -i.quantity } }
-        );
-      } catch {}
+        await Coupon.updateOne({ code: appliedCouponCode }, { $inc: { usedCount: 1 } });
+      } catch (err) {
+        console.error('[orders] coupon usage increment failed', appliedCouponCode, err);
+      }
     }
 
     // Send confirmation email (fire-and-forget, don't block response)

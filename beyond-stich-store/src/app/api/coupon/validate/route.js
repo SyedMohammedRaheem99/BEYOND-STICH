@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import Coupon from '@/lib/models/Coupon';
+import { resolveCoupon } from '@/lib/coupon';
 
 // POST /api/coupon/validate  { code, subtotal }
-// Validates a coupon against the database and returns the computed discount.
+// Advisory endpoint for the checkout UI. The authoritative check runs again in
+// /api/orders — see src/lib/coupon.js.
 export async function POST(request) {
   try {
     const { code, subtotal = 0 } = await request.json();
@@ -14,54 +15,8 @@ export async function POST(request) {
 
     await connectDB();
 
-    const coupon = await Coupon.findOne({ code: code.trim().toUpperCase() }).lean();
-
-    if (!coupon || !coupon.active) {
-      return NextResponse.json({ valid: false, message: 'Invalid coupon code' });
-    }
-
-    if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) {
-      return NextResponse.json({ valid: false, message: 'This coupon has expired' });
-    }
-
-    if (coupon.usageLimit > 0 && coupon.usedCount >= coupon.usageLimit) {
-      return NextResponse.json({ valid: false, message: 'This coupon is no longer available' });
-    }
-
-    if (coupon.minOrder > 0 && subtotal < coupon.minOrder) {
-      return NextResponse.json({
-        valid: false,
-        message: `Add ₹${coupon.minOrder - subtotal} more to use this coupon`,
-      });
-    }
-
-    // Compute the discount
-    let discount = 0;
-    let freeShipping = false;
-
-    if (coupon.type === 'percent') {
-      discount = Math.round((subtotal * coupon.value) / 100);
-      if (coupon.maxDiscount > 0) discount = Math.min(discount, coupon.maxDiscount);
-    } else if (coupon.type === 'flat') {
-      discount = Math.min(coupon.value, subtotal);
-    } else if (coupon.type === 'shipping') {
-      freeShipping = true;
-    }
-
-    const label =
-      coupon.type === 'percent' ? `${coupon.value}% off`
-      : coupon.type === 'flat' ? `₹${coupon.value} off`
-      : 'Free shipping';
-
-    return NextResponse.json({
-      valid: true,
-      code: coupon.code,
-      type: coupon.type,
-      discount,
-      freeShipping,
-      label,
-      message: `${coupon.code} applied — ${label}`,
-    });
+    const result = await resolveCoupon(code, Number(subtotal) || 0);
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Coupon validate error:', error);
     return NextResponse.json({ valid: false, message: 'Could not validate coupon' }, { status: 500 });

@@ -97,10 +97,15 @@ function CheckoutSuccessContent() {
           </p>
         )}
 
+        {/* Email delivery is only configured when RESEND_API_KEY is set, so
+            never promise a confirmation that may not arrive — the order number
+            above is the customer's proof of purchase. */}
         <p className={styles.emailNote}>
-          We've sent a confirmation
-          {order?.address?.email ? ` to ${order.address.email}` : ' email'} with your
-          shipping details and tracking information.
+          Save your order number <strong>{orderId}</strong> — you&apos;ll need it to track
+          this order.
+          {order?.address?.email
+            ? ` If email confirmations are enabled, a copy goes to ${order.address.email}.`
+            : ''}
         </p>
 
         <div className={styles.actions}>

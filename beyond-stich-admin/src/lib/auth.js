@@ -48,7 +48,11 @@ export async function comparePassword(plaintext, hash) {
 export function getAdminFromRequest(request) {
   const cookie = request.cookies.get(TOKEN_NAME);
   if (!cookie?.value) return null;
-  return verifyToken(cookie.value);
+  const payload = verifyToken(cookie.value);
+  // Check the role here too, not just in middleware: a validly signed token
+  // that isn't an admin's must never satisfy an admin API route.
+  if (!payload || payload.role !== 'admin') return null;
+  return payload;
 }
 
 export { TOKEN_NAME };

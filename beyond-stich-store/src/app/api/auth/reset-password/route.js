@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
+import { rateLimit, clientKey, tooManyRequests } from '@/lib/rateLimit';
 
 export async function POST(request) {
   try {
     const { token, password } = await request.json();
 
-    if (!token || !password) {
+    // Reject non-strings so a {$gt:""} style object can't match any token.
+    if (typeof token !== 'string' || typeof password !== 'string' || !token || !password) {
       return NextResponse.json({ error: 'Token and password are required' }, { status: 400 });
     }
 
@@ -15,10 +18,16 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
     }
 
+    const wait = rateLimit('reset-password', clientKey(request), 10, 60 * 60 * 1000);
+    if (wait) return tooManyRequests(wait);
+
     await connectDB();
 
+    // Tokens are stored hashed — hash the incoming one to compare.
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
     const user = await User.findOne({
-      resetToken: token,
+      resetToken: tokenHash,
       resetTokenExpiry: { $gt: new Date() },
     }).select('+resetToken +resetTokenExpiry');
 
