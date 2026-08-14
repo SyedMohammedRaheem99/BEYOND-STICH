@@ -55,8 +55,8 @@ export default async function Home() {
       </h1>
       <HeroSection />
       <TrustBar />
-      <SegmentGrid />
       <LatestDrop initialDrops={latestDrops} />
+      <SegmentGrid />
       <OfferBanner />
       <BrandManifesto />
       <SocialProofBar />
