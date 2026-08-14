@@ -16,8 +16,18 @@ const seedAdmin = async () => {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('✅ Connected to MongoDB');
 
+    // DISABLED. This created admin@beyondstich.com with the password 'admin'
+    // — a working backdoor into an account that can read every customer's
+    // address and phone number. Use create-admin.js instead, which takes the
+    // credentials from the environment and enforces a minimum length.
+    console.error('\n  seed.js is disabled: it created an admin with the password "admin".');
+    console.error('  Use create-admin.js instead:\n');
+    console.error('    ADMIN_EMAIL="you@example.com" ADMIN_PASSWORD="a-strong-password" node create-admin.js\n');
+    process.exit(1);
+
+    // eslint-disable-next-line no-unreachable
     const db = mongoose.connection.useDb(mongoose.connection.name);
-    
+
     // We are directly inserting into the 'users' collection
     const passwordHash = await bcrypt.hash('admin', 12);
     

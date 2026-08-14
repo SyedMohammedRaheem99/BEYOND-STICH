@@ -8,9 +8,20 @@
  *
  * Re-running with the same email resets that account's password.
  */
-require('dotenv').config({ path: '.env.local' });
+// Load .env.local, but let anything already exported in the shell win. Some
+// networks refuse the SRV DNS lookup that mongodb+srv:// needs, so you may
+// need to pass a standard mongodb:// URI via MONGODB_URI to run this.
+require('dotenv').config({ path: '.env.local', override: false });
+const dns = require('dns');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+
+// Some local resolvers refuse the SRV lookup that mongodb+srv:// depends on
+// (ECONNREFUSED on _mongodb._tcp...). Point Node at public DNS so this script
+// works regardless of the machine's DNS setup. Production is unaffected.
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch {}
 
 const email = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
 const password = process.env.ADMIN_PASSWORD || '';
@@ -36,9 +47,20 @@ if (!process.env.MONGODB_URI) {
   fail('MONGODB_URI is missing from .env.local');
 }
 
+process.on('unhandledRejection', (err) => fail(`Unhandled error: ${err?.message || err}`));
+
 (async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 20000 });
+    const uri = process.env.MONGODB_URI;
+    console.log(`\n  Connecting to ${uri.replace(/\/\/[^@]+@/, '//***@').slice(0, 80)}...`);
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 30000,
+      // Talk to one node directly when the URI names a single host. Avoids
+      // needing the exact replicaSet name, which the driver otherwise
+      // enforces strictly.
+      ...(process.env.MONGODB_DIRECT === '1' ? { directConnection: true } : {}),
+    });
+    console.log('  Connected.');
     const users = mongoose.connection.db.collection('users');
 
     const passwordHash = await bcrypt.hash(password, 12);
