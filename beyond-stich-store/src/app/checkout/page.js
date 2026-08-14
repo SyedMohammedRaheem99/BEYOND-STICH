@@ -53,6 +53,7 @@ export default function CheckoutPage() {
   const [couponMsg, setCouponMsg] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('online'); // 'online' | 'cod'
+  const [placingOrder, setPlacingOrder] = useState(false);
 
   // Restore a previously used address (nicer for returning customers).
   useEffect(() => {
@@ -163,6 +164,12 @@ export default function CheckoutPage() {
   };
 
   const handlePay = async () => {
+    // Guard against a double-tap or an impatient retry creating two orders:
+    // there is no idempotency key, so each POST would be a separate COD
+    // parcel the customer never asked for.
+    if (placingOrder) return;
+    setPlacingOrder(true);
+
     setStep(STEPS.PAYMENT);
     const orderPayload = buildOrderPayload();
 
@@ -180,10 +187,12 @@ export default function CheckoutPage() {
         } else {
           alert(data.error || 'Could not place your order. Please try again.');
           setStep(STEPS.SUMMARY);
+          setPlacingOrder(false);
         }
       } catch {
         alert('Network error. Please try again.');
         setStep(STEPS.SUMMARY);
+        setPlacingOrder(false);
       }
       return;
     }
@@ -214,6 +223,7 @@ export default function CheckoutPage() {
         } else {
           alert(data.error || 'Could not place your order. Please try again.');
           setStep(STEPS.SUMMARY);
+          setPlacingOrder(false);
         }
         return;
       }
@@ -253,15 +263,18 @@ export default function CheckoutPage() {
             } else {
               alert(verifyData.error || 'Payment verification failed. Contact support with your payment ID.');
               setStep(STEPS.SUMMARY);
+              setPlacingOrder(false);
             }
           } catch {
             alert('Network error during verification. Please contact support.');
             setStep(STEPS.SUMMARY);
+            setPlacingOrder(false);
           }
         },
         modal: {
           ondismiss: () => {
             setStep(STEPS.SUMMARY);
+            setPlacingOrder(false);
           },
         },
       };
@@ -272,6 +285,7 @@ export default function CheckoutPage() {
     } catch (err) {
       alert(err.message || 'Something went wrong. Please try again.');
       setStep(STEPS.SUMMARY);
+      setPlacingOrder(false);
     }
   };
 
@@ -403,8 +417,12 @@ export default function CheckoutPage() {
                   </label>
                 </div>
 
-                <button onClick={handlePay} className={styles.mockPayBtn}>
-                  {paymentMethod === 'cod' ? `PLACE ORDER — ₹${total}` : `PROCEED TO SECURE PAYMENT — ₹${total}`}
+                <button onClick={handlePay} className={styles.mockPayBtn} disabled={placingOrder}>
+                  {placingOrder
+                    ? 'PLACING YOUR ORDER…'
+                    : paymentMethod === 'cod'
+                      ? `PLACE ORDER — ₹${total}`
+                      : `PROCEED TO SECURE PAYMENT — ₹${total}`}
                 </button>
               </motion.div>
             )}

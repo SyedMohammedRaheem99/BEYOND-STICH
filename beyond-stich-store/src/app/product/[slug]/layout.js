@@ -5,21 +5,23 @@ import { DUMMY_PRODUCTS } from '@/lib/dummyData';
 export async function generateMetadata({ params }) {
   const { slug } = await params;
 
+  // Mirror getProduct() in page.js: if the database answers, its answer is
+  // final. Falling back to seed data on a miss would give a nonexistent
+  // product real metadata and a canonical URL.
   let product = null;
   try {
     await connectDB();
     const doc = await Product.findOne({ slug, isActive: true }).lean();
     if (doc) product = { ...doc, _id: doc._id.toString() };
   } catch {
-    // fallback
+    product = DUMMY_PRODUCTS.find((p) => p.slug === slug) || null;
   }
 
   if (!product) {
-    product = DUMMY_PRODUCTS.find(p => p.slug === slug);
-  }
-  
-  if (!product) {
-    return { title: 'Product Not Found | Beyond Stich' };
+    return {
+      title: 'Product Not Found | Beyond Stich',
+      robots: { index: false, follow: false },
+    };
   }
   
   const canonical = `https://beyondstich.com/product/${slug}`;
