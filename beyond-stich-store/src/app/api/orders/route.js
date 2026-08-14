@@ -60,24 +60,51 @@ export async function POST(request) {
       if (session?.user?.id) userId = session.user.id;
     } catch {}
 
+    // Re-price every line from the database. The client sends prices, but a
+    // tampered request could otherwise buy a ₹799 tee for ₹1 — especially on
+    // COD, where no payment gateway re-checks the amount. Products that only
+    // exist in the local seed fall back to the submitted price.
+    const pricedItems = await Promise.all(
+      items.map(async (i) => {
+        const slug = i.productSlug || i.slug || '';
+        const quantity = Math.max(1, parseInt(i.quantity, 10) || 1);
+        let price = Number(i.price) || 0;
+
+        if (slug) {
+          try {
+            const dbProduct = await Product.findOne({ slug }).select('price').lean();
+            if (dbProduct && typeof dbProduct.price === 'number') price = dbProduct.price;
+          } catch {}
+        }
+
+        return {
+          productSlug: slug,
+          name: i.name,
+          image: i.image || '',
+          size: i.size || '',
+          color: i.color || '',
+          segment: i.segment || '',
+          quantity,
+          price,
+        };
+      })
+    );
+
+    const serverSubtotal = pricedItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    // Never let a client-supplied discount exceed the real subtotal.
+    const serverDiscount = Math.min(Math.max(Number(discount) || 0, 0), serverSubtotal);
+    const serverShipping = Math.max(Number(shipping) || 0, 0);
+    const serverTotal = serverSubtotal - serverDiscount + serverShipping;
+
     const order = await Order.create({
       user: userId,
       email: email || '',
-      items: items.map((i) => ({
-        productSlug: i.productSlug || i.slug || '',
-        name: i.name,
-        image: i.image || '',
-        size: i.size || '',
-        color: i.color || '',
-        segment: i.segment || '',
-        quantity: i.quantity,
-        price: i.price,
-      })),
+      items: pricedItems,
       shippingAddress,
-      subtotal,
-      discount,
-      shipping,
-      total,
+      subtotal: serverSubtotal,
+      discount: serverDiscount,
+      shipping: serverShipping,
+      total: serverTotal,
       couponCode: couponCode || '',
       paymentMethod: reqPaymentMethod || 'mock',
       paymentStatus: reqPaymentMethod === 'cod' ? 'pending' : 'paid',

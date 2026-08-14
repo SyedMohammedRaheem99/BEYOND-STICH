@@ -102,5 +102,8 @@ export const authOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
 
-  secret: process.env.NEXTAUTH_SECRET || 'beyond-stich-secret-change-me',
+  // No fallback: this file is public, and a known secret would let anyone forge
+  // a session cookie. NextAuth throws on a missing secret in production, which
+  // is the behaviour we want.
+  secret: process.env.NEXTAUTH_SECRET,
 };

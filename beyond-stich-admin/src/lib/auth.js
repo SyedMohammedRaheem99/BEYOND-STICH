@@ -1,7 +1,12 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'beyond-stich-admin-secret-key-change-me';
+// No fallback secret: this file is public, so a default would let anyone forge
+// an admin token. Fail loudly at startup instead of silently being insecure.
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET is not set. Admin auth cannot run without it.');
+}
 const TOKEN_NAME = 'bs_admin_token';
 
 /**

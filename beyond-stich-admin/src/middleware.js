@@ -3,7 +3,11 @@ import { jwtVerify } from 'jose';
 import { TOKEN_NAME } from '@/lib/auth';
 
 // Edge-compatible secret. Must match the secret used to SIGN in src/lib/auth.js.
-const JWT_SECRET = process.env.JWT_SECRET || 'beyond-stich-admin-secret-key-change-me';
+// No fallback — a public default would let anyone forge an admin token.
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET is not set. Admin auth cannot run without it.');
+}
 const secretKey = new TextEncoder().encode(JWT_SECRET);
 
 export async function middleware(request) {
