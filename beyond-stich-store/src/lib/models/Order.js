@@ -73,5 +73,11 @@ OrderSchema.pre('validate', function () {
 
 OrderSchema.index({ createdAt: -1 });
 OrderSchema.index({ orderStatus: 1 });
+// The account page lists a customer's orders by user and by email (guest
+// orders have user: null), and review submission verifies a purchase by
+// email + item slug. All three were unindexed collection scans.
+OrderSchema.index({ user: 1, createdAt: -1 });
+OrderSchema.index({ email: 1, createdAt: -1 });
+OrderSchema.index({ 'items.productSlug': 1 });
 
 export default mongoose.models.Order || mongoose.model('Order', OrderSchema);

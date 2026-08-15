@@ -68,6 +68,10 @@ const UserSchema = new mongoose.Schema(
   }
 );
 
-UserSchema.index({ email: 1 });
+// `email` is not indexed here: unique: true on the field already creates it,
+// and declaring it twice triggers a duplicate-index warning.
+// Password reset looks users up by token on every attempt — that was a full
+// collection scan on a public endpoint.
+UserSchema.index({ resetToken: 1 });
 
 export default mongoose.models.User || mongoose.model('User', UserSchema);

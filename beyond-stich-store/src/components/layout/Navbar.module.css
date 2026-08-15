@@ -423,8 +423,16 @@
     font-size: 1.1rem;
   }
 
+  /* Was 62px inside a 60px navbar, so the logo bled past the nav's bottom
+     border onto the page content. */
   .logoImage {
-    height: 62px;
+    height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logoImage {
+    height: 38px;
   }
 }
 

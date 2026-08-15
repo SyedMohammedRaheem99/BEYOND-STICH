@@ -23,6 +23,16 @@ const fontBody = Space_Grotesk({
   display: 'swap',
 });
 
+// viewportFit: 'cover' is what makes env(safe-area-inset-*) resolve to real
+// values instead of 0, so fixed bottom bars (the PDP add-to-cart bar, the
+// WhatsApp button) clear the iPhone home indicator. Zoom is deliberately left
+// enabled — disabling it fails WCAG.
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
+
 export const metadata = {
   metadataBase: new URL('https://beyondstich.com'),
   title: 'Beyond Stich — Wear the thought.',

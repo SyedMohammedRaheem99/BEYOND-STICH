@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/mongodb';
 import Order from '@/lib/models/Order';
+import User from '@/lib/models/User';
 import Coupon from '@/lib/models/Coupon';
 import { sendOrderConfirmation } from '@/lib/email';
 import {
@@ -30,7 +31,15 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit')) || 20;
 
-    const orders = await Order.find({ user: session.user.id })
+    // Match on email as well as user id. Orders placed before signing in — or
+    // whenever the session cookie didn't ride along with the POST — have
+    // user: null, and matching on id alone made them permanently invisible
+    // here. The customer sees "no orders yet" for an order they just placed.
+    const account = await User.findById(session.user.id).select('email').lean();
+    const identity = [{ user: session.user.id }];
+    if (account?.email) identity.push({ email: account.email.toLowerCase() });
+
+    const orders = await Order.find({ $or: identity })
       .sort({ createdAt: -1 })
       .limit(limit)
       .lean();
@@ -156,7 +165,17 @@ export async function POST(request) {
 
     return NextResponse.json({
       success: true,
-      order: { orderNumber: order.orderNumber, createdAt: order.createdAt, total: order.total },
+      // Return the authoritative money values so the confirmation page shows
+      // what was actually recorded, not the cart's possibly-stale figures.
+      order: {
+        orderNumber: order.orderNumber,
+        createdAt: order.createdAt,
+        subtotal: order.subtotal,
+        discount: order.discount,
+        shipping: order.shipping,
+        total: order.total,
+        couponCode: order.couponCode || null,
+      },
     }, { status: 201 });
   } catch (error) {
     console.error('Order CREATE error:', error);

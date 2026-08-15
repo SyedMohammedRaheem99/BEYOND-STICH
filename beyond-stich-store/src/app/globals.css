@@ -84,6 +84,10 @@
   --space-16: 4rem;
   --space-20: 5rem;
   --space-24: 6rem;
+  /* Referenced by the segment page and empty wishlist. Without it those
+     paddings were invalid declarations and collapsed to zero, so the product
+     grid ran straight into the footer. */
+  --space-32: 8rem;
 
   /* Border Radius */
   --radius-sm: 4px;

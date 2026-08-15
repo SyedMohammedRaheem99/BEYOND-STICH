@@ -12,6 +12,10 @@ export const useCartStore = create(
     (set, get) => ({
       items: [],
       isOpen: false,
+      // False until localStorage has been restored (see StoreHydration).
+      // Lets the UI tell "cart is genuinely empty" apart from "not loaded
+      // yet", so /checkout doesn't flash its empty-bag screen on every visit.
+      hydrated: false,
 
       // Open/close cart drawer
       openCart: () => set({ isOpen: true }),
@@ -123,6 +127,18 @@ export const useCartStore = create(
     }),
     {
       name: 'beyond-stich-cart',
+      // Zustand rehydrates from localStorage synchronously at module load, so
+      // the client's first render already had the saved cart while the server
+      // rendered an empty one. React then threw away the mismatched subtree
+      // and re-rendered — the cart badge popping in, and /checkout flashing
+      // "YOUR BAG IS EMPTY" before the real page. Rehydration is now deferred
+      // to StoreHydration, which runs it inside an effect after mount.
+      skipHydration: true,
+      onRehydrateStorage: () => (state) => {
+        // Runs after rehydrate() finishes, including when there was nothing
+        // stored — so the flag is always set and the UI never stays stuck.
+        useCartStore.setState({ hydrated: true });
+      },
     }
   )
 );
@@ -204,7 +220,10 @@ export const useWishlistStore = create(
       },
     }),
     {
+      // Same reason as the cart: wishlist hearts on every product card
+      // mismatched between server and client render.
       name: 'beyond-stich-wishlist',
+      skipHydration: true,
     }
   )
 );

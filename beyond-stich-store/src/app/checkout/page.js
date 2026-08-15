@@ -43,7 +43,7 @@ function validate(form) {
 
 export default function CheckoutPage() {
   const [step, setStep] = useState(STEPS.ADDRESS);
-  const { items, getSubtotal, getSavings, getShipping } = useCartStore();
+  const { items, hydrated, getSubtotal, getSavings, getShipping } = useCartStore();
   const router = useRouter();
 
   const [formData, setFormData] = useState(EMPTY_FORM);
@@ -157,11 +157,19 @@ export default function CheckoutPage() {
   });
 
   const saveOrderAndRedirect = (dbOrder) => {
+    // Prefer the server's figures over the client's. Prices are re-read from
+    // the database at order time, and an expired coupon is dropped there — so
+    // showing the cart's own totals could tell a COD customer to keep ₹799
+    // ready for an order actually written as ₹1299.
     const order = {
       id: dbOrder.orderNumber,
       items, address: formData,
-      subtotal, savings, couponCode: coupon?.code || null,
-      couponDiscount, shipping, total,
+      savings,
+      subtotal: dbOrder.subtotal ?? subtotal,
+      couponCode: dbOrder.couponCode ?? (coupon?.code || null),
+      couponDiscount: dbOrder.discount ?? couponDiscount,
+      shipping: dbOrder.shipping ?? shipping,
+      total: dbOrder.total ?? total,
       placedAt: dbOrder.createdAt,
       paymentMethod,
     };
@@ -296,6 +304,16 @@ export default function CheckoutPage() {
     }
   };
 
+
+  // Wait for the persisted cart to load before deciding the bag is empty,
+  // otherwise this screen flashes on every visit to checkout.
+  if (!hydrated) {
+    return (
+      <div className={styles.emptyContainer}>
+        <h2>LOADING YOUR BAG…</h2>
+      </div>
+    );
+  }
 
   if (items.length === 0 && step !== STEPS.PAYMENT) {
     return (

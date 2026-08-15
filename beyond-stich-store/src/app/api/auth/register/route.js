@@ -33,13 +33,29 @@ export async function POST(request) {
 
     const passwordHash = await bcrypt.hash(password, 12);
 
-    await User.create({
+    const normalisedEmail = email.toLowerCase().trim();
+
+    const newUser = await User.create({
       name: name.trim(),
-      email: email.toLowerCase().trim(),
+      email: normalisedEmail,
       passwordHash,
       provider: 'credentials',
       role: 'customer',
     });
+
+    // Claim any orders this person placed as a guest with the same email.
+    // Without this, someone who checks out and then creates an account sees
+    // "no orders yet" for an order they just placed — the most common
+    // support ticket in D2C.
+    try {
+      await Order.updateMany(
+        { email: normalisedEmail, user: null },
+        { $set: { user: newUser._id } }
+      );
+    } catch (err) {
+      // Never fail signup over this — /api/orders also matches on email.
+      console.error('[register] guest order backfill failed', err);
+    }
 
     return NextResponse.json({ message: 'Account created successfully' }, { status: 201 });
   } catch (error) {

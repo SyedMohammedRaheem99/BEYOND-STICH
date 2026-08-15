@@ -66,19 +66,27 @@ export async function GET(request) {
     const filter = { isActive: true };
     if (segment && segment !== 'ALL') filter.segment = segment;
     if (tag) filter.tags = tag;
-    if (featured === 'true') filter.tags = 'featured';
-
-    const sortObj = SORT_MAP[sort] || { createdAt: -1 };
-    let query = Product.find(filter).sort(sortObj);
-    if (limit > 0) query = query.limit(limit);
-
-    const docs = await query.lean();
-    if (docs.length > 0) {
-      return NextResponse.json(docs.map(d => ({ ...d, _id: d._id.toString() })));
+    // 'featured' is a tag here but a boolean in the seed data, and no product
+    // actually carries the tag — so this always matched nothing and fell
+    // through to seed products. Match either representation.
+    if (featured === 'true') {
+      filter.$or = [{ tags: 'featured' }, { featured: true }];
     }
 
-    // Fallback to dummy data
-    return NextResponse.json(getDummyFallback({ segment, tag, sort, featured, limit }));
+    const sortObj = SORT_MAP[sort] || { createdAt: -1 };
+    // Cap the response: this is public and unauthenticated, and without a
+    // limit it serialised the entire catalogue on every call.
+    const cap = limit > 0 ? Math.min(limit, 100) : 48;
+    const docs = await Product.find(filter)
+      .select('name slug price mrp images segment fitType colors sizes tags averageRating reviewCount featured createdAt')
+      .sort(sortObj)
+      .limit(cap)
+      .lean();
+
+    // An empty result is a valid answer from a healthy database. Falling back
+    // to seed data here made the cart drawer cross-sell tees that aren't for
+    // sale, linking to slugs that 404.
+    return NextResponse.json(docs.map(d => ({ ...d, _id: d._id.toString() })));
   } catch (err) {
     console.error('[/api/products] DB error, using fallback:', err.message);
     return NextResponse.json(getDummyFallback({ segment, tag, sort, featured, limit }));

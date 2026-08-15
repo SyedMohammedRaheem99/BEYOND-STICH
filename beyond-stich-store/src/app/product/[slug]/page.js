@@ -45,8 +45,14 @@ async function getRelated(slug, segment) {
 async function getReviews(slug) {
   try {
     await connectDB();
+    // Never project authorEmail: these documents are serialised into the
+    // public page HTML, so returning whole documents published every
+    // reviewer's email address. The API route was already fixed for this;
+    // this server path reintroduced it.
     const reviews = await Review.find({ productSlug: slug, approved: true })
+      .select('productSlug authorName rating title body verified createdAt')
       .sort({ createdAt: -1 })
+      .limit(50)
       .lean();
     const count = reviews.length;
     const average = count

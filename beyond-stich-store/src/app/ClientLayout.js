@@ -11,6 +11,7 @@ import PageLoader from '@/components/layout/PageLoader';
 import ScrollProgress from '@/components/layout/ScrollProgress';
 import AnnouncementBar from '@/components/layout/AnnouncementBar';
 import WhatsAppWidget from '@/components/ui/WhatsAppWidget';
+import StoreHydration from '@/components/layout/StoreHydration';
 
 export default function ClientLayout({ children }) {
   useEffect(() => {
@@ -25,6 +26,7 @@ export default function ClientLayout({ children }) {
     // components. reducedMotion="user" defers to the OS setting.
     <MotionConfig reducedMotion="user">
       <SessionProvider>
+        <StoreHydration />
         <a href="#main-content" className="skip-link">
           Skip to content
         </a>

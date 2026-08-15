@@ -100,12 +100,16 @@ const ProductSchema = new mongoose.Schema(
   }
 );
 
-// Indexes for performance
-ProductSchema.index({ slug: 1 });
+// Indexes for performance.
+// `slug` is not listed here: it already has unique: true on the field, which
+// creates the index — declaring it twice triggers a duplicate-index warning.
 ProductSchema.index({ segment: 1 });
 ProductSchema.index({ tags: 1 });
 ProductSchema.index({ price: 1 });
 ProductSchema.index({ createdAt: -1 });
+// Every catalogue query filters on isActive and sorts by createdAt; the
+// single-field indexes above can't serve that combination.
+ProductSchema.index({ isActive: 1, segment: 1, createdAt: -1 });
 
 // Virtual: discount percentage
 ProductSchema.virtual('discountPercent').get(function () {

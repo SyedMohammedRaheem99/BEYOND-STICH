@@ -11,6 +11,10 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-6);
+  /* Rendered outside .container, so it had no horizontal padding at all and
+     its text sat flush against both screen edges on mobile. */
+  padding: 0 var(--container-padding);
+  text-align: center;
 }
 
 .emptyContainer h2 {
@@ -464,7 +468,24 @@
 @media (max-width: 1024px) {
   .container {
     grid-template-columns: 1fr;
-    gap: var(--space-12);
+    gap: var(--space-8);
+  }
+
+  /* Put the order summary ABOVE the form. In one column the DOM order left
+     the customer looking at a PLACE ORDER button with the items and grand
+     total further down the page, out of sight. */
+  .orderSnapshot {
+    position: static;
+    order: -1;
+  }
+
+  /* max-height: 40vh is ~256px on a 640px phone — an inner scroll region
+     nested inside the page scroll, with no visible scrollbar to hint that
+     more items exist. Let it size naturally on mobile. */
+  .itemList {
+    max-height: none;
+    overflow-y: visible;
+    padding-right: 0;
   }
 }
 
@@ -484,6 +505,28 @@
 
   .input {
     font-size: 16px; /* prevents iOS zoom on focus */
+  }
+
+  /* The coupon field was missed by the rule above and still zoomed on focus. */
+  .couponInput {
+    font-size: 16px;
+    min-height: 48px;
+  }
+
+  .couponBtn {
+    min-height: 48px;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  /* 12px text links with no padding — "EDIT" is the only way back to correct
+     a wrong delivery address, at roughly a 28x16px target. */
+  .editBtn,
+  .couponRemove {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 var(--space-2);
+    font-size: var(--text-sm);
   }
 
   .ctaBtn, .mockPayBtn {

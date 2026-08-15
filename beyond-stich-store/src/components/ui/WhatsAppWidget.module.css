@@ -1,8 +1,20 @@
 .whatsappWrapper {
   position: fixed;
-  bottom: 24px;
+  /* Clear the iPhone home indicator. */
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   right: 24px;
-  z-index: 999;
+  /* Below the PDP sticky add-to-cart bar (900) and the cart drawer / size
+     guide modal (2000+). At 999 this green circle sat directly on top of the
+     ADD TO BAG button on mobile — right where a thumb lands. */
+  z-index: 899;
+}
+
+@media (max-width: 768px) {
+  .whatsappWrapper {
+    right: 16px;
+    /* Lift clear of the ~76px PDP sticky bar. */
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 .triggerBtn {
