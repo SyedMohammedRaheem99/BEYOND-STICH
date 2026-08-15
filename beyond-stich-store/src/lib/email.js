@@ -5,6 +5,8 @@ const resend = process.env.RESEND_API_KEY
   : null;
 
 const FROM = process.env.EMAIL_FROM || 'Beyond Stich <noreply@beyondstich.com>';
+// Used to build links in emails. NEXTAUTH_URL is already set in production.
+const SITE_URL = process.env.NEXTAUTH_URL || 'https://beyondstich.com';
 
 /**
  * Send order confirmation email
@@ -83,7 +85,13 @@ export async function sendOrderConfirmation(order) {
         </div>
         ` : ''}
         <div style="margin-top:32px;text-align:center;">
-          <p style="color:#808080;font-size:12px;">Estimated delivery: 3–6 business days</p>
+          <!-- The email had no links at all, so a customer wanting to check
+               their order had to find the site and retype the number. -->
+          <a href="${SITE_URL}/track?order=${encodeURIComponent(order.orderNumber)}"
+             style="display:inline-block;padding:14px 28px;background:#F5F5F5;color:#0A0A0A;text-decoration:none;font-weight:700;letter-spacing:0.08em;border-radius:4px;">
+            TRACK YOUR ORDER
+          </a>
+          <p style="color:#808080;font-size:12px;margin-top:16px;">Estimated delivery: 3–6 business days</p>
         </div>
       </div>
       <div style="padding:24px;text-align:center;border-top:1px solid #2A2A2A;color:#808080;font-size:11px;">
@@ -143,7 +151,10 @@ export async function sendShippingUpdate(order) {
           </table>
         </div>
         <div style="margin-top:32px;text-align:center;">
-          <p style="color:#808080;font-size:12px;">You can track your order anytime on our website.</p>
+          <a href="${SITE_URL}/track?order=${encodeURIComponent(order.orderNumber)}"
+             style="display:inline-block;padding:14px 28px;background:#F5F5F5;color:#0A0A0A;text-decoration:none;font-weight:700;letter-spacing:0.08em;border-radius:4px;">
+            TRACK YOUR ORDER
+          </a>
         </div>
       </div>
       <div style="padding:24px;text-align:center;border-top:1px solid #2A2A2A;color:#808080;font-size:11px;">
@@ -268,5 +279,67 @@ export async function sendRefundEmail(order) {
     });
   } catch (err) {
     console.error('[EMAIL] Failed to send refund email:', err);
+  }
+}
+
+/**
+ * Alert the shop owner that an order came in.
+ *
+ * Without this the only way to learn about a new order is to open the admin
+ * and look — so overnight and weekend orders sat unnoticed against a stated
+ * 24-hour dispatch promise.
+ *
+ * Sends to ADMIN_ALERT_EMAIL, falling back to EMAIL_FROM's address.
+ */
+export async function sendNewOrderAlert(order) {
+  const to = process.env.ADMIN_ALERT_EMAIL;
+  if (!resend || !to) {
+    console.log('[EMAIL] Admin alert not configured — skipping for', order.orderNumber);
+    return;
+  }
+
+  const addr = order.shippingAddress || {};
+  const itemsHtml = (order.items || [])
+    .map(
+      (i) =>
+        `<tr>
+          <td style="padding:6px 10px;border-bottom:1px solid #2A2A2A;">${i.name} (${i.size}${i.color ? `, ${i.color}` : ''})</td>
+          <td style="padding:6px 10px;border-bottom:1px solid #2A2A2A;text-align:center;">${i.quantity}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid #2A2A2A;text-align:right;">₹${i.price * i.quantity}</td>
+        </tr>`
+    )
+    .join('');
+
+  const isCod = order.paymentMethod === 'cod';
+
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to,
+      subject: `New ${isCod ? 'COD ' : ''}order ${order.orderNumber} — ₹${order.total}`,
+      html: `
+        <div style="font-family:sans-serif;background:#0A0A0A;color:#F5F5F5;padding:24px;">
+          <h2 style="margin:0 0 4px;">NEW ORDER — ${order.orderNumber}</h2>
+          <p style="margin:0 0 16px;color:#9A9A9A;">
+            ${isCod ? 'Cash on delivery — collect ' : 'Paid online — '}<strong style="color:#F5F5F5;">₹${order.total}</strong>
+          </p>
+
+          <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">${itemsHtml}</table>
+
+          <h3 style="margin:0 0 6px;font-size:14px;">DELIVER TO</h3>
+          <p style="margin:0 0 4px;line-height:1.5;">
+            ${addr.fullName || ''}<br/>
+            ${addr.street || ''}<br/>
+            ${addr.city || ''}, ${addr.state || ''} — ${addr.pincode || ''}
+          </p>
+          <p style="margin:0;">
+            <a href="tel:${addr.phone || ''}" style="color:#4ADE80;">${addr.phone || 'no phone'}</a>
+            ${order.email ? ` &nbsp;·&nbsp; <span style="color:#9A9A9A;">${order.email}</span>` : ''}
+          </p>
+        </div>
+      `,
+    });
+  } catch (err) {
+    console.error('[EMAIL] Failed to send admin order alert:', err);
   }
 }

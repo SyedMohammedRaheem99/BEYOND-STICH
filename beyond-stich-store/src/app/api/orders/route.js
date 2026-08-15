@@ -5,7 +5,7 @@ import connectDB from '@/lib/mongodb';
 import Order from '@/lib/models/Order';
 import User from '@/lib/models/User';
 import Coupon from '@/lib/models/Coupon';
-import { sendOrderConfirmation } from '@/lib/email';
+import { sendOrderConfirmation, sendNewOrderAlert } from '@/lib/email';
 import {
   MAX_ITEMS,
   OrderError,
@@ -158,10 +158,18 @@ export async function POST(request) {
       }
     }
 
-    // Send confirmation email (fire-and-forget, don't block response)
+    // Fire-and-forget so email latency never blocks the response, but log
+    // failures — a silently broken key means no confirmations at all.
     if (order.email) {
-      sendOrderConfirmation(order).catch(() => {});
+      sendOrderConfirmation(order).catch((err) =>
+        console.error('[orders] confirmation email failed', order.orderNumber, err)
+      );
     }
+    // Tell the owner an order arrived; otherwise they only find out by
+    // opening the admin panel and looking.
+    sendNewOrderAlert(order).catch((err) =>
+      console.error('[orders] admin alert failed', order.orderNumber, err)
+    );
 
     return NextResponse.json({
       success: true,

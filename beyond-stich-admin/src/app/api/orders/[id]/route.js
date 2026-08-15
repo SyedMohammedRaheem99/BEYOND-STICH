@@ -42,8 +42,18 @@ export async function PUT(request, { params }) {
     // Only allow updating specific fields
     const allowedUpdates = {};
     if (body.orderStatus) allowedUpdates.orderStatus = body.orderStatus;
-    if (body.trackingNumber) allowedUpdates.trackingNumber = body.trackingNumber;
-    if (body.notes) allowedUpdates.notes = body.notes;
+    // Compare against undefined, not truthiness: a truthiness check meant an
+    // empty string was silently dropped, so a wrong tracking number could
+    // never be cleared — the save appeared to work and the stale number
+    // (already emailed to the customer) came back on reload.
+    if (body.trackingNumber !== undefined) allowedUpdates.trackingNumber = body.trackingNumber;
+    if (body.notes !== undefined) allowedUpdates.notes = body.notes;
+    // COD is settled on delivery, so the owner needs a way to record it —
+    // without this no COD order ever becomes 'paid' and all revenue
+    // reporting reads zero.
+    if (body.paymentStatus && ['pending', 'paid', 'failed', 'refunded'].includes(body.paymentStatus)) {
+      allowedUpdates.paymentStatus = body.paymentStatus;
+    }
 
     // Refund fields
     if (body.refundAmount !== undefined) allowedUpdates.refundAmount = body.refundAmount;

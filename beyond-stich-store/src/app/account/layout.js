@@ -12,6 +12,10 @@ const ACCOUNT_NAV = [
   { label: 'WISHLIST', href: '/account/wishlist', icon: '❤️' },
   { label: 'PROFILE', href: '/account/profile', icon: '👤' },
   { label: 'ADDRESSES', href: '/account/addresses', icon: '📍' },
+  // "Where is my order" is the top query for a COD store, and the account
+  // area — where it gets asked — had no route to tracking or support.
+  { label: 'TRACK ORDER', href: '/track', icon: '🚚' },
+  { label: 'HELP', href: '/contact', icon: '💬' },
 ];
 
 export default function AccountLayout({ children }) {
@@ -20,7 +24,11 @@ export default function AccountLayout({ children }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    // The wishlist works from local storage and needs no account, and the
+    // navbar heart is visible to everyone — but this effect redirected
+    // logged-out visitors to login anyway. Only the render guards below were
+    // exempted, not the redirect itself.
+    if (status === 'unauthenticated' && pathname !== '/account/wishlist') {
       router.push(`/login?callbackUrl=${encodeURIComponent(pathname)}`);
     }
   }, [status, router, pathname]);

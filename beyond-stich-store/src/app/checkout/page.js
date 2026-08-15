@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { useCartStore } from '@/lib/store';
 import styles from './page.module.css';
 import Image from 'next/image';
@@ -45,6 +46,10 @@ export default function CheckoutPage() {
   const [step, setStep] = useState(STEPS.ADDRESS);
   const { items, hydrated, getSubtotal, getSavings, getShipping } = useCartStore();
   const router = useRouter();
+  // Checkout was entirely session-blind: a signed-in customer got no prefill,
+  // no saved addresses, and no prompt to sign in — so returning customers kept
+  // creating guest orders they could never see in their account.
+  const { data: session, status } = useSession();
 
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
@@ -61,6 +66,10 @@ export default function CheckoutPage() {
   // accident on mobile and loses the reason the order failed.
   const [orderError, setOrderError] = useState('');
 
+  // Saved addresses for signed-in customers. The address book existed but
+  // checkout never read it, so curated addresses were ignored.
+  const [savedAddresses, setSavedAddresses] = useState([]);
+
   // Restore a previously used address (nicer for returning customers).
   useEffect(() => {
     try {
@@ -68,6 +77,41 @@ export default function CheckoutPage() {
       if (saved) setFormData({ ...EMPTY_FORM, ...JSON.parse(saved) });
     } catch {}
   }, []);
+
+  // Prefill from the signed-in account and offer their saved addresses.
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+
+    setFormData((prev) => ({
+      ...prev,
+      email: prev.email || session?.user?.email || '',
+      firstName: prev.firstName || (session?.user?.name || '').split(' ')[0] || '',
+      lastName:
+        prev.lastName || (session?.user?.name || '').split(' ').slice(1).join(' ') || '',
+    }));
+
+    fetch('/api/user/addresses')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (Array.isArray(data?.addresses)) setSavedAddresses(data.addresses);
+      })
+      .catch(() => {});
+  }, [status, session]);
+
+  const useSavedAddress = (addr) => {
+    const [firstName, ...rest] = (addr.fullName || '').split(' ');
+    setFormData({
+      firstName: firstName || '',
+      lastName: rest.join(' '),
+      email: formData.email || session?.user?.email || '',
+      phone: addr.phone || '',
+      address: addr.street || '',
+      city: addr.city || '',
+      state: addr.state || '',
+      pin: addr.pincode || '',
+    });
+    setErrors({});
+  };
 
   // ---- Totals ----
   const subtotal = getSubtotal();
@@ -369,6 +413,38 @@ export default function CheckoutPage() {
                 onSubmit={handleAddressSubmit}
                 noValidate
               >
+                {/* Returning customers who forget to sign in create orders
+                    that never show up in their account. */}
+                {status === 'unauthenticated' && (
+                  <p className={styles.signInPrompt}>
+                    Have an account?{' '}
+                    <Link href="/login?callbackUrl=%2Fcheckout">Sign in</Link> to
+                    use your saved addresses and see this order in your account.
+                  </p>
+                )}
+
+                {savedAddresses.length > 0 && (
+                  <div className={styles.savedAddresses}>
+                    <h3>USE A SAVED ADDRESS</h3>
+                    <div className={styles.savedList}>
+                      {savedAddresses.map((addr) => (
+                        <button
+                          key={addr._id}
+                          type="button"
+                          className={styles.savedCard}
+                          onClick={() => useSavedAddress(addr)}
+                        >
+                          <span className={styles.savedName}>{addr.fullName}</span>
+                          <span className={styles.savedLine}>
+                            {addr.street}, {addr.city}, {addr.state} {addr.pincode}
+                          </span>
+                          <span className={styles.savedLine}>{addr.phone}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <h3>SHIPPING ADDRESS</h3>
                 <div className={styles.formRow}>
                   {field('firstName', 'First Name')}

@@ -110,3 +110,20 @@
   border: 1px solid rgba(239, 68, 68, 0.3);
   color: var(--color-error);
 }
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding-top: var(--space-8);
+  margin-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 640px) {
+  .saveBtn {
+    width: 100%;
+    min-height: 48px;
+  }
+}

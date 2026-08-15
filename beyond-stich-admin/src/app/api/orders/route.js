@@ -24,9 +24,13 @@ export async function GET(request) {
     }
 
     if (search) {
+      // Customers ring up quoting a phone number far more often than an
+      // order number, so both that and email need to be searchable.
       query.$or = [
         { orderNumber: { $regex: search, $options: 'i' } },
         { 'shippingAddress.fullName': { $regex: search, $options: 'i' } },
+        { 'shippingAddress.phone': { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
       ];
     }
 

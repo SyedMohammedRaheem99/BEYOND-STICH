@@ -22,7 +22,7 @@ export async function GET(request) {
 
     // 1. Daily Revenue Time Series
     const dailyRevenue = await Order.aggregate([
-      { $match: { createdAt: { $gte: startDate }, paymentStatus: 'paid' } },
+      { $match: { createdAt: { $gte: startDate }, $or: [{ paymentStatus: 'paid' }, { paymentMethod: 'cod', orderStatus: 'delivered' }] } },
       {
         $group: {
           _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
@@ -35,7 +35,7 @@ export async function GET(request) {
 
     // 2. Top 10 Products by units sold
     const topProducts = await Order.aggregate([
-      { $match: { createdAt: { $gte: startDate }, paymentStatus: 'paid' } },
+      { $match: { createdAt: { $gte: startDate }, $or: [{ paymentStatus: 'paid' }, { paymentMethod: 'cod', orderStatus: 'delivered' }] } },
       { $unwind: '$items' },
       {
         $group: {
@@ -51,7 +51,7 @@ export async function GET(request) {
 
     // 3. Segment Revenue Breakdown
     const segmentBreakdown = await Order.aggregate([
-      { $match: { createdAt: { $gte: startDate }, paymentStatus: 'paid' } },
+      { $match: { createdAt: { $gte: startDate }, $or: [{ paymentStatus: 'paid' }, { paymentMethod: 'cod', orderStatus: 'delivered' }] } },
       { $unwind: '$items' },
       {
         $group: {
@@ -72,7 +72,7 @@ export async function GET(request) {
 
     // 5. Summary KPIs
     const kpiAgg = await Order.aggregate([
-      { $match: { createdAt: { $gte: startDate }, paymentStatus: 'paid' } },
+      { $match: { createdAt: { $gte: startDate }, $or: [{ paymentStatus: 'paid' }, { paymentMethod: 'cod', orderStatus: 'delivered' }] } },
       {
         $group: {
           _id: null,

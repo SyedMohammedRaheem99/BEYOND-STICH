@@ -1,14 +1,19 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import PasswordInput from '@/components/ui/PasswordInput';
 import styles from '../login/page.module.css';
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  // Registering from a "sign in" link mid-checkout used to land the customer
+  // on /account instead of back where they were.
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') || '/account';
 
   const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [error, setError] = useState('');
@@ -50,7 +55,22 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push('/login?registered=true');
+      // Sign in immediately rather than handing the customer a second form
+      // with the credentials they just typed. Preserves callbackUrl so
+      // registering mid-checkout returns them to checkout, not /account.
+      const signInResult = await signIn('credentials', {
+        email: form.email,
+        password: form.password,
+        redirect: false,
+      });
+
+      if (signInResult?.error) {
+        router.push(`/login?registered=true&callbackUrl=${encodeURIComponent(callbackUrl)}`);
+        return;
+      }
+
+      router.push(callbackUrl);
+      router.refresh();
     } catch {
       setError('Something went wrong. Please try again.');
     } finally {
@@ -134,9 +154,21 @@ export default function RegisterPage() {
         </form>
 
         <p className={styles.switchLink}>
-          Already have an account? <Link href="/login">Sign in</Link>
+          Already have an account?{' '}
+          <Link href={`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`}>
+            Sign in
+          </Link>
         </p>
       </motion.div>
     </div>
+  );
+}
+
+// useSearchParams needs a Suspense boundary.
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterForm />
+    </Suspense>
   );
 }

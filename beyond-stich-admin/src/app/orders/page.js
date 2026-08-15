@@ -27,9 +27,13 @@ export default function AdminOrders() {
   const [refund, setRefund] = useState({ refundAmount: 0, refundReason: '', refundStatus: 'none' });
   const [savingRefund, setSavingRefund] = useState(false);
 
+  // Re-query on search too, debounced. Previously only Enter triggered a
+  // fetch, and a second client-side filter then hid any row the server
+  // matched on a field the client didn't check (phone, email).
   useEffect(() => {
-    fetchOrders();
-  }, [statusFilter]);
+    const t = setTimeout(fetchOrders, searchTerm ? 350 : 0);
+    return () => clearTimeout(t);
+  }, [statusFilter, searchTerm]);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -146,11 +150,9 @@ export default function AdminOrders() {
     }
   };
 
-  const filteredOrders = orders.filter(o =>
-    o.orderNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    o.shippingAddress?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    o.user?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // The server already applied the search filter; re-filtering here on a
+  // narrower set of fields only hid legitimate matches.
+  const filteredOrders = orders;
 
   const formatDate = (dateStr) => {
     const d = new Date(dateStr);
@@ -278,9 +280,35 @@ export default function AdminOrders() {
               <div>
                 <h4 style={{ color: '#888', fontSize: '11px', marginBottom: '6px' }}>SHIPPING ADDRESS</h4>
                 <p style={{ color: '#F5F5F5', fontSize: '13px' }}>
+                  {selectedOrder.shippingAddress?.fullName}<br />
                   {selectedOrder.shippingAddress?.street}<br />
                   {selectedOrder.shippingAddress?.city}, {selectedOrder.shippingAddress?.state} — {selectedOrder.shippingAddress?.pincode}
                 </p>
+                {/* The phone is what you need to hand a courier or call about
+                    a failed delivery, and it wasn't shown anywhere. */}
+                {selectedOrder.shippingAddress?.phone && (
+                  <p style={{ marginTop: '8px', fontSize: '13px' }}>
+                    <a
+                      href={`tel:${selectedOrder.shippingAddress.phone}`}
+                      style={{ color: '#4ADE80', fontWeight: 600 }}
+                    >
+                      📞 {selectedOrder.shippingAddress.phone}
+                    </a>
+                    <a
+                      href={`https://wa.me/91${String(selectedOrder.shippingAddress.phone).replace(/\D/g, '').slice(-10)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: '#25D366', marginLeft: '12px', fontWeight: 600 }}
+                    >
+                      WhatsApp
+                    </a>
+                  </p>
+                )}
+                {selectedOrder.email && (
+                  <p style={{ marginTop: '4px', fontSize: '12px', color: '#888' }}>
+                    {selectedOrder.email}
+                  </p>
+                )}
               </div>
               <div>
                 <h4 style={{ color: '#888', fontSize: '11px', marginBottom: '6px' }}>PAYMENT</h4>

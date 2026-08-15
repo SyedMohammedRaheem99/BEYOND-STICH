@@ -117,7 +117,12 @@ export default function LoginPage() {
         </button>
 
         <p className={styles.switchLink}>
-          Don&apos;t have an account? <Link href="/register">Create one</Link>
+          {/* Carry callbackUrl across so cart → checkout → sign in → create
+              account returns to checkout rather than /account. */}
+          Don&apos;t have an account?{' '}
+          <Link href={`/register?callbackUrl=${encodeURIComponent(callbackUrl)}`}>
+            Create one
+          </Link>
         </p>
       </motion.div>
     </div>

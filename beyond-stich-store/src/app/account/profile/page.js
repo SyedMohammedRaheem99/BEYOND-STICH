@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
+import PasswordInput from '@/components/ui/PasswordInput';
 import styles from './page.module.css';
 
 export default function ProfilePage() {
@@ -12,6 +13,38 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+
+  // Change password — previously impossible from inside the account, so the
+  // only route was signing out and using the reset-by-email flow.
+  const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '' });
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwMsg, setPwMsg] = useState('');
+  const [pwError, setPwError] = useState(false);
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (pwSaving) return;
+    setPwSaving(true);
+    setPwMsg('');
+
+    try {
+      const res = await fetch('/api/user/password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pwForm),
+      });
+      const data = await res.json();
+
+      setPwError(!res.ok);
+      setPwMsg(res.ok ? 'Password updated.' : data.error || 'Could not update password');
+      if (res.ok) setPwForm({ currentPassword: '', newPassword: '' });
+    } catch {
+      setPwError(true);
+      setPwMsg('Network error. Please try again.');
+    } finally {
+      setPwSaving(false);
+    }
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -125,6 +158,48 @@ export default function ProfilePage() {
           {saving ? 'SAVING...' : 'SAVE CHANGES'}
         </button>
       </form>
+
+      {/* Google accounts have no password of their own. */}
+      {provider !== 'google' && (
+        <form className={styles.form} onSubmit={handlePasswordSubmit}>
+          <h2 className={styles.sectionTitle}>CHANGE PASSWORD</h2>
+
+          {pwMsg && (
+            <p className={`${styles.message} ${pwError ? styles.error : styles.success}`} role="alert">
+              {pwMsg}
+            </p>
+          )}
+
+          <div className={styles.fieldGroup}>
+            <label className={styles.label} htmlFor="currentPassword">CURRENT PASSWORD</label>
+            <PasswordInput
+              id="currentPassword"
+              className={styles.input}
+              value={pwForm.currentPassword}
+              onChange={(e) => setPwForm(f => ({ ...f, currentPassword: e.target.value }))}
+              autoComplete="current-password"
+              required
+            />
+          </div>
+
+          <div className={styles.fieldGroup}>
+            <label className={styles.label} htmlFor="newPassword">NEW PASSWORD</label>
+            <PasswordInput
+              id="newPassword"
+              className={styles.input}
+              value={pwForm.newPassword}
+              onChange={(e) => setPwForm(f => ({ ...f, newPassword: e.target.value }))}
+              placeholder="Min 6 characters"
+              autoComplete="new-password"
+              required
+            />
+          </div>
+
+          <button type="submit" className={styles.saveBtn} disabled={pwSaving}>
+            {pwSaving ? 'UPDATING...' : 'UPDATE PASSWORD'}
+          </button>
+        </form>
+      )}
     </div>
   );
 }

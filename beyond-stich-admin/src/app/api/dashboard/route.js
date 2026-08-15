@@ -21,9 +21,13 @@ export async function GET(request) {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
 
+    // Revenue counts an order once the money is actually in hand: an online
+    // order marked paid, or a COD order that has been delivered. Filtering on
+    // paymentStatus: 'paid' alone reported zero, because nothing ever moves a
+    // COD order to 'paid' — so the entire COD business was invisible here.
     // 1. Today's Revenue
     const revenueAgg = await Order.aggregate([
-      { $match: { createdAt: { $gte: todayStart, $lte: todayEnd }, paymentStatus: 'paid' } },
+      { $match: { createdAt: { $gte: todayStart, $lte: todayEnd }, $or: [{ paymentStatus: 'paid' }, { paymentMethod: 'cod', orderStatus: 'delivered' }] } },
       { $group: { _id: null, total: { $sum: '$total' }, count: { $sum: 1 } } },
     ]);
 
@@ -37,7 +41,7 @@ export async function GET(request) {
     yesterdayEnd.setMilliseconds(-1);
 
     const yesterdayAgg = await Order.aggregate([
-      { $match: { createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd }, paymentStatus: 'paid' } },
+      { $match: { createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd }, $or: [{ paymentStatus: 'paid' }, { paymentMethod: 'cod', orderStatus: 'delivered' }] } },
       { $group: { _id: null, total: { $sum: '$total' } } },
     ]);
     const yesterdayRevenue = yesterdayAgg[0]?.total || 0;
@@ -68,7 +72,7 @@ export async function GET(request) {
 
     // 4. Segment Performance (last 7 days) — items carry the segment directly.
     const segmentAgg = await Order.aggregate([
-      { $match: { createdAt: { $gte: weekAgo }, paymentStatus: 'paid' } },
+      { $match: { createdAt: { $gte: weekAgo }, $or: [{ paymentStatus: 'paid' }, { paymentMethod: 'cod', orderStatus: 'delivered' }] } },
       { $unwind: '$items' },
       {
         $group: {
