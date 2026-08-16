@@ -15,12 +15,11 @@ export default function OrganizationSchema() {
       areaServed: 'IN',
       availableLanguage: ['English', 'Hindi'],
     },
-    sameAs: [
-      'https://instagram.com/beyondstich',
-      'https://www.facebook.com/beyondstich',
-      'https://youtube.com/@beyondstich',
-      'https://pinterest.com/beyondstich',
-    ],
+    // Only profiles that actually exist. Instagram is the one the footer
+    // links; Facebook/YouTube/Pinterest were asserted here but appear
+    // nowhere else in the site, and sameAs entries that 404 weaken entity
+    // resolution rather than help it. Add them back once they're live.
+    sameAs: ['https://instagram.com/beyondstich'],
   };
 
   return (

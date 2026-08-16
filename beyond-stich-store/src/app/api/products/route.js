@@ -8,8 +8,15 @@ const SORT_MAP = {
   'price-low': { price: 1 },
   'price-high': { price: -1 },
   rating: { averageRating: -1 },
-  discount: { price: 1 },
+  // 'discount' can't be expressed as a field sort — it's derived from mrp vs
+  // price — so it's applied in memory below. Mapping it to { price: 1 } meant
+  // "Biggest Discount" actually sorted cheapest-first: a ₹499 tee at 10% off
+  // ranked above a ₹1299 tee at 60% off.
+  discount: { createdAt: -1 },
 };
+
+const discountPercent = (p) =>
+  p.mrp > p.price ? Math.round(((p.mrp - p.price) / p.mrp) * 100) : 0;
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -86,7 +93,11 @@ export async function GET(request) {
     // An empty result is a valid answer from a healthy database. Falling back
     // to seed data here made the cart drawer cross-sell tees that aren't for
     // sale, linking to slugs that 404.
-    return NextResponse.json(docs.map(d => ({ ...d, _id: d._id.toString() })));
+    const result = docs.map(d => ({ ...d, _id: d._id.toString() }));
+    if (sort === 'discount') {
+      result.sort((a, b) => discountPercent(b) - discountPercent(a));
+    }
+    return NextResponse.json(result);
   } catch (err) {
     console.error('[/api/products] DB error, using fallback:', err.message);
     return NextResponse.json(getDummyFallback({ segment, tag, sort, featured, limit }));

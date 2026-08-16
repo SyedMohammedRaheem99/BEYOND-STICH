@@ -3,6 +3,7 @@ import InfoPageLayout from '@/components/layout/InfoPageLayout';
 export const metadata = {
   title: 'Privacy Policy | Beyond Stich',
   description: 'How Beyond Stich collects, uses and protects your personal information.',
+  alternates: { canonical: 'https://beyondstich.com/privacy' },
 };
 
 export default function PrivacyPage() {

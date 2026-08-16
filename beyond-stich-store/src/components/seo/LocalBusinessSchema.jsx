@@ -1,7 +1,20 @@
+/**
+ * Organisation schema for the store.
+ *
+ * Deliberately NOT a ClothingStore/LocalBusiness. That type declares a
+ * physical shop customers can visit, and it previously carried opening hours
+ * (Mon–Sat 10:00–19:00), a hasMap link, and geo coordinates that were just
+ * the centroid of Bangalore — for a business with no storefront. Asserting a
+ * location and hours nobody is there to honour is a structured-data policy
+ * violation and risks a manual action.
+ *
+ * OnlineStore keeps the parts that are true: the brand, the real contact
+ * details, the price range, and the area actually served.
+ */
 export default function LocalBusinessSchema() {
   const schema = {
     '@context': 'https://schema.org',
-    '@type': 'ClothingStore',
+    '@type': 'OnlineStore',
     name: 'Beyond Stich',
     url: 'https://beyondstich.com',
     logo: 'https://beyondstich.com/logos/beyond-stich-logo.png',
@@ -10,32 +23,24 @@ export default function LocalBusinessSchema() {
       'Beyond Stich — premium oversized graphic tees for men. 240 GSM combed cotton, bold typography, 13+ segment worlds. Based in Bangalore, India.',
     priceRange: '₹799 – ₹999',
     currenciesAccepted: 'INR',
-    paymentAccepted: 'Cash, Credit Card, Debit Card, UPI, Net Banking, COD',
+    paymentAccepted: 'Cash on Delivery, UPI, Credit Card, Debit Card, Net Banking',
     address: {
       '@type': 'PostalAddress',
       addressLocality: 'Bangalore',
       addressRegion: 'Karnataka',
       addressCountry: 'IN',
     },
-    geo: {
-      '@type': 'GeoCoordinates',
-      latitude: 12.9716,
-      longitude: 77.5946,
-    },
     email: 'hello@beyondstich.com',
     telephone: '+91-83102-73670',
-    openingHoursSpecification: [
-      {
-        '@type': 'OpeningHoursSpecification',
-        dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-        opens: '10:00',
-        closes: '19:00',
-      },
-    ],
-    sameAs: [
-      'https://instagram.com/beyondstich',
-    ],
-    hasMap: 'https://maps.google.com/?q=Bangalore,Karnataka,India',
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer service',
+      telephone: '+91-83102-73670',
+      email: 'hello@beyondstich.com',
+      areaServed: 'IN',
+      availableLanguage: ['English', 'Hindi', 'Kannada'],
+    },
+    sameAs: ['https://instagram.com/beyondstich'],
     areaServed: {
       '@type': 'Country',
       name: 'India',

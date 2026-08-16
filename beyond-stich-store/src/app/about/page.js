@@ -4,6 +4,7 @@ export const metadata = {
   title: 'Our Story | Beyond Stich',
   description:
     'Beyond Stich builds heavy-duty, super-oversized graphic tees for people who think different. This is why we exist.',
+  alternates: { canonical: 'https://beyondstich.com/about' },
 };
 
 export default function AboutPage() {

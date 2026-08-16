@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getPostBySlug, getAllPosts, BLOG_CATEGORIES } from '@/lib/blog';
 import { SEGMENTS } from '@/lib/constants';
+import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema';
 
 export async function generateStaticParams() {
   return getAllPosts().map((post) => ({ slug: post.slug }));
@@ -96,6 +97,38 @@ export default async function BlogPostPage({ params }) {
     .map(id => SEGMENTS.find(s => s.id === id))
     .filter(Boolean);
 
+  // These guides are the store's top-of-funnel content, but carried no
+  // structured data at all — so no author/date rich results and no article
+  // carousel eligibility, which is most of the reason to publish them.
+  const articleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.excerpt,
+    datePublished: post.publishedAt,
+    dateModified: post.publishedAt,
+    author: {
+      '@type': 'Organization',
+      name: post.author || 'Beyond Stich',
+      url: 'https://beyondstich.com',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Beyond Stich',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://beyondstich.com/logos/beyond-stich-logo.png',
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `https://beyondstich.com/blog/${post.slug}`,
+    },
+    image: 'https://beyondstich.com/banners/og/og-default.jpg',
+    articleSection: cat.label,
+    inLanguage: 'en-IN',
+  };
+
   return (
     <main style={{
       minHeight: '100vh',
@@ -103,6 +136,17 @@ export default async function BlogPostPage({ params }) {
       color: 'var(--color-text-primary)',
       padding: '120px 24px 80px',
     }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: '/' },
+          { name: 'Journal', url: '/blog' },
+          { name: post.title },
+        ]}
+      />
       <article style={{ maxWidth: 740, margin: '0 auto' }}>
         {/* Breadcrumb */}
         <nav style={{

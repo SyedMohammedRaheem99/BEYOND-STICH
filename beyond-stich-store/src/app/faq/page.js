@@ -3,6 +3,7 @@ import InfoPageLayout from '@/components/layout/InfoPageLayout';
 export const metadata = {
   title: 'FAQ | Beyond Stich',
   description: 'Answers to common questions about sizing, fabric, shipping, returns and orders at Beyond Stich.',
+  alternates: { canonical: 'https://beyondstich.com/faq' },
 };
 
 const FAQ_ITEMS = [

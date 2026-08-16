@@ -86,11 +86,17 @@ export default async function ProductDetailPage({ params }) {
 
   const relatedProducts = await getRelated(slug, product.segment);
 
-  // Merge live review stats into product for schema (aggregateRating)
+  // Only ever advertise ratings backed by real, approved reviews.
+  // `|| product.averageRating` fell back to a DB field that is never
+  // recomputed from reviews and ships non-zero on seeded products — so a
+  // product with no reviews at all could emit an aggregateRating. Google
+  // prohibits review markup with no genuine on-page reviews, and it risks a
+  // manual action plus Merchant Center suspension. ProductSchema already
+  // omits aggregateRating entirely when the count is zero.
   const productWithRating = {
     ...product,
-    averageRating: reviewData.average || product.averageRating,
-    reviewCount: reviewData.count || product.reviewCount,
+    averageRating: reviewData.average,
+    reviewCount: reviewData.count,
   };
 
   return (

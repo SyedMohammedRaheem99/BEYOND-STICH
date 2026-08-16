@@ -3,6 +3,7 @@ import InfoPageLayout from '@/components/layout/InfoPageLayout';
 export const metadata = {
   title: 'Terms of Service | Beyond Stich',
   description: 'The terms that govern your use of Beyond Stich and any purchases you make.',
+  alternates: { canonical: 'https://beyondstich.com/terms' },
 };
 
 export default function TermsPage() {

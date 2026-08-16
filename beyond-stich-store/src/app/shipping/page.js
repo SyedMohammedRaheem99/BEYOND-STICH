@@ -3,6 +3,7 @@ import InfoPageLayout from '@/components/layout/InfoPageLayout';
 export const metadata = {
   title: 'Shipping | Beyond Stich',
   description: 'Shipping timelines, charges and tracking for Beyond Stich orders across India.',
+  alternates: { canonical: 'https://beyondstich.com/shipping' },
 };
 
 export default function ShippingPage() {

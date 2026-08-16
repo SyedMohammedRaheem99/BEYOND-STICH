@@ -3,6 +3,7 @@ import InfoPageLayout from '@/components/layout/InfoPageLayout';
 export const metadata = {
   title: 'Size Guide | Beyond Stich',
   description: 'Oversized fit measurements and how to measure for the perfect Beyond Stich tee.',
+  alternates: { canonical: 'https://beyondstich.com/size-guide' },
 };
 
 export default function SizeGuidePage() {

@@ -3,6 +3,7 @@ import InfoPageLayout from '@/components/layout/InfoPageLayout';
 export const metadata = {
   title: 'Contact Us | Beyond Stich',
   description: 'Get in touch with the Beyond Stich team for support, collabs and press.',
+  alternates: { canonical: 'https://beyondstich.com/contact' },
 };
 
 export default function ContactPage() {

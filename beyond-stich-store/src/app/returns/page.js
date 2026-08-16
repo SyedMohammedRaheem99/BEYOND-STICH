@@ -3,6 +3,7 @@ import InfoPageLayout from '@/components/layout/InfoPageLayout';
 export const metadata = {
   title: 'Returns & Exchanges | Beyond Stich',
   description: 'Our easy 7-day returns and exchange policy for Beyond Stich orders.',
+  alternates: { canonical: 'https://beyondstich.com/returns' },
 };
 
 export default function ReturnsPage() {

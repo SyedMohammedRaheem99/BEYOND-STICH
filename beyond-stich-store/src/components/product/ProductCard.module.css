@@ -255,3 +255,16 @@
     flex-wrap: wrap;
   }
 }
+
+@media (max-width: 480px) {
+  /* Cards are ~162px wide at 360px, so long names wrapped to three lines and
+     left cards in a row visually mismatched. Clamp to two. */
+  .productName {
+    font-size: var(--text-sm);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.6em;
+  }
+}

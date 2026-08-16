@@ -20,6 +20,9 @@ export default async function sitemap() {
     '/terms',
     '/privacy',
     '/stores/bangalore',
+    // Explicitly indexable (see track/layout.js) and a high-intent query
+    // — "beyond stich track order" — but it was missing here.
+    '/track',
   ].map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),

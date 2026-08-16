@@ -51,6 +51,7 @@ export default async function SegmentWorldPage({ params }) {
     url: `https://beyondstich.com/segment/${segmentData.id}`,
     mainEntity: {
       '@type': 'ItemList',
+      numberOfItems: products.length,
       itemListElement: products.map((p, i) => ({
         '@type': 'ListItem',
         position: i + 1,

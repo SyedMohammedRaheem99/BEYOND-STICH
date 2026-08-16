@@ -5,7 +5,10 @@
 
 /* ---- Promotional Banner Section ---- */
 .bannerSection {
-  padding: calc(var(--nav-height) + var(--space-6)) var(--space-4) 0;
+  /* <main> already offsets by --header-height (see ClientLayout), so adding
+     another --nav-height here left ~176px blank above the first content on
+     mobile — the page looked empty on landing. */
+  padding: var(--space-6) var(--space-4) 0;
   background: var(--color-bg);
 }
 
@@ -300,5 +303,20 @@
   .filterPill {
     font-size: var(--text-xs);
     padding: var(--space-2) var(--space-3);
+  }
+}
+
+@media (max-width: 768px) {
+  /* The sticky filter strip sits under a 92px fixed header; at its desktop
+     padding the two together occupied ~26% of a 640px viewport before any
+     product was visible. */
+  .filterScroll {
+    padding-top: var(--space-2);
+    padding-bottom: var(--space-2);
+  }
+
+  /* 14px triggers iOS zoom on focus. */
+  .sortSelect {
+    font-size: 16px;
   }
 }
