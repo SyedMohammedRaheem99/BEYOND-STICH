@@ -57,10 +57,10 @@ export default function CheckoutPage() {
   const [coupon, setCoupon] = useState(null); // { code, discount, freeShipping, label }
   const [couponMsg, setCouponMsg] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
-  // COD is the default until Razorpay keys are live. With placeholder keys the
-  // gateway runs in mock mode, so an "online" order would be recorded as paid
-  // without the customer ever paying.
-  const [paymentMethod, setPaymentMethod] = useState('cod'); // 'online' | 'cod'
+  // Online is offered first now that live Razorpay keys are configured; an
+  // order only reaches paymentStatus 'paid' after /api/razorpay/verify checks
+  // the HMAC signature, so the mock path can no longer mark anything paid.
+  const [paymentMethod, setPaymentMethod] = useState('online'); // 'online' | 'cod'
   const [placingOrder, setPlacingOrder] = useState(false);
   // Checkout failures used to fire setOrderError(), which is easy to dismiss by
   // accident on mobile and loses the reason the order failed.
@@ -258,14 +258,23 @@ export default function CheckoutPage() {
 
     // ONLINE: Razorpay flow
     try {
+      // Send the cart, not a total: the server prices it so the amount
+      // charged can't be tampered with.
       const rzpOrderRes = await fetch('/api/razorpay/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: total, currency: 'INR', notes: { email: formData.email } }),
+        body: JSON.stringify({
+          items: orderPayload.items,
+          couponCode: orderPayload.couponCode,
+          currency: 'INR',
+          notes: { email: formData.email },
+        }),
       });
       const rzpOrderData = await rzpOrderRes.json();
 
-      if (!rzpOrderData.success) throw new Error('Could not initiate payment.');
+      if (!rzpOrderData.success) {
+        throw new Error(rzpOrderData.error || 'Could not initiate payment.');
+      }
 
       const rzpOrder = rzpOrderData.order;
 
@@ -338,7 +347,23 @@ export default function CheckoutPage() {
         },
       };
 
+      if (typeof window.Razorpay !== 'function') {
+        throw new Error('Payment could not load. Check your connection and try again.');
+      }
+
       const razorpay = new window.Razorpay(options);
+
+      // A declined card fires this instead of `handler`, so without it the
+      // customer would sit on the processing screen with no explanation.
+      razorpay.on('payment.failed', (response) => {
+        setOrderError(
+          response?.error?.description ||
+            'Payment failed. No money was taken — please try again or choose Cash on Delivery.'
+        );
+        setStep(STEPS.SUMMARY);
+        setPlacingOrder(false);
+      });
+
       razorpay.open();
 
     } catch (err) {
