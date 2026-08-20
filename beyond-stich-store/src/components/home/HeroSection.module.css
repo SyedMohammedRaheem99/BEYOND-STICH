@@ -36,6 +36,15 @@
   );
 }
 
+.bgOverlayLight {
+  background: linear-gradient(
+    to right,
+    rgba(17, 17, 17, 0.55) 0%,
+    rgba(17, 17, 17, 0.25) 55%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+}
+
 /* ---- Content ---- */
 .content {
   position: relative;
@@ -114,6 +123,15 @@
   font-weight: 900;
   color: #F5C518;
   letter-spacing: 0.15em;
+}
+
+.codeNote {
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 500;
+  font-family: var(--font-body);
+  white-space: nowrap;
 }
 
 /* CTA button */

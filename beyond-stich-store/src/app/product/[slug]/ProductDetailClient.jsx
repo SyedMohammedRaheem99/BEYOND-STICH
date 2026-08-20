@@ -15,6 +15,11 @@ import styles from './page.module.css';
 export default function ProductDetailClient({ product, relatedProducts, initialReviewData }) {
   const [reviewData, setReviewData] = useState(initialReviewData);
   const [selectedSize, setSelectedSize] = useState(null);
+  // Restock alerts for a sold-out size.
+  const [notifySize, setNotifySize] = useState(null);
+  const [notifyEmail, setNotifyEmail] = useState('');
+  const [notifyLoading, setNotifyLoading] = useState(false);
+  const [notifyMsg, setNotifyMsg] = useState('');
   const [selectedColor, setSelectedColor] = useState(product?.colors?.[0] || null);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [pincode, setPincode] = useState('');
@@ -28,11 +33,38 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
   const isWishlisted = wishlistItems.some(i => i._id === product._id);
   const discount = discountPercent(product);
 
+  // Sold-out sizes are selectable now (they open the notify-me form), so the
+  // add-to-cart path has to check stock rather than just "a size is picked".
+  const selectedSizeStock =
+    product.sizes?.find((s) => s.size === selectedSize)?.stock ?? 0;
+
   const handleAddToCart = () => {
-    if (!selectedSize) return;
+    if (!selectedSize || selectedSizeStock <= 0) return;
     addItem(product, selectedSize, selectedColor);
     setAdded(true);
     setTimeout(() => setAdded(false), 1600);
+  };
+
+  const submitNotify = async (e) => {
+    e.preventDefault();
+    if (notifyLoading) return;
+    setNotifyLoading(true);
+    setNotifyMsg('');
+
+    try {
+      const res = await fetch('/api/notify-stock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug: product.slug, size: notifySize, email: notifyEmail }),
+      });
+      const data = await res.json();
+      setNotifyMsg(data.error || data.message);
+      if (res.ok) setNotifyEmail('');
+    } catch {
+      setNotifyMsg('Network error. Please try again.');
+    } finally {
+      setNotifyLoading(false);
+    }
   };
 
   const checkDelivery = (e) => {
@@ -154,8 +186,19 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
                 {product.sizes.map(({ size, stock }) => (
                   <button
                     key={size}
-                    onClick={() => stock > 0 && setSelectedSize(size)}
-                    disabled={stock === 0}
+                    // Sold-out sizes are now selectable so they can open the
+                    // notify-me form. Previously they were disabled and the
+                    // customer had no way to signal demand.
+                    onClick={() => {
+                      setSelectedSize(size);
+                      if (stock === 0) {
+                        setNotifySize(size);
+                        setNotifyMsg('');
+                      } else {
+                        setNotifySize(null);
+                      }
+                    }}
+                    aria-pressed={selectedSize === size}
                     className={`${styles.sizeBtn} ${selectedSize === size ? styles.sizeSelected : ''} ${stock === 0 ? styles.sizeOos : ''}`}
                     style={selectedSize === size ? { borderColor: accentColor, color: accentColor } : {}}
                   >
@@ -165,17 +208,47 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
                   </button>
                 ))}
               </div>
+
+              {notifySize && (
+                <form className={styles.notifyForm} onSubmit={submitNotify}>
+                  <p className={styles.notifyLead}>
+                    Size {notifySize} is sold out. Leave your email and we&apos;ll tell
+                    you the moment it&apos;s back.
+                  </p>
+                  <div className={styles.notifyRow}>
+                    <input
+                      type="email"
+                      className={styles.notifyInput}
+                      value={notifyEmail}
+                      onChange={(e) => setNotifyEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      required
+                      aria-label="Email for restock alert"
+                    />
+                    <button type="submit" className={styles.notifyBtn} disabled={notifyLoading}>
+                      {notifyLoading ? '…' : 'NOTIFY ME'}
+                    </button>
+                  </div>
+                  {notifyMsg && <p className={styles.notifyMsg}>{notifyMsg}</p>}
+                </form>
+              )}
             </div>
 
             {/* Actions */}
             <div className={styles.actions}>
               <button
-                className={`${styles.addToCartBtn} ${!selectedSize ? styles.disabled : ''}`}
+                className={`${styles.addToCartBtn} ${!selectedSize || selectedSizeStock <= 0 ? styles.disabled : ''}`}
                 onClick={handleAddToCart}
-                style={{ backgroundColor: selectedSize ? accentColor : '' }}
-                disabled={!selectedSize}
+                style={{ backgroundColor: selectedSize && selectedSizeStock > 0 ? accentColor : '' }}
+                disabled={!selectedSize || selectedSizeStock <= 0}
               >
-                {added ? 'ADDED TO BAG ✓' : selectedSize ? `ADD TO BAG — ₹${product.price}` : 'SELECT A SIZE'}
+                {added
+                  ? 'ADDED TO BAG ✓'
+                  : !selectedSize
+                    ? 'SELECT A SIZE'
+                    : selectedSizeStock <= 0
+                      ? 'SOLD OUT — GET RESTOCK ALERT'
+                      : `ADD TO BAG — ₹${product.price}`}
               </button>
               <button className={styles.wishlistBtn} onClick={handleWishlist}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill={isWishlisted ? accentColor : 'none'} stroke={isWishlisted ? accentColor : 'currentColor'} strokeWidth="2">
@@ -325,10 +398,21 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
         </div>
         <button
           className={styles.stickyBtn}
-          onClick={selectedSize ? handleAddToCart : () => document.getElementById('pdp-sizes')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-          style={{ backgroundColor: selectedSize ? accentColor : '' }}
+          onClick={
+            selectedSize && selectedSizeStock > 0
+              ? handleAddToCart
+              : () =>
+                  document
+                    .getElementById('pdp-sizes')
+                    ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          }
+          style={{ backgroundColor: selectedSize && selectedSizeStock > 0 ? accentColor : '' }}
         >
-          {selectedSize ? 'ADD TO BAG' : 'SELECT SIZE'}
+          {!selectedSize
+            ? 'SELECT SIZE'
+            : selectedSizeStock <= 0
+              ? 'SOLD OUT'
+              : 'ADD TO BAG'}
         </button>
       </div>
     </div>

@@ -77,16 +77,38 @@ export default function OrderHistoryPage() {
                   </span>
                 </div>
 
+                {/* Was a row of bare thumbnails — no names, sizes or prices,
+                    so the customer couldn't tell their orders apart. */}
                 {order.items?.length > 0 && (
-                  <div className={styles.orderItems}>
-                    {order.items.map((item, j) => (
-                      item.image ? (
-                        <img key={j} src={item.image} alt={item.name} className={styles.itemThumb} />
-                      ) : (
-                        <div key={j} className={styles.itemThumb} />
-                      )
+                  <ul className={styles.orderItems}>
+                    {order.items.slice(0, 3).map((item, j) => (
+                      <li key={j} className={styles.itemRow}>
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt=""
+                            className={styles.itemThumb}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className={styles.itemThumb} />
+                        )}
+                        <div className={styles.itemText}>
+                          <span className={styles.itemName}>{item.name}</span>
+                          <span className={styles.itemMeta}>
+                            Size {item.size}
+                            {item.color ? ` · ${item.color}` : ''} · Qty {item.quantity}
+                          </span>
+                        </div>
+                      </li>
                     ))}
-                  </div>
+                    {order.items.length > 3 && (
+                      <li className={styles.moreItems}>
+                        + {order.items.length - 3} more item
+                        {order.items.length - 3 !== 1 ? 's' : ''}
+                      </li>
+                    )}
+                  </ul>
                 )}
 
                 <div className={styles.orderFooter}>
@@ -94,8 +116,13 @@ export default function OrderHistoryPage() {
                     <span className={styles.orderTotal}>₹{order.total?.toLocaleString('en-IN')}</span>
                     <span className={styles.itemCount}> · {order.items?.length} item{order.items?.length !== 1 ? 's' : ''}</span>
                   </div>
-                  <Link href={`/track?order=${order.orderNumber}`} className={styles.trackLink}>
-                    TRACK ORDER
+                  {/* Goes to the order's own page rather than /track, which
+                      re-asked an already-signed-in customer for their email. */}
+                  <Link
+                    href={`/account/orders/${order.orderNumber}`}
+                    className={styles.trackLink}
+                  >
+                    VIEW DETAILS
                   </Link>
                 </div>
               </div>

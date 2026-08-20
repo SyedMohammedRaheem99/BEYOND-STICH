@@ -41,7 +41,22 @@ export async function PUT(request, { params }) {
 
     // Only allow updating specific fields
     const allowedUpdates = {};
-    if (body.orderStatus) allowedUpdates.orderStatus = body.orderStatus;
+    if (body.orderStatus) {
+      allowedUpdates.orderStatus = body.orderStatus;
+      // Stamp the delivery date: the customer's 7-day return window runs from
+      // here, and without it there's nothing to measure against.
+      if (body.orderStatus === 'delivered') allowedUpdates.deliveredAt = new Date();
+    }
+    // Let the owner action a customer's return request.
+    if (
+      body.returnStatus &&
+      ['none', 'requested', 'approved', 'rejected', 'completed'].includes(body.returnStatus)
+    ) {
+      allowedUpdates['returnRequest.status'] = body.returnStatus;
+      if (['approved', 'rejected', 'completed'].includes(body.returnStatus)) {
+        allowedUpdates['returnRequest.resolvedAt'] = new Date();
+      }
+    }
     // Compare against undefined, not truthiness: a truthiness check meant an
     // empty string was silently dropped, so a wrong tracking number could
     // never be cleared — the save appeared to work and the stale number

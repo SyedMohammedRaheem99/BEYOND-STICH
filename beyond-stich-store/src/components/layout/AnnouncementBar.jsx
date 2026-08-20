@@ -5,10 +5,12 @@ import { AnimatePresence, motion } from 'framer-motion';
 import styles from './AnnouncementBar.module.css';
 
 const MESSAGES = [
-  'FREE shipping on all orders over ₹999',
-  'Cash on Delivery available across India',
-  '7-day easy returns & exchanges',
-  'New drop live — limited stock',
+  '🎉 FLAT 20% OFF your first order — use code WELCOME20',
+  '🚚 FREE shipping on all orders over ₹999',
+  '🔁 7-day easy returns & exchanges',
+  '🎮 New Gamer Collection is LIVE — Shop Now',
+  '💐 Floral Women\'s Edit just dropped — limited stock',
+  '📦 Cash on Delivery available across India',
 ];
 
 export default function AnnouncementBar() {

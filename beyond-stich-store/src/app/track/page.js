@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -21,6 +22,7 @@ function fmtDate(d) {
 
 function TrackContent() {
   const searchParams = useSearchParams();
+  const { data: session, status } = useSession();
   const [orderNumber, setOrderNumber] = useState('');
   const [contact, setContact] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,6 +33,15 @@ function TrackContent() {
     const o = searchParams.get('order');
     if (o) setOrderNumber(o);
   }, [searchParams]);
+
+  // A signed-in customer already proved who they are, so don't make them
+  // retype the email they checked out with — especially arriving from the
+  // "TRACK YOUR ORDER" link in their confirmation email.
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.email) {
+      setContact((c) => c || session.user.email);
+    }
+  }, [status, session]);
 
   const track = async (e) => {
     e?.preventDefault();

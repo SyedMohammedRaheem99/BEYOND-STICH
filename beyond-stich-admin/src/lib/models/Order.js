@@ -57,6 +57,20 @@ const OrderSchema = new mongoose.Schema(
       default: 'none',
     },
     refundInitiatedAt: { type: Date, default: null },
+
+    // Mirrors the storefront model — customers can now raise returns
+    // themselves, and this is where the admin sees them.
+    returnRequest: {
+      status: {
+        type: String,
+        enum: ['none', 'requested', 'approved', 'rejected', 'completed'],
+        default: 'none',
+      },
+      reason: { type: String, default: '', maxlength: 500 },
+      requestedAt: { type: Date, default: null },
+      resolvedAt: { type: Date, default: null },
+    },
+    deliveredAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

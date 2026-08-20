@@ -96,6 +96,73 @@ export const useCartStore = create(
         });
       },
 
+      // Reconcile the persisted cart against what the server says is true.
+      // Returns a list of plain-language changes so the UI can tell the
+      // customer what moved before they pay, rather than surprising them at
+      // the door on a COD order.
+      syncWithServer: async () => {
+        const items = get().items;
+        if (items.length === 0) return [];
+
+        try {
+          const res = await fetch('/api/cart/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              items: items.map((i) => ({
+                slug: i.slug,
+                size: i.size,
+                quantity: i.quantity,
+                price: i.price,
+              })),
+            }),
+          });
+          if (!res.ok) return [];
+
+          const data = await res.json();
+          if (!data.hasChanges) return [];
+
+          const notices = [];
+          const byKey = new Map(data.items.map((r) => [`${r.slug}|${r.size}`, r]));
+
+          const nextItems = items.reduce((acc, item) => {
+            const r = byKey.get(`${item.slug}|${item.size}`);
+            if (!r || r.status === 'ok') {
+              acc.push(r?.price ? { ...item, price: r.price, mrp: r.mrp ?? item.mrp } : item);
+              return acc;
+            }
+
+            if (r.status === 'unavailable' || r.status === 'out_of_stock') {
+              notices.push(`${r.name || item.name} (${item.size}) is no longer available and was removed.`);
+              return acc; // drop it
+            }
+
+            if (r.status === 'low_stock') {
+              notices.push(`Only ${r.availableQty} left of ${r.name} (${item.size}) — quantity updated.`);
+              acc.push({ ...item, quantity: r.availableQty, price: r.price, mrp: r.mrp ?? item.mrp });
+              return acc;
+            }
+
+            if (r.status === 'price_changed') {
+              notices.push(
+                `${r.name} (${item.size}) is now ₹${r.price} (was ₹${r.oldPrice}).`
+              );
+              acc.push({ ...item, price: r.price, mrp: r.mrp ?? item.mrp });
+              return acc;
+            }
+
+            acc.push(item);
+            return acc;
+          }, []);
+
+          set({ items: nextItems });
+          return notices;
+        } catch {
+          // Never block checkout on this; the order API re-prices anyway.
+          return [];
+        }
+      },
+
       // Clear cart
       clearCart: () => set({ items: [], isOpen: false }),
 

@@ -609,3 +609,76 @@
   color: var(--color-text-secondary);
   line-height: 1.4;
 }
+
+/* Cart reconciliation notices — price/stock changes since the bag was filled. */
+.cartNotices {
+  margin-bottom: var(--space-6);
+  padding: var(--space-4);
+  background: rgba(245, 197, 24, 0.08);
+  border: 1px solid rgba(245, 197, 24, 0.4);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.cartNotices strong {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  color: #F5C518;
+}
+
+.cartNotices ul {
+  margin: 0;
+  padding-left: var(--space-5);
+  color: var(--color-text-secondary);
+}
+
+.cartNotices li + li {
+  margin-top: var(--space-1);
+}
+
+/* Live offers, shown so customers don't leave to search for codes. */
+.offerChips {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.offerChip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  padding: var(--space-3) var(--space-4);
+  min-height: 48px;
+  background: var(--color-bg-card);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--duration-fast);
+}
+
+.offerChip:hover:not(:disabled) {
+  border-color: #F5C518;
+}
+
+.offerChip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.offerChip strong {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  letter-spacing: 0.1em;
+  color: #F5C518;
+}
+
+.offerChip span {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}

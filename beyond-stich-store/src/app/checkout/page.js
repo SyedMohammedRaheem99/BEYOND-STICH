@@ -44,7 +44,13 @@ function validate(form) {
 
 export default function CheckoutPage() {
   const [step, setStep] = useState(STEPS.ADDRESS);
-  const { items, hydrated, getSubtotal, getSavings, getShipping } = useCartStore();
+  const { items, hydrated, syncWithServer, getSubtotal, getSavings, getShipping } = useCartStore();
+  // Plain-language notes about anything that changed since the cart was
+  // filled — prices, stock, items pulled from sale.
+  const [cartNotices, setCartNotices] = useState([]);
+  // The store's live offers, shown as chips so customers don't leave to hunt
+  // for codes.
+  const [availableCoupons, setAvailableCoupons] = useState([]);
   const router = useRouter();
   // Checkout was entirely session-blind: a signed-in customer got no prefill,
   // no saved addresses, and no prompt to sign in — so returning customers kept
@@ -77,6 +83,26 @@ export default function CheckoutPage() {
       if (saved) setFormData({ ...EMPTY_FORM, ...JSON.parse(saved) });
     } catch {}
   }, []);
+
+  useEffect(() => {
+    fetch('/api/coupons')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (Array.isArray(data?.coupons)) setAvailableCoupons(data.coupons);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Reconcile the persisted cart with the server once it has loaded, so the
+  // totals shown here are the ones that will actually be charged.
+  useEffect(() => {
+    if (!hydrated) return;
+    let cancelled = false;
+    syncWithServer().then((notices) => {
+      if (!cancelled && notices.length > 0) setCartNotices(notices);
+    });
+    return () => { cancelled = true; };
+  }, [hydrated, syncWithServer]);
 
   // Prefill from the signed-in account and offer their saved addresses.
   useEffect(() => {
@@ -125,8 +151,10 @@ export default function CheckoutPage() {
     if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: undefined });
   };
 
-  const applyCoupon = async () => {
-    const code = couponInput.trim();
+  const applyCoupon = async (codeArg) => {
+    // Accepts an explicit code so an offer chip can apply directly, without
+    // waiting for the input's state update to land.
+    const code = (typeof codeArg === 'string' ? codeArg : couponInput).trim();
     if (!code) return;
     setCouponLoading(true);
     try {
@@ -415,6 +443,19 @@ export default function CheckoutPage() {
       <div className={`${styles.container} container`}>
         {/* Left Col: Flow */}
         <div className={styles.mainFlow}>
+          {/* Anything that changed while the cart sat in localStorage. Shown
+              before payment so a COD customer is never surprised at the door. */}
+          {cartNotices.length > 0 && (
+            <div className={styles.cartNotices} role="status">
+              <strong>Your bag was updated</strong>
+              <ul>
+                {cartNotices.map((note, i) => (
+                  <li key={i}>{note}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Breadcrumb Steps */}
           <div className={styles.steps}>
             <div className={`${styles.stepIndicator} ${step === STEPS.ADDRESS ? styles.activeStep : ''}`}>
@@ -619,9 +660,37 @@ export default function CheckoutPage() {
                     className={styles.couponInput}
                     aria-label="Coupon code"
                   />
-                  <button onClick={applyCoupon} className={styles.couponBtn} type="button" disabled={couponLoading}>
+                  <button onClick={() => applyCoupon()} className={styles.couponBtn} type="button" disabled={couponLoading}>
                     {couponLoading ? '…' : 'APPLY'}
                   </button>
+                </div>
+              )}
+
+              {/* Show the store's own live offers. A blank code box sends
+                  shoppers off to hunt for codes, and they often don't return. */}
+              {!coupon && availableCoupons.length > 0 && (
+                <div className={styles.offerChips}>
+                  {availableCoupons.map((c) => {
+                    const eligible = subtotal >= c.minOrder;
+                    return (
+                      <button
+                        key={c.code}
+                        type="button"
+                        className={styles.offerChip}
+                        disabled={!eligible}
+                        onClick={() => {
+                          setCouponInput(c.code);
+                          applyCoupon(c.code);
+                        }}
+                      >
+                        <strong>{c.code}</strong>
+                        <span>
+                          {c.label}
+                          {!eligible ? ` · spend ₹${c.minOrder - subtotal} more` : ''}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
               {couponMsg && (

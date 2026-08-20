@@ -97,6 +97,35 @@ export default function AdminOrders() {
     });
   };
 
+  const saveReturnStatus = async (returnStatus) => {
+    if (!selectedOrder) return;
+    try {
+      const res = await fetch(`/api/orders/${selectedOrder._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ returnStatus }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || 'Failed to update return');
+        return;
+      }
+      const patch = {
+        returnRequest: {
+          ...selectedOrder.returnRequest,
+          status: returnStatus,
+          resolvedAt: new Date().toISOString(),
+        },
+      };
+      setOrders((prev) =>
+        prev.map((o) => (o._id === selectedOrder._id ? { ...o, ...patch } : o))
+      );
+      setSelectedOrder((prev) => (prev ? { ...prev, ...patch } : prev));
+    } catch {
+      alert('Network error');
+    }
+  };
+
   const saveFulfilment = async () => {
     if (!selectedOrder) return;
     setSavingFulfil(true);
@@ -362,6 +391,49 @@ export default function AdminOrders() {
                 {savingFulfil ? 'SAVING…' : 'SAVE CHANGES'}
               </button>
             </div>
+
+            {/* Customer-raised return request. Previously customers had no
+                way to start a return, so this never had anything to show. */}
+            {selectedOrder.returnRequest?.status &&
+              selectedOrder.returnRequest.status !== 'none' && (
+              <div style={{ background: '#1A1A1A', border: '1px solid #F5C518', borderRadius: '6px', padding: '16px', marginBottom: '20px' }}>
+                <h4 style={{ color: '#F5C518', fontSize: '11px', marginBottom: '12px', letterSpacing: '0.08em' }}>
+                  RETURN REQUEST — {selectedOrder.returnRequest.status.toUpperCase()}
+                </h4>
+                <p style={{ color: '#F5F5F5', fontSize: '13px', lineHeight: 1.6, marginBottom: '12px' }}>
+                  “{selectedOrder.returnRequest.reason}”
+                </p>
+                <p style={{ color: '#888', fontSize: '12px', marginBottom: '12px' }}>
+                  Raised {selectedOrder.returnRequest.requestedAt
+                    ? formatDate(selectedOrder.returnRequest.requestedAt)
+                    : '—'}
+                </p>
+                {selectedOrder.returnRequest.status === 'requested' && (
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => saveReturnStatus('approved')}
+                      style={{ ...fulfilStyles.saveBtn, background: '#22C55E', minHeight: '44px' }}
+                    >
+                      APPROVE
+                    </button>
+                    <button
+                      onClick={() => saveReturnStatus('rejected')}
+                      style={{ ...fulfilStyles.saveBtn, background: '#EF4444', minHeight: '44px' }}
+                    >
+                      REJECT
+                    </button>
+                  </div>
+                )}
+                {selectedOrder.returnRequest.status === 'approved' && (
+                  <button
+                    onClick={() => saveReturnStatus('completed')}
+                    style={{ ...fulfilStyles.saveBtn, minHeight: '44px' }}
+                  >
+                    MARK RETURN COMPLETE
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Refund controls — visible for returned/cancelled orders */}
             {['returned', 'cancelled'].includes(selectedOrder.orderStatus) && (

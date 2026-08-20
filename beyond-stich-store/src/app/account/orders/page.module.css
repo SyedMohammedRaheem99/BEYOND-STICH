@@ -65,12 +65,49 @@
   white-space: nowrap;
 }
 
+/* A vertical list rather than a horizontal thumbnail strip: names and sizes
+   are what let a customer tell one order from another, and a scroller with
+   no affordance hid items entirely on mobile. */
 .orderItems {
   display: flex;
+  flex-direction: column;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
-  overflow-x: auto;
-  padding-bottom: var(--space-2);
+  list-style: none;
+}
+
+.itemRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.itemText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.itemName {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemMeta {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.moreItems {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  padding-left: calc(48px + var(--space-3));
 }
 
 .itemThumb {

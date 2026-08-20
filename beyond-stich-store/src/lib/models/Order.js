@@ -58,6 +58,21 @@ const OrderSchema = new mongoose.Schema(
       default: 'none',
     },
     refundInitiatedAt: { type: Date, default: null },
+
+    // Customer-initiated return request. The admin already had refund fields
+    // but there was no way for a customer to start the process.
+    returnRequest: {
+      status: {
+        type: String,
+        enum: ['none', 'requested', 'approved', 'rejected', 'completed'],
+        default: 'none',
+      },
+      reason: { type: String, default: '', maxlength: 500 },
+      requestedAt: { type: Date, default: null },
+      // When the order was marked delivered — the 7-day window runs from here.
+      resolvedAt: { type: Date, default: null },
+    },
+    deliveredAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

@@ -122,7 +122,7 @@ export default function HeroSection() {
             loading={current === 0 ? 'eager' : 'lazy'}
             fetchPriority={current === 0 ? 'high' : 'auto'}
           />
-          <div className={styles.bgOverlay} />
+          <div className={`${styles.bgOverlay} ${slide.theme === 'light' ? styles.bgOverlayLight : ''}`} />
         </motion.div>
       </AnimatePresence>
 
@@ -175,6 +175,7 @@ export default function HeroSection() {
             >
               <span className={styles.codeLabel}>USE CODE</span>
               <span className={styles.code}>{slide.code}</span>
+              <span className={styles.codeNote}>for flat 20% off</span>
             </motion.div>
           )}
 
