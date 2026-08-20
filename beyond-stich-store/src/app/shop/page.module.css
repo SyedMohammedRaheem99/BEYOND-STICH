@@ -320,3 +320,9 @@
     font-size: 16px;
   }
 }
+
+/* The heading moved to ShopHero; this band now only carries the product
+   count, so it no longer needs the full header padding. */
+.headerCompact {
+  padding: var(--space-6) 0;
+}

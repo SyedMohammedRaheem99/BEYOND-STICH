@@ -24,6 +24,23 @@
   filter: grayscale(0.15) brightness(0.6) contrast(1.1);
 }
 
+/* Only one of the two crops is ever displayed. display:none also stops the
+   browser fetching the hidden one, so a phone never downloads the landscape
+   file and vice versa. */
+.heroImgMobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .heroImgDesktop {
+    display: none;
+  }
+
+  .heroImgMobile {
+    display: block;
+  }
+}
+
 .bgOverlay {
   position: absolute;
   inset: 0;

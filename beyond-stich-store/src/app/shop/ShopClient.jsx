@@ -97,22 +97,16 @@ function ShopContent({ initialProducts }) {
         </div>
       </div>
 
-      {/* Header */}
-      <header className={`${styles.header} noise-overlay`}>
+      {/* The "ALL DROPS" H1 now lives in ShopHero (server-rendered, above
+          this component), so only the live product count remains here —
+          two H1s saying the same thing helps nobody. */}
+      <header className={`${styles.header} ${styles.headerCompact} noise-overlay`}>
         <div className="container">
-          <motion.h1
-            className={styles.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-          >
-            ALL DROPS
-          </motion.h1>
           <motion.p
             className={styles.count}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.2 }}
           >
             SHOWING {filteredProducts.length}{' '}
             {filteredProducts.length === 1 ? 'PRODUCT' : 'PRODUCTS'}

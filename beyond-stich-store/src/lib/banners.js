@@ -3,21 +3,45 @@
 // ============================================
 
 // --- Hero Carousel Slides ---
+// Each slide has a genuinely different desktop and mobile crop (landscape vs
+// portrait), so the art direction in HeroSection actually does something —
+// previously both keys pointed at the same file and phones were served the
+// desktop framing. Copy is written to match what is actually pictured.
 export const HERO_SLIDES = [
   {
-    id: 'mens-typography',
-    desktop: '/banners/hero/slide-mens-typography.png',
-    mobile: '/banners/hero/slide-mens-typography.png',
+    id: 'be-a-voice',
+    desktop: '/banners/hero/home-3-desktop.webp',
+    mobile: '/banners/hero/home-3-mobile.webp',
     badge: 'NEW DROP',
-    headline: 'WEAR THE\nTHOUGHT',
-    subheadline: 'Be Strong. Be A Voice. 240 GSM Premium Oversized Tees.',
+    headline: 'BE A VOICE\nNOT AN ECHO',
+    subheadline: 'Statement graphics on 240 GSM heavyweight cotton. Oversized fit.',
     cta: { label: 'SHOP THE DROP', href: '/shop' },
     theme: 'dark',
   },
   {
+    id: 'explorer',
+    desktop: '/banners/hero/home-1-desktop.webp',
+    mobile: '/banners/hero/home-1-mobile.webp',
+    badge: 'JUST LANDED',
+    headline: 'EXPLORER',
+    subheadline: 'High-density prints that hold their colour, wash after wash.',
+    cta: { label: 'SEE THE DROP', href: '/shop' },
+    theme: 'dark',
+  },
+  {
+    id: 'full-collection',
+    desktop: '/banners/hero/home-2-desktop.webp',
+    mobile: '/banners/hero/home-2-mobile.webp',
+    badge: '13 SEGMENT WORLDS',
+    headline: 'FIND YOUR\nWORLD',
+    subheadline: 'Gym, gaming, coffee, music and more — a tee for whatever you live in.',
+    cta: { label: 'EXPLORE WORLDS', href: '/shop' },
+    theme: 'dark',
+  },
+  {
     id: 'welcome-offer',
-    desktop: '/banners/hero/slide-welcome-offer.png',
-    mobile: '/banners/hero/slide-welcome-offer.png',
+    desktop: '/banners/hero/home-4-desktop.webp',
+    mobile: '/banners/hero/home-4-mobile.webp',
     badge: 'EXCLUSIVE OFFER',
     headline: 'FLAT 20%\nOFF YOUR\nFIRST ORDER',
     subheadline: 'Welcome to Beyond Stich. No minimum order value.',
@@ -25,25 +49,30 @@ export const HERO_SLIDES = [
     code: 'WELCOME20',
     theme: 'dark',
   },
+];
+
+// --- All Drops (/shop) hero slides ---
+export const SHOP_HERO_SLIDES = [
   {
-    id: 'gamer',
-    desktop: '/banners/hero/slide-gamer.png',
-    mobile: '/banners/hero/slide-gamer.png',
-    badge: 'GAMER COLLECTION',
-    headline: 'GAME ON.\nDRESS UP.',
-    subheadline: 'Error 404. Games Over. Level unlocked — in premium oversized fits.',
-    cta: { label: 'SHOP GAMER', href: '/shop' },
-    theme: 'dark',
+    id: 'the-collection',
+    desktop: '/banners/shop/drops-1-desktop.webp',
+    mobile: '/banners/shop/drops-1-mobile.webp',
+    headline: 'ALL DROPS',
+    subheadline: 'Every tee we make, in one place. 240 GSM combed cotton, oversized fit.',
   },
   {
-    id: 'floral-women',
-    desktop: '/banners/hero/slide-floral-women.png',
-    mobile: '/banners/hero/slide-floral-women.png',
-    badge: "WOMEN'S EDIT",
-    headline: 'BLOOM IN\nYOUR OWN\nSTYLE',
-    subheadline: 'Floral heavyweight tees. Feminine. Bold. Premium.',
-    cta: { label: 'SHOP WOMEN', href: '/shop' },
-    theme: 'light',
+    id: 'built-heavy',
+    desktop: '/banners/shop/drops-2-desktop.webp',
+    mobile: '/banners/shop/drops-2-mobile.webp',
+    headline: 'BUILT HEAVY',
+    subheadline: 'Structured drop-shoulder cuts that hold their shape.',
+  },
+  {
+    id: 'wear-the-thought',
+    desktop: '/banners/shop/drops-3-desktop.webp',
+    mobile: '/banners/shop/drops-3-mobile.webp',
+    headline: 'WEAR THE THOUGHT',
+    subheadline: 'Designed in Bangalore. Made for everywhere.',
   },
 ];
 

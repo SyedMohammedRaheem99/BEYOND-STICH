@@ -105,20 +105,27 @@ export default function HeroSection() {
           exit="exit"
           transition={{ duration: 0.7, ease: [0.32, 0.72, 0, 1] }}
         >
-          {/* Every slide's mobile/desktop asset is currently the same file
-              (see HERO_SLIDES in lib/banners.js), so the old <picture>'s
-              media query never actually swapped anything — mobile was
-              already getting the "desktop" image. next/image at least
-              re-encodes to AVIF/WebP and serves a viewport-appropriate size
-              from the one source. Distinct mobile crops are a design task,
-              not a code one. */}
+          {/* Real art direction: the mobile files are portrait crops framed
+              for a phone, not the landscape image squeezed down. next/image
+              can't switch source by breakpoint, so the two are stacked and
+              CSS shows one — both are lazy except the first slide, so the
+              hidden one isn't fetched. */}
           <Image
             src={slide.desktop}
             alt={slide.headline.replace(/\n/g, ' ')}
             fill
             sizes="100vw"
-            className={styles.heroImg}
-            priority={current === 0}
+            className={`${styles.heroImg} ${styles.heroImgDesktop}`}
+            loading={current === 0 ? 'eager' : 'lazy'}
+            fetchPriority={current === 0 ? 'high' : 'auto'}
+          />
+          <Image
+            src={slide.mobile}
+            alt=""
+            aria-hidden="true"
+            fill
+            sizes="100vw"
+            className={`${styles.heroImg} ${styles.heroImgMobile}`}
             loading={current === 0 ? 'eager' : 'lazy'}
             fetchPriority={current === 0 ? 'high' : 'auto'}
           />

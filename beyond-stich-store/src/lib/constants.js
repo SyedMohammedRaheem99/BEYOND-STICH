@@ -144,20 +144,24 @@ export function getColorHex(name) {
 }
 
 // Cinematic key image per segment world (used by the home grid + segment hero).
+// Brand-shot segment heroes. These were stock Unsplash photos, so every
+// segment page showed someone else's gym/cafe/garage instead of a Beyond
+// Stich tee — and the site depended on a third-party CDN for its own hero
+// imagery. Now local WebP (~50-230KB each, down from 1.5-2.4MB PNGs).
 export const SEGMENT_IMAGES = {
-  GYM: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1200&q=80',
-  COFFEE: 'https://images.unsplash.com/photo-1497515114629-f71d768fd07c?w=1200&q=80',
-  MILLIONAIRE: 'https://images.unsplash.com/photo-1601597111158-2fceff292cdc?w=1200&q=80',
-  MUSIC: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=1200&q=80',
-  GAMER: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&q=80',
-  CARS: 'https://images.unsplash.com/photo-1513258496099-48168024aec0?w=1200&q=80',
-  BIKE: 'https://images.unsplash.com/photo-1558981359-219d6364c9c8?w=1200&q=80',
-  SUMMER: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=80',
-  FLORAL: 'https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=1200&q=80',
-  SPORTS: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1200&q=80',
-  VALENTINE: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=1200&q=80',
-  TYPOGRAPHY: 'https://images.unsplash.com/photo-1516414447565-b14be0adf13e?w=1200&q=80',
-  RANDOMS: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&q=80',
+  GYM: '/banners/segments/gym.webp',
+  COFFEE: '/banners/segments/coffee.webp',
+  MILLIONAIRE: '/banners/segments/millionaire.webp',
+  MUSIC: '/banners/segments/music.webp',
+  GAMER: '/banners/segments/gamer.webp',
+  CARS: '/banners/segments/cars.webp',
+  BIKE: '/banners/segments/bike.webp',
+  SUMMER: '/banners/segments/summer.webp',
+  FLORAL: '/banners/segments/floral.webp',
+  SPORTS: '/banners/segments/sports.webp',
+  VALENTINE: '/banners/segments/valentine.webp',
+  TYPOGRAPHY: '/banners/segments/typography.webp',
+  RANDOMS: '/banners/segments/randoms.webp',
 };
 
 export function getSegmentImage(name) {

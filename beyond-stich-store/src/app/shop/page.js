@@ -3,6 +3,7 @@ import connectDB from '@/lib/mongodb';
 import Product from '@/lib/models/Product';
 import { DUMMY_PRODUCTS } from '@/lib/dummyData';
 import ShopClient from './ShopClient';
+import ShopHero from '@/components/shop/ShopHero';
 
 // Serve catalog pages from cache for 5 minutes. Without this every
 // visit blocks on a MongoDB round trip before any HTML ships.
@@ -59,8 +60,12 @@ export default async function ShopPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
       />
 
+      {/* Real, visible H1 lives here now (ShopHero), so the crawler-only
+          list below no longer carries its own — two H1s on one page is
+          worse than none. */}
+      <ShopHero />
+
       <div className="sr-only">
-        <h1>All Drops — Oversized Graphic Tees</h1>
         <ul>
           {products.map((p) => (
             <li key={p._id}>

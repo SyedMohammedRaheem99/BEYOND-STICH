@@ -1,0 +1,75 @@
+.hero {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: 42vh;
+  padding: var(--space-16) var(--container-padding) var(--space-10);
+  overflow: hidden;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--color-bg);
+}
+
+.img {
+  object-fit: cover;
+}
+
+/* Only one crop is displayed, and display:none stops the browser fetching
+   the other — a phone never downloads the landscape file. */
+.imgMobile {
+  display: none;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 10, 10, 0.35) 0%,
+    rgba(10, 10, 10, 0.75) 60%,
+    var(--color-bg) 100%
+  );
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
+}
+
+.headline {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 8vw, 5.5rem);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-3);
+}
+
+.sub {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  max-width: 46ch;
+}
+
+@media (max-width: 768px) {
+  .imgDesktop {
+    display: none;
+  }
+
+  .imgMobile {
+    display: block;
+  }
+
+  .hero {
+    min-height: 38vh;
+    padding: var(--space-12) var(--container-padding) var(--space-8);
+  }
+}
