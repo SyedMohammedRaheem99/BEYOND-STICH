@@ -169,6 +169,7 @@ function CouponFormModal({ coupon, onClose, onSubmit }) {
     expiresAt: coupon?.expiresAt ? new Date(coupon.expiresAt).toISOString().slice(0, 10) : '',
     active: coupon?.active ?? true,
     description: coupon?.description || '',
+    firstOrderOnly: coupon?.firstOrderOnly ?? false,
   });
 
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
@@ -245,9 +246,24 @@ function CouponFormModal({ coupon, onClose, onSubmit }) {
             <input value={form.description} onChange={(e) => set('description', e.target.value)} placeholder="10% off your first order" style={m.input} />
           </div>
 
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#F5F5F5', fontSize: '13px', cursor: 'pointer' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#F5F5F5', fontSize: '13px', cursor: 'pointer', minHeight: '44px' }}>
             <input type="checkbox" checked={form.active} onChange={(e) => set('active', e.target.checked)} />
             Active (available at checkout)
+          </label>
+
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', color: '#F5F5F5', fontSize: '13px', cursor: 'pointer', minHeight: '44px' }}>
+            <input
+              type="checkbox"
+              checked={form.firstOrderOnly}
+              onChange={(e) => set('firstOrderOnly', e.target.checked)}
+              style={{ marginTop: '3px' }}
+            />
+            <span>
+              First order only
+              <span style={{ display: 'block', color: '#888', fontSize: '11px', marginTop: '2px' }}>
+                Rejected if the checkout email has ordered before. Use for welcome offers.
+              </span>
+            </span>
           </label>
 
           <button type="submit" style={m.submitBtn}>{coupon ? 'UPDATE COUPON' : 'CREATE COUPON'}</button>

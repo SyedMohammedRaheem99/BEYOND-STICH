@@ -161,7 +161,9 @@ export default function CheckoutPage() {
       const res = await fetch('/api/coupon/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, subtotal }),
+        // Send the email so a first-order-only offer is judged now, not
+        // rejected later at order time.
+        body: JSON.stringify({ code, subtotal, email: formData.email }),
       });
       const data = await res.json();
       if (data.valid) {
@@ -294,6 +296,10 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           items: orderPayload.items,
           couponCode: orderPayload.couponCode,
+          // Must match what /api/orders will use, or a first-order-only
+          // coupon could resolve differently and the gateway would charge a
+          // different amount than the order records.
+          email: formData.email,
           currency: 'INR',
           notes: { email: formData.email },
         }),

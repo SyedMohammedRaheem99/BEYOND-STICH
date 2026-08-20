@@ -12,7 +12,11 @@ import { MAX_ITEMS, OrderError, repriceItems, computeTotals } from '@/lib/orderI
 // happily collect whatever amount the order was created for.
 export async function POST(request) {
   try {
-    const { items, couponCode = '', currency = 'INR', notes = {} } = await request.json();
+    // email is needed so first-order-only coupons resolve the same way here
+    // as they will at order time — otherwise the amount charged by the
+    // gateway could differ from the amount recorded on the order.
+    const { items, couponCode = '', email = '', currency = 'INR', notes = {} } =
+      await request.json();
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'Your cart is empty' }, { status: 400 });
@@ -35,7 +39,7 @@ export async function POST(request) {
       throw err;
     }
 
-    const { total } = await computeTotals(pricedItems, couponCode);
+    const { total } = await computeTotals(pricedItems, couponCode, email);
 
     // Razorpay rejects anything under 100 paise (₹1).
     if (!Number.isFinite(total) || total < 1) {

@@ -45,12 +45,17 @@ export default function AdminShell({ children }) {
       {/* Sidebar Navigation */}
       <aside className={styles.sidebar}>
         <Link href="/" className={styles.logo}>
+          {/* Same fix as the storefront: this was pointing at the 3.9MB
+              6250x6250 master, downloaded in full on every admin page to
+              render an 84px-tall wordmark, and declared square dimensions
+              for a 3.53:1 image. */}
           <img
-            src="/logos/beyond-stich-logo.png"
+            src="/logos/wordmark.png"
+            srcSet="/logos/wordmark.png 1x, /logos/wordmark@2x.png 2x, /logos/wordmark@3x.png 3x"
             alt="Beyond Stich"
             className={styles.adminLogoImage}
-            width={312}
-            height={312}
+            width={296}
+            height={84}
           />
           <span className={styles.badge}>ADMIN</span>
         </Link>

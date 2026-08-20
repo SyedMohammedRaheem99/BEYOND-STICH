@@ -13,6 +13,12 @@ export const BRAND = {
   // every chat from the floating button went nowhere.
   phone: '+91 83102 73670',
   phoneE164: '918310273670', // wa.me / tel: format, digits only
+  // Socials live here for the same reason the phone number does — the handle
+  // was hardcoded as `beyondstich` in five files (footer, contact page, and
+  // both SEO schemas), none of which matched the real account, so every
+  // Instagram link on the site 404'd.
+  instagram: 'https://www.instagram.com/thebeyondstich/',
+  instagramHandle: '@thebeyondstich',
 };
 
 export const SEGMENTS = [
@@ -186,6 +192,17 @@ export const PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'refunded'];
 export const SHIPPING = {
   FREE_THRESHOLD: 999,  // ₹ — orders at or above this amount ship free
   FLAT_RATE: 79,        // ₹ — flat fee for orders below threshold
+};
+
+// Welcome offer tiers. These drive the cart nudge and the marketing copy, but
+// the actual discount is applied by the WELCOME10 / WELCOME25 coupons in the
+// database — these values must match the minOrder set on those coupons, or
+// the site will promise a discount that checkout then refuses.
+export const WELCOME_TIERS = {
+  LOWER_MIN: 949,   // WELCOME10 — 10% off
+  LOWER_PERCENT: 10,
+  UPPER_MIN: 1999,  // WELCOME25 — 25% off
+  UPPER_PERCENT: 25,
 };
 
 // Stock thresholds — single source of truth for "low stock" indicators.

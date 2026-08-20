@@ -364,3 +364,23 @@
   font-weight: 600;
   color: var(--color-text-primary);
 }
+
+/* Welcome-discount nudge — the bigger saving, so it sits above the shipping
+   bar and uses the brand accent rather than the muted shipping style. */
+.discountNudge {
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-3);
+  background: rgba(245, 197, 24, 0.1);
+  border: 1px solid rgba(245, 197, 24, 0.35);
+  border-radius: var(--radius-sm);
+}
+
+.discountText {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.discountText strong {
+  color: #F5C518;
+}

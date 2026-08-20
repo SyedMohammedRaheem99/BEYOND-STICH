@@ -7,15 +7,21 @@ import { resolveCoupon } from '@/lib/coupon';
 // /api/orders — see src/lib/coupon.js.
 export async function POST(request) {
   try {
-    const { code, subtotal = 0 } = await request.json();
+    const { code, subtotal = 0, email = '' } = await request.json();
 
-    if (!code || !code.trim()) {
+    if (typeof code !== 'string' || !code.trim()) {
       return NextResponse.json({ valid: false, message: 'Enter a coupon code' }, { status: 400 });
     }
 
     await connectDB();
 
-    const result = await resolveCoupon(code, Number(subtotal) || 0);
+    // email lets first-order-only offers be checked here rather than failing
+    // at order time, after the customer thinks the discount applied.
+    const result = await resolveCoupon(
+      code,
+      Number(subtotal) || 0,
+      typeof email === 'string' ? email : ''
+    );
     return NextResponse.json(result);
   } catch (error) {
     console.error('Coupon validate error:', error);

@@ -121,7 +121,7 @@ export default function BangalorePage() {
                 <span className={styles.offerLabel}>Segment Worlds</span>
               </div>
               <div className={styles.offerItem}>
-                <span className={styles.offerValue}>₹799–999</span>
+                <span className={styles.offerValue}>₹949–1099</span>
                 <span className={styles.offerLabel}>Price Range</span>
               </div>
               <div className={styles.offerItem}>

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCartStore, useUIStore } from '@/lib/store';
-import { SHIPPING } from '@/lib/constants';
+import { SHIPPING, WELCOME_TIERS } from '@/lib/constants';
 import useFocusTrap from '@/hooks/useFocusTrap';
 import styles from './CartDrawer.module.css';
 
@@ -108,6 +108,18 @@ export default function CartDrawer() {
                 ✕
               </button>
             </div>
+
+            {/* Welcome-discount nudge. Someone at ₹1500 is one tee away from
+                25% off — worth ~₹500 — and had no way of knowing. Shown above
+                the shipping bar because it's the bigger saving. */}
+            {items.length > 0 && subtotal >= WELCOME_TIERS.LOWER_MIN && subtotal < WELCOME_TIERS.UPPER_MIN && (
+              <div className={styles.discountNudge}>
+                <p className={styles.discountText}>
+                  Add ₹{WELCOME_TIERS.UPPER_MIN - subtotal} more to unlock{' '}
+                  <strong>25% off your first order</strong>
+                </p>
+              </div>
+            )}
 
             {/* Free Shipping Progress */}
             {items.length > 0 && subtotal < SHIPPING.FREE_THRESHOLD && (

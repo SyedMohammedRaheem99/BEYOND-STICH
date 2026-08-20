@@ -92,17 +92,19 @@ export default function Footer() {
         {/* Brand Column */}
         <div className={styles.brandCol}>
           <div className={styles.brandLogo}>
-            <img 
-              src="/logos/beyond-stich-logo.png"
+            <img
+              src="/logos/wordmark.png"
+              srcSet="/logos/wordmark.png 1x, /logos/wordmark@2x.png 2x, /logos/wordmark@3x.png 3x"
               alt="Beyond Stich"
               className={styles.footerLogoImage}
-              width={312}
-              height={312}
+              width={296}
+              height={84}
+              loading="lazy"
             />
           </div>
           <p className={styles.brandTagline}>{BRAND.tagline}</p>
           <div className={styles.socials}>
-            <a href="https://instagram.com/beyondstich" target="_blank" rel="noopener noreferrer" aria-label="Instagram" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+            <a href={BRAND.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
                 <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />

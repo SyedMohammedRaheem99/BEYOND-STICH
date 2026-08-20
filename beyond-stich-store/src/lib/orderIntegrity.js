@@ -86,7 +86,7 @@ export async function repriceItems(items) {
 
 // Compute authoritative money values. Discounts and shipping are business
 // rules, never client inputs.
-export async function computeTotals(pricedItems, couponCode) {
+export async function computeTotals(pricedItems, couponCode, email = '') {
   const subtotal = pricedItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   let discount = 0;
@@ -94,7 +94,8 @@ export async function computeTotals(pricedItems, couponCode) {
   let appliedCouponCode = '';
 
   if (couponCode && couponCode.trim()) {
-    const resolved = await resolveCoupon(couponCode, subtotal);
+    // Email is needed so first-order-only offers can be enforced.
+    const resolved = await resolveCoupon(couponCode, subtotal, email);
     if (resolved.valid) {
       discount = resolved.discount;
       freeShipping = resolved.freeShipping;

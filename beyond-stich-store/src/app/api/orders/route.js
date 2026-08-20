@@ -111,7 +111,7 @@ export async function POST(request) {
       shipping: serverShipping,
       total: serverTotal,
       appliedCouponCode,
-    } = await computeTotals(pricedItems, couponCode);
+    } = await computeTotals(pricedItems, couponCode, email);
 
     // Reserve stock BEFORE creating the order so concurrent checkouts for the
     // last tee can't both succeed.

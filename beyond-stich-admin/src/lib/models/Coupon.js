@@ -55,6 +55,13 @@ const CouponSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    // Restricts the coupon to a customer's first order. Checked on the
+    // storefront against past orders for that email — without it a welcome
+    // discount can be claimed on every order forever.
+    firstOrderOnly: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

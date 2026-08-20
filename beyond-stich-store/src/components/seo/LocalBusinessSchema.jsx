@@ -11,17 +11,19 @@
  * OnlineStore keeps the parts that are true: the brand, the real contact
  * details, the price range, and the area actually served.
  */
+
+import { BRAND } from '@/lib/constants';
 export default function LocalBusinessSchema() {
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'OnlineStore',
     name: 'Beyond Stich',
     url: 'https://beyondstich.com',
-    logo: 'https://beyondstich.com/logos/beyond-stich-logo.png',
+    logo: 'https://beyondstich.com/logos/icon-512.png',
     image: 'https://beyondstich.com/banners/og/og-default.jpg',
     description:
       'Beyond Stich — premium oversized graphic tees for men. 240 GSM combed cotton, bold typography, 13+ segment worlds. Based in Bangalore, India.',
-    priceRange: '₹799 – ₹999',
+    priceRange: '₹949 – ₹1099',
     currenciesAccepted: 'INR',
     paymentAccepted: 'Cash on Delivery, UPI, Credit Card, Debit Card, Net Banking',
     address: {
@@ -40,7 +42,7 @@ export default function LocalBusinessSchema() {
       areaServed: 'IN',
       availableLanguage: ['English', 'Hindi', 'Kannada'],
     },
-    sameAs: ['https://instagram.com/beyondstich'],
+    sameAs: [BRAND.instagram],
     areaServed: {
       '@type': 'Country',
       name: 'India',

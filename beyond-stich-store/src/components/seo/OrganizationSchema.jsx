@@ -6,7 +6,7 @@ export default function OrganizationSchema() {
     '@type': 'Organization',
     name: BRAND.name,
     url: BRAND.url,
-    logo: `${BRAND.url}/logos/beyond-stich-logo.png`,
+    logo: `${BRAND.url}/logos/icon-512.png`,
     description: BRAND.description,
     contactPoint: {
       '@type': 'ContactPoint',
@@ -19,7 +19,7 @@ export default function OrganizationSchema() {
     // links; Facebook/YouTube/Pinterest were asserted here but appear
     // nowhere else in the site, and sameAs entries that 404 weaken entity
     // resolution rather than help it. Add them back once they're live.
-    sameAs: ['https://instagram.com/beyondstich'],
+    sameAs: [BRAND.instagram],
   };
 
   return (

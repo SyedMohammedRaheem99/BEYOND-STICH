@@ -1,4 +1,5 @@
 import InfoPageLayout from '@/components/layout/InfoPageLayout';
+import { BRAND } from '@/lib/constants';
 
 export const metadata = {
   title: 'Contact Us | Beyond Stich',
@@ -30,8 +31,8 @@ export default function ContactPage() {
         </li>
         <li>
           <strong>Instagram DM:</strong>{' '}
-          <a href="https://instagram.com/beyondstich" target="_blank" rel="noopener noreferrer">
-            @beyondstich
+          <a href={BRAND.instagram} target="_blank" rel="noopener noreferrer">
+            {BRAND.instagramHandle}
           </a>
         </li>
       </ul>

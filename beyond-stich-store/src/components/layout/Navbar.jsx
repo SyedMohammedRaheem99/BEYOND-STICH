@@ -148,12 +148,19 @@ export default function Navbar() {
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
-            <img 
-              src="/logos/beyond-stich-logo.png"
+            {/* Wordmark regenerated from the 6250px master. The old asset was
+                a 312x312 upscale rendered at 84px tall, which is why it looked
+                soft on retina; it also declared a square aspect ratio for a
+                3.53:1 image, so the header shifted as it loaded. srcSet lets
+                the browser pick 2x/3x only where it helps. */}
+            <img
+              src="/logos/wordmark.png"
+              srcSet="/logos/wordmark.png 1x, /logos/wordmark@2x.png 2x, /logos/wordmark@3x.png 3x"
               alt="Beyond Stich"
               className={styles.logoImage}
-              width={312}
-              height={312}
+              width={296}
+              height={84}
+              fetchPriority="high"
             />
           </Link>
 

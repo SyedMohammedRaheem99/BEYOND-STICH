@@ -1,4 +1,5 @@
 import Coupon from '@/lib/models/Coupon';
+import Order from '@/lib/models/Order';
 
 // Single source of truth for coupon rules.
 //
@@ -7,7 +8,7 @@ import Coupon from '@/lib/models/Coupon';
 // same checks itself before trusting a discount. Both callers share this.
 //
 // Assumes connectDB() has already been awaited by the caller.
-export async function resolveCoupon(code, subtotal = 0) {
+export async function resolveCoupon(code, subtotal = 0, email = '') {
   if (!code || !code.trim()) {
     return { valid: false, discount: 0, freeShipping: false, message: 'Enter a coupon code' };
   }
@@ -33,6 +34,37 @@ export async function resolveCoupon(code, subtotal = 0) {
       freeShipping: false,
       message: `Add ₹${coupon.minOrder - subtotal} more to use this coupon`,
     };
+  }
+
+  // Welcome offers are for new customers. Without this the same person could
+  // claim the discount on every order they ever place. Matched on the email
+  // used at checkout, which is what a guest order is keyed by.
+  if (coupon.firstOrderOnly) {
+    const normalised = String(email || '').trim().toLowerCase();
+    if (!normalised) {
+      return {
+        valid: false,
+        discount: 0,
+        freeShipping: false,
+        message: 'Enter your email above to use this welcome offer',
+      };
+    }
+
+    const previous = await Order.findOne({
+      email: normalised,
+      orderStatus: { $ne: 'cancelled' },
+    })
+      .select('_id')
+      .lean();
+
+    if (previous) {
+      return {
+        valid: false,
+        discount: 0,
+        freeShipping: false,
+        message: 'This welcome offer is for your first order only',
+      };
+    }
   }
 
   let discount = 0;

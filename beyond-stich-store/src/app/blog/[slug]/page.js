@@ -117,7 +117,7 @@ export default async function BlogPostPage({ params }) {
       name: 'Beyond Stich',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://beyondstich.com/logos/beyond-stich-logo.png',
+        url: 'https://beyondstich.com/logos/icon-512.png',
       },
     },
     mainEntityOfPage: {

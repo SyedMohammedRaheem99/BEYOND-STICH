@@ -40,12 +40,13 @@ export default function PageLoader() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             >
-              <img 
-                src="/logos/beyond-stich-logo.png"
+              <img
+                src="/logos/wordmark.png"
+                srcSet="/logos/wordmark.png 1x, /logos/wordmark@2x.png 2x, /logos/wordmark@3x.png 3x"
                 alt="Beyond Stich"
                 className={styles.loaderLogoImage}
-                width={312}
-                height={312}
+                width={296}
+                height={84}
               />
             </motion.div>
 

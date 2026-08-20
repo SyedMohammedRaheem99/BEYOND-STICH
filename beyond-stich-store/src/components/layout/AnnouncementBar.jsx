@@ -4,13 +4,15 @@ import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import styles from './AnnouncementBar.module.css';
 
+// Only claims we can actually honour. This previously advertised WELCOME20,
+// which did not exist in the database — customers reached checkout, typed it,
+// and got "Invalid coupon code". It also announced a "new" Gamer collection
+// and a Floral Women's Edit as fresh drops when neither had launched.
 const MESSAGES = [
-  '🎉 FLAT 20% OFF your first order — use code WELCOME20',
+  '🎉 First order? Get 10% off above ₹799 — 25% off above ₹1999',
   '🚚 FREE shipping on all orders over ₹999',
-  '🔁 7-day easy returns & exchanges',
-  '🎮 New Gamer Collection is LIVE — Shop Now',
-  '💐 Floral Women\'s Edit just dropped — limited stock',
   '📦 Cash on Delivery available across India',
+  '🔁 7-day easy returns & exchanges',
 ];
 
 export default function AnnouncementBar() {

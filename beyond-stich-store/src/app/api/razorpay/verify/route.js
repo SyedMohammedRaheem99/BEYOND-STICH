@@ -99,7 +99,7 @@ export async function POST(request) {
       shipping: serverShipping,
       total: serverTotal,
       appliedCouponCode,
-    } = await computeTotals(pricedItems, couponCode);
+    } = await computeTotals(pricedItems, couponCode, email);
 
     const soldOut = await reserveStock(pricedItems);
     if (soldOut) {

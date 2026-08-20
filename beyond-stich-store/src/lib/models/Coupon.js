@@ -13,6 +13,10 @@ const CouponSchema = new mongoose.Schema(
     usedCount: { type: Number, default: 0, min: 0 },
     expiresAt: { type: Date, default: null },
     description: { type: String, default: '' },
+    // Welcome offers are for first-time buyers only. Without this the same
+    // customer could claim the 25% code on every order they ever place.
+    // Enforced in resolveCoupon() against past orders for that email.
+    firstOrderOnly: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
