@@ -458,9 +458,11 @@
   }
 
   /* Was 62px inside a 60px navbar, so the logo bled past the nav's bottom
-     border onto the page content. */
+     border onto the page content. The -28px (32px tall) keeps the wordmark in
+     proportion with the 22px hamburger and 20px action icons; at
+     -16px it rendered ~155px wide and dominated the bar. */
   .logoImage {
-    height: calc(var(--nav-height) - 16px);
+    height: calc(var(--nav-height) - 28px);
   }
 }
 
@@ -470,7 +472,7 @@
      height and let the parent's max-width shrink it to fit instead. */
   .logoImage {
     height: auto;
-    max-height: calc(var(--nav-height) - 16px);
+    max-height: calc(var(--nav-height) - 28px);
   }
 }
 
