@@ -300,6 +300,9 @@ export default function CheckoutPage() {
           // coupon could resolve differently and the gateway would charge a
           // different amount than the order records.
           email: formData.email,
+          // Stored server-side against this Razorpay order so the webhook can
+          // still create the order if this browser never comes back.
+          shippingAddress: orderPayload.shippingAddress,
           currency: 'INR',
           notes: { email: formData.email },
         }),

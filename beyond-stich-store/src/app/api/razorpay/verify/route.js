@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import connectDB from '@/lib/mongodb';
 import Order from '@/lib/models/Order';
 import Coupon from '@/lib/models/Coupon';
+import PendingOrder from '@/lib/models/PendingOrder';
 import {
   MAX_ITEMS,
   OrderError,
@@ -79,6 +80,31 @@ export async function POST(request) {
     }
 
     await connectDB();
+
+    // The webhook is racing this request. Whoever claims the pending cart
+    // first creates the order; the other backs off. Without this a payment
+    // could produce two orders and two stock reservations.
+    if (!isMock && razorpay_order_id) {
+      const alreadyPlaced = await Order.findOne({ razorpayOrderId: razorpay_order_id })
+        .select('orderNumber createdAt total')
+        .lean();
+      if (alreadyPlaced) {
+        return NextResponse.json({
+          success: true,
+          message: 'Payment already confirmed',
+          order: {
+            orderNumber: alreadyPlaced.orderNumber,
+            createdAt: alreadyPlaced.createdAt,
+            total: alreadyPlaced.total,
+          },
+        });
+      }
+
+      await PendingOrder.updateOne(
+        { razorpayOrderId: razorpay_order_id },
+        { $set: { consumed: true } }
+      ).catch(() => {});
+    }
 
     // Same integrity rules as /api/orders: prices, discount and shipping are
     // recomputed server-side and stock is reserved atomically. This route

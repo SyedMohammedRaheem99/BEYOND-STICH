@@ -94,5 +94,9 @@ OrderSchema.index({ orderStatus: 1 });
 OrderSchema.index({ user: 1, createdAt: -1 });
 OrderSchema.index({ email: 1, createdAt: -1 });
 OrderSchema.index({ 'items.productSlug': 1 });
+// The Razorpay webhook and the browser's verify call both look an order up by
+// this to avoid creating a duplicate for the same payment. Sparse because COD
+// orders never have one.
+OrderSchema.index({ razorpayOrderId: 1 }, { sparse: true });
 
 export default mongoose.models.Order || mongoose.model('Order', OrderSchema);

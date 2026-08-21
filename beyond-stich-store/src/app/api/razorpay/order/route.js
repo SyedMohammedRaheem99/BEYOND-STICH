@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/mongodb';
+import PendingOrder from '@/lib/models/PendingOrder';
 import { MAX_ITEMS, OrderError, repriceItems, computeTotals } from '@/lib/orderIntegrity';
 
 // POST /api/razorpay/order
@@ -15,8 +18,16 @@ export async function POST(request) {
     // email is needed so first-order-only coupons resolve the same way here
     // as they will at order time — otherwise the amount charged by the
     // gateway could differ from the amount recorded on the order.
-    const { items, couponCode = '', email = '', currency = 'INR', notes = {} } =
-      await request.json();
+    const {
+      items,
+      couponCode = '',
+      email = '',
+      // Kept alongside the cart so the webhook can build a complete order
+      // without the browser.
+      shippingAddress = null,
+      currency = 'INR',
+      notes = {},
+    } = await request.json();
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'Your cart is empty' }, { status: 400 });
@@ -71,6 +82,31 @@ export async function POST(request) {
       receipt: `rcpt_${Date.now()}`,
       notes,
     });
+
+    // Stash the basket so the webhook can create the order if the customer's
+    // browser never makes it back to /api/razorpay/verify — otherwise their
+    // money is taken and no order exists. Razorpay's own `notes` field is far
+    // too small to hold a cart.
+    try {
+      let userId = null;
+      try {
+        const session = await getServerSession(authOptions);
+        if (session?.user?.id) userId = session.user.id;
+      } catch {}
+
+      await PendingOrder.create({
+        razorpayOrderId: order.id,
+        items,
+        shippingAddress: shippingAddress || null,
+        email,
+        couponCode,
+        user: userId,
+      });
+    } catch (err) {
+      // Don't block checkout: the browser path still works, this only costs
+      // us the webhook safety net for this one order.
+      console.error('[razorpay/order] could not save pending order', order.id, err);
+    }
 
     return NextResponse.json({ success: true, order });
   } catch (error) {
