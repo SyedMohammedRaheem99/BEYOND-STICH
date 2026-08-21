@@ -1,4 +1,8 @@
 .navbar {
+  /* Width the centred logo must keep clear on each side. Desktop shows 4
+     action buttons (44px each) with 3 gaps; below 768px the account button is
+     hidden, leaving 3 buttons and 2 gaps. */
+  --nav-side-cluster: calc(4 * 44px + 3 * var(--space-2));
   position: fixed;
   top: var(--announce-height);
   left: 0;
@@ -206,6 +210,11 @@
   align-items: center;
   gap: 6px;
   text-decoration: none;
+  /* Absolutely centred, so it cannot see the hamburger or the action icons.
+     On desktop there is ample room; the mobile rules below switch it out of
+     centring entirely, because a centred wordmark physically cannot fit
+     between the two clusters at phone widths. */
+  max-width: max(0px, calc(100% - 2 * var(--nav-side-cluster) - 2 * var(--space-2)));
 }
 
 .logoText {
@@ -229,6 +238,11 @@
      hard-coded 84px logo overflowed it and got clipped along the top edge. */
   height: calc(var(--nav-height) - 18px);
   width: auto;
+  /* The wordmark is ~3.53:1, so on narrow screens it runs out of horizontal
+     room long before vertical. Letting width win there (via the parent's
+     max-width) is what stops it colliding with the icons. */
+  max-width: 100%;
+  object-fit: contain;
   display: block;
 }
 
@@ -408,6 +422,23 @@
 }
 
 @media (max-width: 768px) {
+  .navbar {
+    /* .hideOnMobile removes the account button, so one fewer button + gap. */
+    --nav-side-cluster: calc(3 * 44px + 2 * var(--space-2));
+  }
+
+  /* A centred wordmark cannot fit here. At 360px the gap between the 44px
+     hamburger and the 148px action cluster leaves only ~24px for a centred
+     box, which is why the logo ran under the icons. Anchoring it beside the
+     hamburger instead frees ~128px — enough to render it legibly. */
+  .logo {
+    left: 44px;
+    top: 50%;
+    transform: translateY(-50%);
+    justify-content: flex-start;
+    max-width: calc(100% - 44px - var(--nav-side-cluster) - 2 * var(--space-2));
+  }
+
   .hideOnMobile {
     display: none;
   }
@@ -434,8 +465,12 @@
 }
 
 @media (max-width: 480px) {
+  /* At 360px the 3.53:1 wordmark is width-bound, not height-bound: a 38px
+     height implied ~134px of width, which reached under the icons. Cap the
+     height and let the parent's max-width shrink it to fit instead. */
   .logoImage {
-    height: 38px;
+    height: auto;
+    max-height: calc(var(--nav-height) - 16px);
   }
 }
 
