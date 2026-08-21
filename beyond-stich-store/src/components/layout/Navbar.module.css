@@ -200,9 +200,10 @@
 .logo {
   position: absolute;
   left: 50%;
-  transform: translateX(-50%);
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 6px;
   text-decoration: none;
 }
@@ -224,7 +225,9 @@
 }
 
 .logoImage {
-  height: 84px;
+  /* Derived from --nav-height rather than a fixed 84px: the bar is 70px, so a
+     hard-coded 84px logo overflowed it and got clipped along the top edge. */
+  height: calc(var(--nav-height) - 18px);
   width: auto;
   display: block;
 }
@@ -426,7 +429,7 @@
   /* Was 62px inside a 60px navbar, so the logo bled past the nav's bottom
      border onto the page content. */
   .logoImage {
-    height: 44px;
+    height: calc(var(--nav-height) - 16px);
   }
 }
 
