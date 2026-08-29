@@ -292,8 +292,8 @@
 }
 
 .errorMsg {
-  background: rgba(220, 38, 38, 0.1);
-  border: 1px solid rgba(220, 38, 38, 0.4);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
   color: #FCA5A5;
 }
 

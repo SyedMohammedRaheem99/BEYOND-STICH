@@ -7,7 +7,7 @@
   top: var(--announce-height);
   left: 0;
   right: 0;
-  z-index: 1000;
+  z-index: var(--z-navbar);
   height: var(--nav-height);
   background: transparent;
   transition: background var(--duration-normal) var(--ease-out),
@@ -357,7 +357,7 @@
   position: fixed;
   inset: 0;
   background: var(--overlay-bg);
-  z-index: 1001;
+  z-index: var(--z-overlay);
 }
 
 .sideMenu {
@@ -368,7 +368,7 @@
   width: 320px;
   max-width: 85vw;
   background: var(--color-bg-secondary);
-  z-index: 1002;
+  z-index: var(--z-drawer);
   display: flex;
   flex-direction: column;
   overflow-y: auto;

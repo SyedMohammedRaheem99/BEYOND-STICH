@@ -34,14 +34,6 @@
   text-transform: uppercase;
 }
 
-.desc {
-  font-family: var(--font-body);
-  font-size: var(--text-base);
-  color: var(--color-text-muted);
-  margin-bottom: var(--space-10);
-  line-height: 1.6;
-}
-
 .actionRow {
   display: flex;
   align-items: center;
@@ -53,7 +45,7 @@
   flex-wrap: wrap;
 }
 
-.cta, .ctaBtn {
+.ctaBtn {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
@@ -72,7 +64,7 @@
   transition: transform var(--duration-fast), opacity var(--duration-fast);
 }
 
-.cta:hover, .ctaBtn:hover {
+.ctaBtn:hover {
   transform: translateY(-2px);
   opacity: 0.9;
 }

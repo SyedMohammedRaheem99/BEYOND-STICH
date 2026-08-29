@@ -34,6 +34,11 @@
   /* Semantic Colors */
   --color-success: #22C55E;
   --color-error: #EF4444;
+  /* Tint/border for error banners. Three files independently hardcoded
+     rgba(220, 38, 38, ...) here — a different, off-system red — instead of
+     deriving from --color-error. */
+  --color-error-bg: rgba(239, 68, 68, 0.1);
+  --color-error-border: rgba(239, 68, 68, 0.4);
 
   /* Segment Accent Colors */
   --accent-gym: #F5C518;
@@ -118,6 +123,22 @@
   --header-height: calc(var(--nav-height) + var(--announce-height));
   --container-max: 1400px;
   --container-padding: var(--space-6);
+
+  /* Z-Index Scale — only global stacking-context layers belong here.
+     Values inside a single component's own stacking context (0/1/2/3
+     between a background, an overlay, and its own content) stay local. */
+  --z-sticky: 100;         /* in-page sticky bars (shop filter strip, etc.) */
+  --z-fab: 899;            /* WhatsApp widget — stays just below the PDP sticky bar */
+  --z-sticky-bar: 900;     /* PDP sticky add-to-cart bar */
+  --z-navbar: 1000;        /* main navbar */
+  --z-announce: 1001;      /* announcement bar, sits above navbar */
+  --z-overlay: 1001;       /* full-screen dim layer behind a drawer/menu */
+  --z-drawer: 1002;        /* cart drawer, side menu panel */
+  --z-modal: 2000;         /* size guide, cart drawer overlay-level modals */
+  --z-modal-content: 2001; /* content/close button inside a z-modal layer */
+  --z-toast: 9000;         /* scroll progress bar, transient UI */
+  --z-fullscreen: 10000;   /* PDP image zoom overlay — above every other layer */
+  --z-cursor: 99999;       /* custom cursor, page loader — always on top */
 }
 
 /* --- Base Styles --- */
@@ -239,7 +260,7 @@ select:focus {
   position: fixed;
   top: var(--space-3);
   left: var(--space-3);
-  z-index: 1000;
+  z-index: var(--z-navbar);
   padding: var(--space-3) var(--space-5);
   background: var(--color-text-primary);
   color: var(--color-bg);

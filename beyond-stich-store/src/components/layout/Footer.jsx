@@ -81,7 +81,7 @@ export default function Footer() {
                   {subLoading ? 'SIGNING UP…' : 'NOTIFY ME'}
                 </button>
               </form>
-              {subError && <p style={{ color: '#EF4444', fontSize: '12px', marginTop: '8px' }}>{subError}</p>}
+              {subError && <p style={{ color: 'var(--color-error)', fontSize: '12px', marginTop: '8px' }}>{subError}</p>}
             </>
           )}
         </div>

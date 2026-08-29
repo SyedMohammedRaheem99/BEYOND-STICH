@@ -6,7 +6,7 @@
   /* Below the PDP sticky add-to-cart bar (900) and the cart drawer / size
      guide modal (2000+). At 999 this green circle sat directly on top of the
      ADD TO BAG button on mobile — right where a thumb lands. */
-  z-index: 899;
+  z-index: var(--z-fab);
 }
 
 @media (max-width: 768px) {
@@ -49,12 +49,12 @@
   bottom: 70px;
   right: 0;
   width: 300px;
-  background: #18191c;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-elevated);
+  animation: slideUp var(--duration-normal) var(--ease-out);
 }
 
 @keyframes slideUp {
@@ -69,24 +69,23 @@
 }
 
 .popoverHeader {
-  background: #0b0e14;
-  padding: 14px 16px;
+  background: var(--color-bg-secondary);
+  padding: var(--space-4);
   display: flex;
   align-items: center;
-  gap: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-
+  gap: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .popoverHeader strong {
   display: block;
-  font-size: 0.9rem;
-  color: #fff;
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
 }
 
 .popoverHeader p {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
@@ -94,10 +93,10 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #c6a14a;
-  color: #000;
+  background: var(--accent-millionaire);
+  color: var(--color-bg);
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -107,37 +106,42 @@
   margin-left: auto;
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 1.2rem;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xl);
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .popoverBody {
-  padding: 16px;
+  padding: var(--space-4);
 }
 
 .chatBubble {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 12px;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  color: #ddd;
-  margin-bottom: 14px;
+  background: var(--color-bg-card);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-4);
   line-height: 1.4;
 }
 
 .startChatBtn {
   display: block;
   width: 100%;
-  padding: 10px;
+  padding: var(--space-3);
   background: #25d366;
   color: #000;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   text-align: center;
   text-decoration: none;
-  border-radius: 8px;
-  transition: filter 0.2s ease;
+  border-radius: var(--radius-md);
+  transition: filter var(--duration-fast) ease;
 }
 
 .startChatBtn:hover {

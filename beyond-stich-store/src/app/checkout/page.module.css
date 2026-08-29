@@ -546,8 +546,8 @@
 .orderError {
   margin-bottom: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  background: rgba(220, 38, 38, 0.1);
-  border: 1px solid rgba(220, 38, 38, 0.4);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
   border-radius: var(--radius-sm);
   color: #FCA5A5;
   font-family: var(--font-body);
