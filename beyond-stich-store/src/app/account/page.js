@@ -83,7 +83,7 @@ export default function AccountDashboard() {
         ) : recentOrders.length > 0 ? (
           <div className={styles.ordersList}>
             {recentOrders.map(order => (
-              <Link key={order._id} href={`/track?order=${order.orderNumber}`} className={styles.orderItem}>
+              <Link key={order._id} href={`/account/orders/${order.orderNumber}`} className={styles.orderItem}>
                 <div className={styles.orderInfo}>
                   <span className={styles.orderId}>{order.orderNumber}</span>
                   <span className={styles.orderDate}>{formatDate(order.createdAt)}</span>

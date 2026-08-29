@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore, useUIStore } from '@/lib/store';
@@ -12,6 +12,7 @@ import styles from './Navbar.module.css';
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -94,7 +95,15 @@ export default function Navbar() {
             </button>
 
             <nav className={styles.desktopNav} aria-label="Primary">
-              <Link href="/shop" className={styles.navLink} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+              {/* Nothing in the nav indicated which page you were on — SHOP
+                  looked identical whether you were on /shop or /about. */}
+              <Link
+                href="/shop"
+                className={`${styles.navLink} ${pathname === '/shop' ? styles.navLinkActive : ''}`}
+                aria-current={pathname === '/shop' ? 'page' : undefined}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+              >
                 SHOP
               </Link>
 
@@ -102,6 +111,12 @@ export default function Navbar() {
                 className={styles.worldsWrap}
                 onMouseEnter={() => setWorldsOpen(true)}
                 onMouseLeave={() => setWorldsOpen(false)}
+                // A keyboard user could open this, tab through all 13 links,
+                // tab off the end — and the panel stayed open indefinitely,
+                // floating over the page. Only Escape or a mouse closed it.
+                onBlur={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget)) setWorldsOpen(false);
+                }}
               >
                 <button
                   className={styles.navLink}
@@ -123,7 +138,6 @@ export default function Navbar() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 8 }}
                       transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                      role="menu"
                     >
                       <div className={styles.megaGrid}>
                         {SEGMENTS.map((seg) => (
@@ -132,7 +146,7 @@ export default function Navbar() {
                             href={`/segment/${seg.id}`}
                             className={styles.megaItem}
                             onClick={() => setWorldsOpen(false)}
-                            role="menuitem"
+                            aria-current={pathname === `/segment/${seg.id}` ? 'page' : undefined}
                           >
                             <span className={styles.megaDot} style={{ background: seg.accent }} />
                             <span className={styles.megaText}>
@@ -147,7 +161,13 @@ export default function Navbar() {
                 </AnimatePresence>
               </div>
 
-              <Link href="/about" className={styles.navLink} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+              <Link
+                href="/about"
+                className={`${styles.navLink} ${pathname === '/about' ? styles.navLinkActive : ''}`}
+                aria-current={pathname === '/about' ? 'page' : undefined}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+              >
                 ABOUT
               </Link>
             </nav>
@@ -317,54 +337,9 @@ export default function Navbar() {
                   ✕
                 </button>
               </div>
-              <nav className={styles.sideMenuNav} aria-label="Segments">
-                <Link href="/shop" onClick={() => setMobileMenuOpen(false)}>
-                  ALL DROPS
-                </Link>
-                <Link href="/segment/gym" onClick={() => setMobileMenuOpen(false)}>
-                  GYM
-                </Link>
-                <Link href="/segment/coffee" onClick={() => setMobileMenuOpen(false)}>
-                  COFFEE
-                </Link>
-                <Link href="/segment/millionaire" onClick={() => setMobileMenuOpen(false)}>
-                  MILLIONAIRE
-                </Link>
-                <Link href="/segment/music" onClick={() => setMobileMenuOpen(false)}>
-                  MUSIC
-                </Link>
-                <Link href="/segment/gamer" onClick={() => setMobileMenuOpen(false)}>
-                  GAMER
-                </Link>
-                <Link href="/segment/cars" onClick={() => setMobileMenuOpen(false)}>
-                  CARS
-                </Link>
-                <Link href="/segment/bike" onClick={() => setMobileMenuOpen(false)}>
-                  BIKE
-                </Link>
-                <Link href="/segment/sports" onClick={() => setMobileMenuOpen(false)}>
-                  SPORTS
-                </Link>
-                <Link href="/segment/summer" onClick={() => setMobileMenuOpen(false)}>
-                  SUMMER
-                </Link>
-                <Link href="/segment/floral" onClick={() => setMobileMenuOpen(false)}>
-                  FLORAL
-                </Link>
-                <Link href="/segment/typography" onClick={() => setMobileMenuOpen(false)}>
-                  TYPOGRAPHY
-                </Link>
-                <Link href="/segment/valentine" onClick={() => setMobileMenuOpen(false)}>
-                  VALENTINE
-                </Link>
-                <Link href="/segment/randoms" onClick={() => setMobileMenuOpen(false)}>
-                  RANDOMS
-                </Link>
-              </nav>
-
-              {/* The account icon is hidden on mobile, so without these there
-                  is no path to order tracking or support on a phone — and
-                  "where is my order" is the main query for a COD store. */}
+              {/* Help links come FIRST. They used to sit below 13 segment
+                  rows (~720px down), so "where is my order" — the main query
+                  for a COD store — needed a full scroll to reach. */}
               <nav className={styles.sideMenuSecondary} aria-label="Account and help">
                 <Link href="/track" onClick={() => setMobileMenuOpen(false)}>
                   TRACK ORDER
@@ -379,6 +354,30 @@ export default function Navbar() {
                   RETURNS
                 </Link>
               </nav>
+
+              {/* Mapped from SEGMENTS rather than hardcoded — the mega-menu
+                  and footer already map, so a 14th segment would have shown
+                  everywhere EXCEPT mobile, where most traffic is. */}
+              <nav className={styles.sideMenuNav} aria-label="Segments">
+                <Link
+                  href="/shop"
+                  onClick={() => setMobileMenuOpen(false)}
+                  aria-current={pathname === '/shop' ? 'page' : undefined}
+                >
+                  ALL DROPS
+                </Link>
+                {SEGMENTS.map((seg) => (
+                  <Link
+                    key={seg.id}
+                    href={`/segment/${seg.id}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                    aria-current={pathname === `/segment/${seg.id}` ? 'page' : undefined}
+                  >
+                    {seg.name}
+                  </Link>
+                ))}
+              </nav>
+
             </motion.div>
           </>
         )}

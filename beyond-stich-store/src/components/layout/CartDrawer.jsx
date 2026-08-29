@@ -173,9 +173,18 @@ export default function CartDrawer() {
                     </div>
                     <div className={styles.itemInfo}>
                       <h3 className={styles.itemName}>{item.name}</h3>
-                      <p className={styles.itemMeta}>
+                      {/* Size was static text, so changing M to L meant
+                          remove → navigate back → re-select → re-add. Size
+                          doubt is the main hesitation when buying apparel;
+                          this links back to the product to change it. */}
+                      <Link
+                        href={`/product/${item.slug}`}
+                        className={styles.itemMeta}
+                        onClick={closeCart}
+                      >
                         Size: {item.size} · {item.color}
-                      </p>
+                        <span className={styles.editHint}>Change</span>
+                      </Link>
                       <div className={styles.itemBottom}>
                         <div className={styles.quantityControl}>
                           <button

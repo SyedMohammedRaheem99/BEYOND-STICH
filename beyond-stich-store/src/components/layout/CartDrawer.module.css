@@ -176,8 +176,10 @@
 }
 
 .quantityControl button {
-  width: 36px;
-  height: 36px;
+  /* 44px at every width, not just under 480px — adjacent +/− at 36px is a
+     mis-tap into the wrong quantity on any touch device. */
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;

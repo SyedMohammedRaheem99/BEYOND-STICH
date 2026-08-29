@@ -340,6 +340,13 @@
 }
 
 .searchClose {
+  /* Was a bare glyph in ~8px padding. It's the only visible way to dismiss
+     the overlay, so it needs a real hit area. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   font-size: var(--text-lg);
   color: var(--color-text-muted);
   padding: var(--space-2);
@@ -384,6 +391,11 @@
 }
 
 .sideMenuClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   font-size: var(--text-lg);
   color: var(--color-text-muted);
   padding: var(--space-2);
@@ -497,5 +509,25 @@
 }
 
 .sideMenuSecondary a:hover {
+  color: var(--color-text-primary);
+}
+
+/* Marks the current page. Nothing in the nav indicated it before — SHOP
+   looked identical whether you were on /shop or /about. */
+.navLinkActive {
+  color: var(--color-text-primary);
+}
+
+.navLinkActive::after {
+  content: '';
+  display: block;
+  height: 1px;
+  margin-top: 3px;
+  background: currentColor;
+}
+
+/* Same cue in the mobile menu, driven by aria-current. */
+.sideMenuNav a[aria-current='page'],
+.sideMenuSecondary a[aria-current='page'] {
   color: var(--color-text-primary);
 }

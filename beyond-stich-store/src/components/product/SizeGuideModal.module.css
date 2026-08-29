@@ -41,6 +41,9 @@
 }
 
 .closeBtn {
+  /* Was 36px — the sole dismiss control for the modal. */
+  min-width: 44px;
+  min-height: 44px;
   width: 36px;
   height: 36px;
   display: grid;

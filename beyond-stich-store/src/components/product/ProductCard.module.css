@@ -113,6 +113,10 @@
 
 /* Wishlist Button */
 .wishlistBtn {
+  /* Sits on top of the card's link to the PDP, so it must be a deliberate
+     tap, not an accidental one — 44px hit area with a smaller visual. */
+  min-width: 44px;
+  min-height: 44px;
   position: absolute;
   top: var(--space-3);
   right: var(--space-3);

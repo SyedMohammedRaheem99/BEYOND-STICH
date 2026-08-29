@@ -17,23 +17,31 @@ export default function OrderHistoryPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // A failed fetch used to leave orders as [] and render "NO ORDERS YET" —
+  // telling a paying customer their history is empty when the request simply
+  // failed. For a COD store where "where is my order" is the top query, that
+  // destroys trust and generates support load.
+  const [loadError, setLoadError] = useState(false);
+  const [retry, setRetry] = useState(0);
+
   useEffect(() => {
     const fetchOrders = async () => {
+      setLoadError(false);
       try {
         const res = await fetch('/api/orders?user=true');
-        if (res.ok) {
-          const data = await res.json();
-          setOrders(data.orders || []);
-        }
+        if (!res.ok) throw new Error('Request failed');
+        const data = await res.json();
+        setOrders(data.orders || []);
       } catch (err) {
         console.error('Fetch orders error:', err);
+        setLoadError(true);
       } finally {
         setLoading(false);
       }
     };
     if (session) fetchOrders();
     else setLoading(false);
-  }, [session]);
+  }, [session, retry]);
 
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString('en-IN', {
@@ -128,6 +136,23 @@ export default function OrderHistoryPage() {
               </div>
             </motion.div>
           ))}
+        </div>
+      ) : loadError ? (
+        <div className={styles.emptyState}>
+          <h2>COULDN&apos;T LOAD YOUR ORDERS</h2>
+          <p>
+            Your orders are safe — we just couldn&apos;t fetch them. Check your
+            connection and try again.
+          </p>
+          <button
+            className={styles.shopBtn}
+            onClick={() => {
+              setLoading(true);
+              setRetry((r) => r + 1);
+            }}
+          >
+            TRY AGAIN
+          </button>
         </div>
       ) : (
         <div className={styles.emptyState}>

@@ -193,6 +193,12 @@ function ShopContent({ initialProducts }) {
               initial="hidden"
               animate="visible"
               exit="hidden"
+              // `loading` was tracked but never rendered, so changing the sort
+              // on a slow connection left the old results on screen with no
+              // feedback — the customer taps "Price: Low to High", sees no
+              // change, and taps again.
+              aria-busy={loading}
+              style={{ opacity: loading ? 0.45 : 1, transition: 'opacity 0.2s' }}
             >
               {filteredProducts.map((product, index) => (
                 <ProductCard key={product._id} product={product} index={index} />
