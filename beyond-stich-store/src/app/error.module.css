@@ -47,6 +47,10 @@
   align-items: center;
   gap: var(--space-4);
   justify-content: center;
+  /* Both pills together are ~346px against ~296px of usable width at 360px,
+     so without wrapping they overflowed the viewport on the error page —
+     exactly when the user needs a way out. global-error.js already wraps. */
+  flex-wrap: wrap;
 }
 
 .cta, .ctaBtn {

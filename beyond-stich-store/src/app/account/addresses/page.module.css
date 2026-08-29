@@ -200,7 +200,7 @@
   font-size: var(--text-sm);
 }
 
-.input:focus {
+.input:focus:not(:focus-visible) {
   outline: none;
   border-color: var(--color-text-primary);
 }

@@ -384,3 +384,10 @@
 .discountText strong {
   color: #F5C518;
 }
+
+/* The + button now stops at available stock; without a disabled style it
+   just silently stopped responding. */
+.quantityControl button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}

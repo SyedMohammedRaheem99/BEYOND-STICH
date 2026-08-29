@@ -196,7 +196,19 @@ export default function CheckoutPage() {
     e.preventDefault();
     const errs = validate(formData);
     setErrors(errs);
-    if (Object.keys(errs).length > 0) return;
+
+    if (Object.keys(errs).length > 0) {
+      // Move to the first bad field. On mobile the order summary sits above
+      // the form, so errors can render well off-screen — the customer taps
+      // CONTINUE, nothing visibly happens, and the button reads as broken.
+      const firstInvalid = Object.keys(errs)[0];
+      requestAnimationFrame(() => {
+        const el = document.getElementById(`checkout-${firstInvalid}`);
+        el?.focus({ preventScroll: true });
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+      return;
+    }
     try {
       localStorage.setItem(ADDRESS_KEY, JSON.stringify(formData));
     } catch {}
@@ -430,9 +442,24 @@ export default function CheckoutPage() {
     );
   }
 
+  // Lets the browser fill a saved address in one tap. Without these, every
+  // customer types eight fields by hand on a phone — the single biggest
+  // source of friction in this form.
+  const AUTOCOMPLETE = {
+    firstName: 'given-name',
+    lastName: 'family-name',
+    email: 'email',
+    phone: 'tel-national',
+    address: 'street-address',
+    city: 'address-level2',
+    state: 'address-level1',
+    pin: 'postal-code',
+  };
+
   const field = (name, placeholder, type = 'text', extra = {}) => (
     <div className={styles.field}>
       <input
+        id={`checkout-${name}`}
         name={name}
         type={type}
         value={formData[name]}
@@ -441,9 +468,17 @@ export default function CheckoutPage() {
         className={`${styles.input} ${errors[name] ? styles.inputError : ''}`}
         aria-label={placeholder}
         aria-invalid={errors[name] ? 'true' : 'false'}
+        // Ties the message to the field so a screen reader announces it
+        // instead of leaving the user with a silent red border.
+        aria-describedby={errors[name] ? `checkout-${name}-error` : undefined}
+        autoComplete={AUTOCOMPLETE[name] || 'on'}
         {...extra}
       />
-      {errors[name] && <span className={styles.errorText}>{errors[name]}</span>}
+      {errors[name] && (
+        <span id={`checkout-${name}-error`} className={styles.errorText} role="alert">
+          {errors[name]}
+        </span>
+      )}
     </div>
   );
 

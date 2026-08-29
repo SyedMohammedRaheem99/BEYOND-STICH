@@ -63,7 +63,7 @@
   transition: border-color var(--duration-fast);
 }
 
-.input:focus {
+.input:focus:not(:focus-visible) {
   outline: none;
   border-color: var(--color-text-primary);
 }

@@ -89,6 +89,29 @@
   margin-bottom: var(--space-2);
 }
 
+/* globals.css strips list-style from every ul AND ol, but only ul had styles
+   here — so the numbered return steps on /returns lost their numbers, their
+   indent and their markers, collapsing into four unmarked lines. That's the
+   most procedural content on the site. */
+.body ol {
+  list-style: decimal;
+  margin: 0 0 var(--space-6);
+  padding-left: var(--space-6);
+}
+
+.body ol li {
+  padding-left: var(--space-2);
+  color: var(--color-text-secondary);
+  line-height: 1.8;
+  margin-bottom: var(--space-3);
+}
+
+.body ol li::marker {
+  color: var(--color-text-primary);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
 .body ul li::before {
   content: '';
   position: absolute;

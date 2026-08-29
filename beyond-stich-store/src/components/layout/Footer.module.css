@@ -273,3 +273,10 @@
     justify-content: center;
   }
 }
+
+/* 16px stops iOS zooming the page when this field is focused. */
+@media (max-width: 768px) {
+  .newsletterInput {
+    font-size: 16px;
+  }
+}

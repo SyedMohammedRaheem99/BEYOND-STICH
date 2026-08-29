@@ -128,7 +128,7 @@
   border-color: var(--color-border-hover);
 }
 
-.input:focus {
+.input:focus:not(:focus-visible) {
   outline: none;
   border-color: var(--color-text-primary);
 }
@@ -335,7 +335,10 @@
   position: relative;
   width: 60px;
   height: 80px;
-  border-radius: var(--radius-none);
+  /* --radius-none was never defined, so this whole declaration was invalid
+     and dropped — the thumbnail inherited whatever the browser defaulted to
+     rather than the square corners intended. */
+  border-radius: 0;
   overflow: hidden;
   flex-shrink: 0;
 }

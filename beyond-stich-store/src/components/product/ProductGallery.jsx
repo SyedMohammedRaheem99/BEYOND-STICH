@@ -93,7 +93,25 @@ export default function ProductGallery({ images, name }) {
       <div className={styles.mobileView}>
         <div ref={swipeRef} className={styles.swipeContainer}>
           {images.map((img, i) => (
-            <div key={i} data-index={i} className={styles.swipeItem}>
+            /* Tap to enlarge. Zoom was wired only to the desktop blocks, and
+               .desktopView is display:none below 1024px — so on every phone
+               the overlay was unreachable code. For a graphic tee, being able
+               to inspect the print is the purchase decision. */
+            <div
+              key={i}
+              data-index={i}
+              className={styles.swipeItem}
+              onClick={() => handleImageClick(i)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleImageClick(i);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label={`Enlarge image ${i + 1} of ${images.length}`}
+            >
               {/* Both gallery copies are in the DOM (one hidden by CSS).
                   Preloading here too made the browser fetch the first image
                   twice at two sizes on every PDP — a preload is issued
@@ -111,6 +129,15 @@ export default function ProductGallery({ images, name }) {
           ))}
         </div>
         
+        {/* Counter pinned to the top of the frame. The dots sit at the bottom
+            of a 4:5 image, which on a 360px phone is below the fold — so the
+            customer saw one photo with no indication more existed. */}
+        {images.length > 1 && (
+          <span className={styles.counter} aria-hidden="true">
+            {mobileIndex + 1} / {images.length}
+          </span>
+        )}
+
         {/* Pagination Dots */}
         <div className={styles.dots}>
           {images.map((_, i) => (

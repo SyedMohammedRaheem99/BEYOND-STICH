@@ -12,8 +12,10 @@
 @media (max-width: 768px) {
   .whatsappWrapper {
     right: 16px;
-    /* Lift clear of the ~76px PDP sticky bar. */
-    bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+    /* Only the PDP has a sticky add-to-cart bar to clear, and it sets
+       --fab-offset to lift the button over it. Everywhere else the flat 88px
+       left the green circle hovering over footer content for no reason. */
+    bottom: calc(var(--fab-offset, 24px) + env(safe-area-inset-bottom, 0px));
   }
 }
 

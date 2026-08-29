@@ -52,6 +52,18 @@ export default function Navbar() {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, []);
 
+  // Lock body scroll while the mobile menu is open. The cart drawer and the
+  // size-guide modal already do this; the side menu didn't, so scrolling past
+  // its end chained to the page and moved content behind an aria-modal panel.
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [mobileMenuOpen]);
+
   const handleMouseEnter = () => setCursorVariant('hover');
   const handleMouseLeave = () => resetCursor();
 

@@ -81,6 +81,33 @@
     background: var(--color-bg-card);
   }
 
+  /* Reveal the next image's edge so the swipe is self-evident — a
+     full-width slide with no peek gives no reason to try. */
+  .swipeItem {
+    width: 92%;
+  }
+
+  .swipeContainer {
+    gap: var(--space-2);
+    padding-right: 8%;
+  }
+
+  .counter {
+    position: absolute;
+    top: var(--space-4);
+    right: var(--space-4);
+    z-index: 10;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    background: rgba(10, 10, 10, 0.7);
+    backdrop-filter: blur(8px);
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--color-text-primary);
+  }
+
   .dots {
     position: absolute;
     bottom: var(--space-6);

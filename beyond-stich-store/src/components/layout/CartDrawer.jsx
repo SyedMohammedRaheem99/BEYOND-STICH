@@ -194,6 +194,10 @@ export default function CartDrawer() {
                           <span aria-live="polite">{item.quantity}</span>
                           <button
                             aria-label={`Increase quantity of ${item.name}`}
+                            // Stops at the stock actually available for this
+                            // size, rather than letting the customer commit to
+                            // a quantity that fails at checkout.
+                            disabled={item.quantity >= (item.maxStock ?? 99)}
                             onClick={() =>
                               updateQuantity(
                                 item.productId,

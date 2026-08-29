@@ -540,6 +540,30 @@
     padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
   }
 
+  /* The WhatsApp button is a sibling of <main>, not a descendant of .pdp, so
+     a variable set on .pdp can't reach it — CSS custom properties inherit
+     down, not sideways. :has() lets the PDP raise it from the root while
+     every other page keeps the default 24px. */
+  :root:has(.pdp) {
+    --fab-offset: 88px;
+  }
+
+  /* The sticky bar IS the mobile add-to-cart. Leaving the in-flow one visible
+     too put two buttons for the same action on screen at once, with different
+     labels ("ADD TO BAG" vs "ADD TO BAG — ₹949") and different colours. The
+     wishlist button moves into the bar below so it isn't lost. */
+  .addToCartBtn {
+    display: none;
+  }
+
+  .actions {
+    margin-top: var(--space-6);
+  }
+
+  .wishlistBtn {
+    width: 100%;
+  }
+
   .stickyBar {
     position: fixed;
     bottom: 0;
@@ -626,7 +650,7 @@
   min-height: 48px;
 }
 
-.notifyInput:focus {
+.notifyInput:focus:not(:focus-visible) {
   outline: none;
   border-color: var(--color-text-primary);
 }

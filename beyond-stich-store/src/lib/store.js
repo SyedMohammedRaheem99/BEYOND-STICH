@@ -37,9 +37,12 @@ export const useCartStore = create(
           // left the item object identical, so components subscribed to it
           // could keep showing the old quantity and subtotal.
           const updatedItems = [...items];
+          const existing = items[existingIndex];
+          const ceiling = existing.maxStock ?? 99;
           updatedItems[existingIndex] = {
-            ...items[existingIndex],
-            quantity: items[existingIndex].quantity + 1,
+            ...existing,
+            // Never exceed what's actually in stock for this size.
+            quantity: Math.min(existing.quantity + 1, ceiling),
           };
           set({ items: updatedItems, isOpen: true });
         } else {
@@ -57,6 +60,11 @@ export const useCartStore = create(
                 size,
                 color,
                 segment: product.segment,
+                // Stock for THIS size, so the cart's + button can stop at the
+                // real ceiling. Without it a customer could set quantity to 20
+                // on a size with 2 units and only discover it at checkout —
+                // the worst possible moment on a COD store.
+                maxStock: product.sizes?.find((s) => s.size === size)?.stock ?? 99,
                 quantity: 1,
               },
             ],
@@ -90,7 +98,9 @@ export const useCartStore = create(
             item.productId === productId &&
             item.size === size &&
             item.color === color
-              ? { ...item, quantity }
+              // Clamp here too, so the ceiling holds no matter which UI
+              // calls this.
+              ? { ...item, quantity: Math.min(quantity, item.maxStock ?? 99) }
               : item
           ),
         });
