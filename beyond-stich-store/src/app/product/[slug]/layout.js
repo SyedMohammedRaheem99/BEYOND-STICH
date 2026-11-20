@@ -26,13 +26,23 @@ export async function generateMetadata({ params }) {
   
   const canonical = `https://beyondstich.com/product/${slug}`;
 
+  // Prefer the short description: it is written to stand alone, where the
+  // long one opens mid-thought and gets truncated by search engines around
+  // 160 characters. The fallback no longer says "oversized graphic tees" —
+  // the catalogue is not only t-shirts.
+  const metaDescription =
+    product.shortDescription ||
+    (product.description
+      ? product.description.slice(0, 157).trimEnd() + (product.description.length > 157 ? '…' : '')
+      : `Buy ${product.name} at Beyond Stich.`);
+
   return {
     title: `${product.name} | Beyond Stich`,
-    description: product.description || `Buy ${product.name} at Beyond Stich. Premium oversized graphic tees for men.`,
+    description: metaDescription,
     alternates: { canonical },
     openGraph: {
       title: `${product.name} | Beyond Stich`,
-      description: product.description || `Buy ${product.name} at Beyond Stich. Premium oversized graphic tees for men.`,
+      description: metaDescription,
       url: canonical,
       images: [
         {
@@ -46,7 +56,7 @@ export async function generateMetadata({ params }) {
     twitter: {
       card: 'summary_large_image',
       title: `${product.name} | Beyond Stich`,
-      description: product.description,
+      description: metaDescription,
       images: [product.images?.[0] || '/banners/og/og-default.jpg'],
     },
   };

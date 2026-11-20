@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import styles from '../products/page.module.css';
 
@@ -12,11 +12,11 @@ export default function AdminInventory() {
   const [editingCell, setEditingCell] = useState(null); // { productId, sizeIndex }
   const [editValue, setEditValue] = useState('');
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
+  // Declared before the effect that calls it and memoised on the deps it
+  // reads. It was defined *after* the effect, so the effect captured the
+  // instance that existed at mount and a later dependency change re-ran a
+  // stale closure holding the previous filter value.
+    const fetchProducts = useCallback(async () => {
     try {
       const res = await fetch('/api/products');
       if (res.ok) {
@@ -35,7 +35,20 @@ export default function AdminInventory() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Awaited inside an async IIFE so the first state update lands in a
+    // callback rather than synchronously in the effect body, which React
+    // flags as a cascading render.
+    let cancelled = false;
+    (async () => {
+      if (!cancelled) await fetchProducts();
+    })();
+    return () => { cancelled = true; };
+  }, [fetchProducts]);
+
+
 
   const handleStockUpdate = async (productId, sizes) => {
     try {

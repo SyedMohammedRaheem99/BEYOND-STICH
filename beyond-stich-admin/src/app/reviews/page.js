@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import styles from '../products/page.module.css';
 
 const RATING_STARS = (n) => '★'.repeat(n) + '☆'.repeat(5 - n);
@@ -12,11 +12,11 @@ export default function AdminReviews() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedReview, setSelectedReview] = useState(null);
 
-  useEffect(() => {
-    fetchReviews();
-  }, [statusFilter]);
-
-  const fetchReviews = async () => {
+  // Declared before the effect that calls it and memoised on the deps it
+  // reads. It was defined *after* the effect, so the effect captured the
+  // instance that existed at mount and a later dependency change re-ran a
+  // stale closure holding the previous filter value.
+    const fetchReviews = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -33,7 +33,20 @@ export default function AdminReviews() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter]);
+
+  useEffect(() => {
+    // Awaited inside an async IIFE so the first state update lands in a
+    // callback rather than synchronously in the effect body, which React
+    // flags as a cascading render.
+    let cancelled = false;
+    (async () => {
+      if (!cancelled) await fetchReviews();
+    })();
+    return () => { cancelled = true; };
+  }, [fetchReviews]);
+
+
 
   const handleSearch = () => fetchReviews();
 

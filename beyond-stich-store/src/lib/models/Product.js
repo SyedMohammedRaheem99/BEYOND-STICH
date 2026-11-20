@@ -224,6 +224,10 @@ ProductSchema.index({ createdAt: -1 });
 // Every catalogue query filters on isActive and sorts by createdAt; the
 // single-field indexes above can't serve that combination.
 ProductSchema.index({ isActive: 1, segment: 1, createdAt: -1 });
+// Same shape as the segment index, for browsing by kind of product — the
+// single-field index on productType can't serve the isActive + sort
+// combination every catalogue query uses.
+ProductSchema.index({ isActive: 1, productType: 1, createdAt: -1 });
 
 // Virtual: discount percentage
 ProductSchema.virtual('discountPercent').get(function () {

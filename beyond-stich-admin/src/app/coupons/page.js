@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import styles from '../products/page.module.css';
 
 export default function AdminCoupons() {
@@ -9,11 +9,11 @@ export default function AdminCoupons() {
   const [showForm, setShowForm] = useState(false);
   const [editCoupon, setEditCoupon] = useState(null);
 
-  useEffect(() => {
-    fetchCoupons();
-  }, []);
-
-  const fetchCoupons = async () => {
+  // Declared before the effect that calls it and memoised on the deps it
+  // reads. It was defined *after* the effect, so the effect captured the
+  // instance that existed at mount and a later dependency change re-ran a
+  // stale closure holding the previous filter value.
+    const fetchCoupons = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/coupons');
@@ -26,7 +26,20 @@ export default function AdminCoupons() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Awaited inside an async IIFE so the first state update lands in a
+    // callback rather than synchronously in the effect body, which React
+    // flags as a cascading render.
+    let cancelled = false;
+    (async () => {
+      if (!cancelled) await fetchCoupons();
+    })();
+    return () => { cancelled = true; };
+  }, [fetchCoupons]);
+
+
 
   const handleDelete = async (id, code) => {
     if (!confirm(`Delete coupon "${code}"? This cannot be undone.`)) return;

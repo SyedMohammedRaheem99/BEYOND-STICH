@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import styles from '../products/page.module.css';
 
 const ROLE_COLORS = {
@@ -15,11 +15,11 @@ export default function AdminUsers() {
   const [roleFilter, setRoleFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState(null);
 
-  useEffect(() => {
-    fetchUsers();
-  }, [roleFilter]);
-
-  const fetchUsers = async () => {
+  // Declared before the effect that calls it and memoised on the deps it
+  // reads. It was defined *after* the effect, so the effect captured the
+  // instance that existed at mount and a later dependency change re-ran a
+  // stale closure holding the previous filter value.
+    const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -36,7 +36,20 @@ export default function AdminUsers() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [roleFilter]);
+
+  useEffect(() => {
+    // Awaited inside an async IIFE so the first state update lands in a
+    // callback rather than synchronously in the effect body, which React
+    // flags as a cascading render.
+    let cancelled = false;
+    (async () => {
+      if (!cancelled) await fetchUsers();
+    })();
+    return () => { cancelled = true; };
+  }, [fetchUsers]);
+
+
 
   const handleSearch = () => fetchUsers();
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import styles from './page.module.css';
 
@@ -15,11 +15,11 @@ export default function AdminOverview() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchDashboard();
-  }, []);
-
-  const fetchDashboard = async () => {
+  // Declared before the effect that calls it and memoised on the deps it
+  // reads. It was defined *after* the effect, so the effect captured the
+  // instance that existed at mount and a later dependency change re-ran a
+  // stale closure holding the previous filter value.
+    const fetchDashboard = useCallback(async () => {
     try {
       const res = await fetch('/api/dashboard');
       if (res.ok) {
@@ -31,7 +31,20 @@ export default function AdminOverview() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Awaited inside an async IIFE so the first state update lands in a
+    // callback rather than synchronously in the effect body, which React
+    // flags as a cascading render.
+    let cancelled = false;
+    (async () => {
+      if (!cancelled) await fetchDashboard();
+    })();
+    return () => { cancelled = true; };
+  }, [fetchDashboard]);
+
+
 
   if (loading) return <div className={styles.overview}><p style={{padding: '40px', color: '#666'}}>Loading metrics...</p></div>;
 

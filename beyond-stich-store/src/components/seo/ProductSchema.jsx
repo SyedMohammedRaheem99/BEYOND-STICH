@@ -20,15 +20,42 @@ export default function ProductSchema({ product }) {
           .split('T')[0]
       : '2099-12-31';
 
+  // Specs are operator-defined label/value rows, so match on the label to
+  // map the handful schema.org has dedicated properties for. Anything else
+  // still ships as additionalProperty, which Google reads for the
+  // product-details enrichment.
+  const specByLabel = (re) =>
+    (product.specs || []).find((s) => re.test(String(s.label || '')))?.value;
+
+  const material = product.material || specByLabel(/fabric|material/i);
+  const pattern = specByLabel(/pattern/i);
+  const color = product.colors?.length === 1 ? product.colors[0] : undefined;
+
+  const additionalProperty = (product.specs || [])
+    .filter((s) => s.label && s.value)
+    .map((s) => ({
+      '@type': 'PropertyValue',
+      name: s.label,
+      value: s.value,
+    }));
+
   const schema = {
     '@context': 'https://schema.org/',
     '@type': 'Product',
     name: product.name,
     url: `${baseUrl}/product/${product.slug}`,
     image: product.images || [],
-    description: product.description || `Buy ${product.name} at Beyond Stich.`,
+    // Prefer the short description: it is written to stand alone, where
+    // the long one opens mid-thought.
+    description:
+      product.shortDescription || product.description || `Buy ${product.name} at Beyond Stich.`,
     sku: product.slug,
     mpn: product._id ? product._id.toString() : product.slug,
+    ...(product.productType ? { category: product.productType } : {}),
+    ...(material ? { material } : {}),
+    ...(pattern ? { pattern } : {}),
+    ...(color ? { color } : {}),
+    ...(additionalProperty.length ? { additionalProperty } : {}),
     brand: {
       '@type': 'Brand',
       name: 'Beyond Stich',
