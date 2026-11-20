@@ -24,3 +24,7 @@ env.txt
 secrets.md
 credentials.md
 *.env
+
+# Holds real credentials for pasting into the host's dashboard.
+# Never commit — this is the same mistake env.md made.
+DEPLOY.md
