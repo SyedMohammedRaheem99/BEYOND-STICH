@@ -435,9 +435,11 @@ art direction per breakpoint — real crops, not the same file) · `banners/segm
 `RESEND_API_KEY` / `EMAIL_FROM` / `ADMIN_ALERT_EMAIL` · `CLOUDINARY_*`.
 Admin additionally needs **`JWT_SECRET`**.
 
-> ⚠️ `Beyond_stich/env.md` currently contains what looks like a **live Razorpay key
-> (`rzp_live_…`) and a secret in plaintext, inside the repo.** Rotate those
-> credentials and move them to `.env.local` (gitignored).
+> Credentials live in `.env.local` only, which is gitignored. A scratch file
+> (`env.md`) once held a live Razorpay key in plaintext and was committed; it
+> has been scrubbed from history and the `.gitignore` now matches that
+> spelling. **Never commit a file holding real keys** — `.env*` does not match
+> a name without a leading dot.
 
 ---
 
