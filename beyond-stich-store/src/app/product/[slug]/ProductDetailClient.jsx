@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { discountPercent } from '@/lib/utils';
-import { getSegmentAccent, getColorHex, SIZE_LOW_STOCK_THRESHOLD } from '@/lib/constants';
+import { getSegmentAccent, getColorHex, SIZE_LOW_STOCK_THRESHOLD, SHIPPING } from '@/lib/constants';
 import { useCartStore, useWishlistStore } from '@/lib/store';
 import ProductGallery from '@/components/product/ProductGallery';
 import ProductCard from '@/components/product/ProductCard';
@@ -307,16 +307,17 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
                 <circle cx="18.5" cy="18.5" r="2.5" />
               </svg>
               <div>
-                <span style={{ color: '#22C55E', fontWeight: 700, fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>
-                  {(() => {
-                    const d1 = new Date(); d1.setDate(d1.getDate() + 3);
-                    const d2 = new Date(); d2.setDate(d2.getDate() + 6);
-                    const fmt = d => d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-                    return `GET IT BY ${fmt(d1).toUpperCase()} – ${fmt(d2).toUpperCase()}`;
-                  })()}
+                {/* Was a hardcoded "GET IT BY <today+3> – <today+6>",
+                    promising a delivery window before knowing where to. The
+                    date now only appears once a PIN code has been checked;
+                    until then this prompts for one. */}
+                <span style={{ color: delivery?.ok ? 'var(--color-success)' : 'var(--color-text-primary)', fontWeight: 700, fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>
+                  {delivery?.ok ? delivery.msg.toUpperCase() : 'CHECK DELIVERY TO YOUR AREA'}
                 </span>
-                <span style={{ color: 'var(--color-text-muted)', display: 'block', fontSize: '11px', marginTop: '2px' }}>
-                  {product.price >= 999 ? 'FREE SHIPPING' : 'Free shipping on orders above ₹999'}
+                <span style={{ color: 'var(--color-text-muted)', display: 'block', fontSize: 'var(--text-2xs)', marginTop: '2px' }}>
+                  {product.price >= SHIPPING.FREE_THRESHOLD
+                    ? 'FREE SHIPPING'
+                    : `Free shipping on orders above ₹${SHIPPING.FREE_THRESHOLD}`}
                 </span>
               </div>
             </div>
@@ -377,19 +378,69 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
               </span>
             </div>
 
-            {/* Details */}
+            {/* Details.
+                Every block here is product data now. "MATERIAL & BUILD"
+                used to append "Double stitched shoulders. High density
+                print." to all 35 products whether or not it was true, and
+                "SHIPPING" was the same sentence on every page. */}
             <div className={styles.details}>
+              {product.highlights?.length > 0 && (
+                <div className={styles.detailBlock}>
+                  <h4>HIGHLIGHTS</h4>
+                  <ul className={styles.highlights}>
+                    {product.highlights.map((h, i) => (
+                      <li key={i}>{h}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               <div className={styles.detailBlock}>
                 <h4>THE DROP</h4>
                 <p>{product.description}</p>
               </div>
-              <div className={styles.detailBlock}>
-                <h4>MATERIAL & BUILD</h4>
-                <p>{product.material || 'Heavyweight 240 GSM Cotton'}. Double stitched shoulders. High density print.</p>
-              </div>
+
+              {product.specs?.length > 0 && (
+                <div className={styles.detailBlock}>
+                  <h4>SPECIFICATIONS</h4>
+                  {/* A definition list, not a table: it reads correctly to a
+                      screen reader and reflows to one column on a phone
+                      without horizontal scrolling. */}
+                  <dl className={styles.specList}>
+                    {product.specs.map((s, i) => (
+                      <div key={i} className={styles.specRow}>
+                        <dt>{s.label}</dt>
+                        <dd>{s.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              )}
+
+              {product.material && (
+                <div className={styles.detailBlock}>
+                  <h4>MATERIAL</h4>
+                  <p>{product.material}</p>
+                </div>
+              )}
+
+              {product.careInstructions && (
+                <div className={styles.detailBlock}>
+                  <h4>CARE</h4>
+                  <p>{product.careInstructions}</p>
+                </div>
+              )}
+
               <div className={styles.detailBlock}>
                 <h4>SHIPPING</h4>
-                <p>Free shipping on orders above ₹999. Usually dispatches in 24 hours.</p>
+                <p>
+                  {/* Reflects the PIN code the customer actually checked,
+                      rather than asserting a delivery window for everyone. */}
+                  {delivery?.ok
+                    ? `${delivery.msg} to ${pincode}.`
+                    : `Free shipping on orders above ₹${SHIPPING.FREE_THRESHOLD}.`}
+                  {' '}Dispatched within 24 hours.
+                </p>
               </div>
             </div>
 

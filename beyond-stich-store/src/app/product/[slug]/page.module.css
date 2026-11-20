@@ -363,6 +363,83 @@
   line-height: 1.6;
 }
 
+/* --- Highlights --- */
+/* Three to five scannable points. globals.css strips list markers from
+   every ul, so the bullet is drawn here. */
+.highlights {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.highlights li {
+  position: relative;
+  padding-left: var(--space-5);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+.highlights li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  /* Centred on the first line's cap height rather than the whole item, so
+     a point that wraps keeps its marker beside the first line. */
+  top: 0.55em;
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+}
+
+/* --- Specification table --- */
+/* A definition list rather than a <table>: the columns are label/value
+   pairs with no cross-row relationship, it announces correctly to a screen
+   reader, and it reflows to a single column on a narrow screen instead of
+   scrolling sideways. */
+.specList {
+  display: flex;
+  flex-direction: column;
+}
+
+.specRow {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.8fr) 1.6fr;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.specRow:last-child {
+  border-bottom: none;
+}
+
+.specRow dt {
+  color: var(--color-text-muted);
+}
+
+.specRow dd {
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 480px) {
+  /* Two narrow columns would leave a value like "100% Combed Cotton"
+     wrapping over four lines. Stack instead. */
+  .specRow {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+
+  .specRow dt {
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+  }
+}
+
 /* You may also like */
 .related {
   padding: var(--space-20) var(--container-padding) var(--space-24);
