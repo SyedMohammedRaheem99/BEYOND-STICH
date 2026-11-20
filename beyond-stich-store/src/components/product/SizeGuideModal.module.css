@@ -13,15 +13,28 @@
 
 .modal {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  /* Centred by auto margins inside a full-width inset box, NOT by
+     `left: 50%; transform: translate(-50%, …)`.
+     Framer Motion animates this element's `transform` (scale and y), which
+     overwrites the inline transform entirely — so the -50% centring was
+     dropped the moment the open animation ran and the panel sat half a
+     width to the right, hanging off the screen. Margins cannot be
+     clobbered that way. */
+  inset: 0;
+  margin: auto;
   /* Was `calc(100% - var(--space-8))` with a flat 32px of padding, which on
      a 360px phone left ~300px of content box for a four-column table — so
      the table overflowed and the text ran under the rounded corners. */
   width: min(calc(100% - var(--space-6)), 560px);
+  /* `inset: 0` stretches the box; height must stay content-sized or the
+     panel fills the viewport. */
+  height: fit-content;
   max-height: min(86svh, 760px);
   overflow-y: auto;
+  /* A fixed-position box still grows to fit content that cannot shrink, so
+     without this a wide table pushed the panel past its own width. */
+  max-width: calc(100% - var(--space-6));
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   /* Keeps the last row clear of the home indicator on iOS. */
   padding: var(--space-6) var(--space-6) calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
@@ -91,13 +104,18 @@
 
 @media (max-width: 600px) {
   .modal {
-    /* Anchored near the top rather than centred: a centred sheet that grows
-       past the viewport gets clipped at both ends on a short screen. */
-    top: var(--space-4);
-    transform: translate(-50%, 0);
+    /* Anchored near the top rather than vertically centred: a sheet that
+       grows past the viewport would otherwise be clipped at both ends on a
+       short screen. `margin-bottom: auto` is what pins it upward while the
+       auto side margins keep it horizontally centred. */
+    inset: var(--space-4) 0 auto;
+    margin: 0 auto auto;
     width: calc(100% - var(--space-4));
+    max-width: calc(100% - var(--space-4));
     max-height: calc(100svh - var(--space-8));
-    padding: var(--space-5) var(--space-4) calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+    /* Narrower side padding buys ~16px of table width on a 360px screen,
+       which is the difference between the chart fitting and scrolling. */
+    padding: var(--space-5) var(--space-3) calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
     border-radius: var(--radius-lg);
   }
 

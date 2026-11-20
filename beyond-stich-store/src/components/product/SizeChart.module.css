@@ -7,6 +7,10 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
+  /* A flex item's default min-width is auto, meaning "at least as wide as
+     my content" — so the table below could force this column wider than
+     the modal instead of scrolling within it. */
+  min-width: 0;
 }
 
 /* --- Toolbar: note + unit toggle --- */
@@ -64,23 +68,43 @@
   -webkit-overflow-scrolling: touch;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
+  /* Without an explicit minimum, a flex/grid parent sizes this to its
+     content rather than its container, so the box itself grew wider than
+     the modal instead of scrolling inside it. */
+  min-width: 0;
+  max-width: 100%;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  /* Fixed layout stops one long value (a cap's "21–23") from stealing the
-     width of every other column. */
+  /* Fixed layout distributes width evenly and stops one long value (a cap's
+     "21–23", or a cm figure like 106.7) from stealing the space of every
+     other column. */
   table-layout: fixed;
 }
 
 .table th,
 .table td {
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-3);
   font-size: var(--text-sm);
-  /* Measurements are short; wrapping them mid-range reads as two values. */
+  /* Measurements must not wrap mid-range — "21–23" split over two lines
+     reads as two separate values. Columns are even under table-layout:
+     fixed, so the text is clipped rather than allowed to widen the table;
+     the sizes here keep it well clear of that. */
   white-space: nowrap;
+  /* Belt and braces: if a value ever is too long for its column, truncate
+     it rather than letting it push the table past the modal. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The size column carries short labels ('S', '32', 'Free Size') and can
+   afford less room than the measurement columns. */
+.table th:first-child,
+.table td:first-child {
+  width: 22%;
 }
 
 .table thead th {
@@ -187,8 +211,16 @@
 
   .table th,
   .table td {
-    padding: var(--space-3);
+    padding: var(--space-2);
     font-size: var(--text-xs);
+  }
+
+  /* 'SHOULDER' at --text-2xs with wide tracking is the widest thing in the
+     header row and was what forced the table past the modal. Dropping the
+     tracking buys back ~12px per column without shrinking the figures,
+     which are what the customer is actually reading. */
+  .table thead th {
+    letter-spacing: 0.04em;
   }
 
   .guideRow {
