@@ -4,6 +4,8 @@ import connectDB from '@/lib/mongodb';
 import Order from '@/lib/models/Order';
 import Coupon from '@/lib/models/Coupon';
 import PendingOrder from '@/lib/models/PendingOrder';
+import { sendOrderConfirmation, sendNewOrderAlert } from '@/lib/email';
+import { validateDeliverable } from '@/lib/serviceability';
 import {
   MAX_ITEMS,
   OrderError,
@@ -80,6 +82,21 @@ export async function POST(request) {
     }
 
     await connectDB();
+
+    // Payment has already succeeded by this point, so this should never
+    // fire — /api/razorpay/order checks first. It stays as a backstop
+    // because the alternative is recording an order for an address no
+    // courier will reach.
+    const deliveryError = await validateDeliverable(shippingAddress?.pincode, {
+      paymentMethod: 'online',
+    });
+    if (deliveryError) {
+      console.error('[razorpay/verify] PAID BUT UNDELIVERABLE —', razorpay_payment_id, deliveryError);
+      return NextResponse.json(
+        { error: `${deliveryError} Your payment will be refunded — please contact us.` },
+        { status: 400 }
+      );
+    }
 
     // The webhook is racing this request. Whoever claims the pending cart
     // first creates the order; the other backs off. Without this a payment
@@ -167,6 +184,24 @@ export async function POST(request) {
     }
 
     // Stock was already reserved atomically above — no second decrement here.
+
+    // Confirmations. This is the NORMAL online-payment path — the webhook
+    // only runs when the browser never makes it back here — yet it sent no
+    // mail at all, so every customer who paid by card or UPI got silence
+    // while COD customers got a confirmation, and the owner was never told
+    // an online order had arrived.
+    //
+    // Fire-and-forget so email latency can't delay the response to a
+    // customer who has already paid, but log failures: a silently broken
+    // transport means no confirmations at all.
+    if (order.email) {
+      sendOrderConfirmation(order).catch((err) =>
+        console.error('[razorpay/verify] confirmation email failed', order.orderNumber, err)
+      );
+    }
+    sendNewOrderAlert(order).catch((err) =>
+      console.error('[razorpay/verify] admin alert failed', order.orderNumber, err)
+    );
 
     return NextResponse.json({
       success: true,

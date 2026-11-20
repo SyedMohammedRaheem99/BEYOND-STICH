@@ -8,7 +8,6 @@ import SocialProofBar from '@/components/home/SocialProofBar';
 import connectDB from '@/lib/mongodb';
 import Product from '@/lib/models/Product';
 import { DUMMY_PRODUCTS } from '@/lib/dummyData';
-import { getSegmentAccent } from '@/lib/constants';
 
 // Serve catalog pages from cache for 5 minutes. Without this every
 // visit blocks on a MongoDB round trip before any HTML ships.
@@ -27,13 +26,23 @@ async function getLatestDrops() {
     if (docs.length > 0) products = docs.map(d => ({ ...d, _id: d._id.toString() }));
   } catch {}
   if (products.length === 0) products = DUMMY_PRODUCTS.slice(0, 6);
+  // Projection mirrors the field list in /api/products, because LatestDrop
+  // now renders the shared <ProductCard/> rather than its own stripped-down
+  // card. The old projection dropped _id, images, sizes, colors, tags and
+  // ratings, so badges, wishlist, swatches and stock state were all
+  // structurally impossible on the homepage.
   return products.map(p => ({
-    id: p._id,
+    _id: p._id,
     slug: p.slug,
     name: p.name,
     segment: p.segment,
-    image: p.images?.[0],
-    color: getSegmentAccent(p.segment),
+    images: p.images ?? [],
+    fitType: p.fitType,
+    colors: p.colors ?? [],
+    sizes: p.sizes ?? [],
+    tags: p.tags ?? [],
+    averageRating: p.averageRating,
+    reviewCount: p.reviewCount,
     price: p.price,
     mrp: p.mrp,
   }));

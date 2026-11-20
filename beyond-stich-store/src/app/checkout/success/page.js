@@ -26,6 +26,7 @@ function CheckoutSuccessContent() {
       const raw = sessionStorage.getItem('bs_last_order');
       if (raw) {
         const parsed = JSON.parse(raw);
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing state from a browser/session/URL source that is unavailable during render
         if (parsed.id === orderId) setOrder(parsed);
       }
     } catch {}

@@ -1,121 +1,74 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { motion, useInView } from 'framer-motion';
-import { useUIStore } from '@/lib/store';
-import { getSegmentAccent } from '@/lib/constants';
+import { useState, useEffect } from 'react';
+import Section from '@/components/ui/Section';
+import Button from '@/components/ui/Button';
+import ProductCard from '@/components/product/ProductCard';
+import Skeleton from '@/components/ui/Skeleton';
 import styles from './LatestDrop.module.css';
 
+const ArrowIcon = () => (
+  <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M5 12h14M12 5l7 7-7 7" />
+  </svg>
+);
+
+// Matches the server projection in app/page.js — six is the drop size.
+const SKELETON_COUNT = 6;
+
 export default function LatestDrop({ initialDrops = [] }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
-  const { setCursorVariant, setCursorText, resetCursor } = useUIStore();
   const [drops, setDrops] = useState(initialDrops);
+  // Only ever true on the client-fetch fallback path; when the server
+  // supplied drops there is no loading phase at all.
+  const [loading, setLoading] = useState(initialDrops.length === 0);
 
   useEffect(() => {
     if (initialDrops.length > 0) return;
+    let cancelled = false;
+
     fetch('/api/products?sort=newest&limit=6')
       .then(res => res.json())
       .then(data => {
-        const list = Array.isArray(data) ? data : [];
-        setDrops(list.map(p => ({
-          id: p._id,
-          slug: p.slug,
-          name: p.name,
-          segment: p.segment,
-          image: p.images?.[0],
-          color: getSegmentAccent(p.segment),
-          price: p.price,
-          mrp: p.mrp,
-        })));
+        if (cancelled) return;
+        setDrops(Array.isArray(data) ? data : []);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => { cancelled = true; };
   }, [initialDrops]);
 
-  const handleMouseEnter = () => {
-    setCursorVariant('text');
-    setCursorText('VIEW');
-  };
-
-  const handleMouseLeave = () => {
-    resetCursor();
-  };
-
-  if (drops.length === 0) return null;
+  // Previously this returned null while fetching, so the section popped into
+  // existence and shoved the page down. Reserve the space with skeletons.
+  if (!loading && drops.length === 0) return null;
 
   return (
-    <section className={styles.section} ref={ref}>
-      <div className={styles.header}>
-        <motion.h2
-          className={styles.title}
-          initial={{ opacity: 0, x: -50 }}
-          animate={isInView ? { opacity: 1, x: 0 } : {}}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        >
-          LATEST DROP
-        </motion.h2>
-        <motion.div
-          initial={{ opacity: 0, x: 50 }}
-          animate={isInView ? { opacity: 1, x: 0 } : {}}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <Link href="/shop" className={styles.viewAll}>
-            VIEW ALL →
-          </Link>
-        </motion.div>
+    <Section
+      eyebrow="Just landed"
+      title="Latest Drop"
+      bordered
+      action={
+        <Button href="/shop" variant="secondary" size="sm" icon={<ArrowIcon />}>
+          View all
+        </Button>
+      }
+    >
+      <div className={styles.grid}>
+        {loading
+          ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+              <div key={i} className={styles.skeletonCard}>
+                <Skeleton className={styles.skeletonImage} />
+                <Skeleton shape="text" width="40%" />
+                <Skeleton shape="text" width="75%" height="1.1em" />
+                <Skeleton shape="text" width="30%" />
+              </div>
+            ))
+          : drops.map((product, index) => (
+              <ProductCard key={product._id} product={product} index={index} />
+            ))}
       </div>
-
-      <div className={styles.scrollContainer}>
-        <div className={styles.track}>
-          {drops.map((item, index) => (
-            <motion.div
-              key={item.id}
-              className={styles.item}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={isInView ? { opacity: 1, scale: 1 } : {}}
-              transition={{
-                duration: 0.8,
-                delay: index * 0.1,
-                ease: [0.16, 1, 0.3, 1],
-              }}
-            >
-              <Link
-                href={`/product/${item.slug}`}
-                className={styles.card}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-              >
-                <div className={styles.imageWrap}>
-                  <Image
-                    src={item.image}
-                    alt={item.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 400px"
-                    style={{ objectFit: 'cover' }}
-                    className={styles.image}
-                  />
-                  <div
-                    className={styles.overlay}
-                    style={{ '--hover-color': item.color }}
-                  />
-                </div>
-                <div className={styles.info}>
-                  <span className={styles.segment} style={{ color: item.color }}>
-                    {item.segment}
-                  </span>
-                  <h3 className={styles.name}>{item.name}</h3>
-                  <div className={styles.priceRow}>
-                    <span className={styles.price}>₹{item.price}</span>
-                    {item.mrp > item.price && <span className={styles.mrp}>₹{item.mrp}</span>}
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
+    </Section>
   );
 }

@@ -24,6 +24,7 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [pincode, setPincode] = useState('');
   const [delivery, setDelivery] = useState(null);
+  const [deliveryLoading, setDeliveryLoading] = useState(false);
   const [added, setAdded] = useState(false);
 
   const { addItem } = useCartStore();
@@ -67,20 +68,41 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
     }
   };
 
-  const checkDelivery = (e) => {
+  // Asks the server, which holds the actual delivery areas. This used to be
+  // decided here in the browser from `/^[14578]/.test(pincode) ? 3 : 6` —
+  // so every six-digit number got a confident delivery date, including PIN
+  // codes we don't ship to, and the customer only found out when the COD
+  // parcel never arrived.
+  const checkDelivery = async (e) => {
     e.preventDefault();
-    if (!/^\d{6}$/.test(pincode.trim())) {
+    const pin = pincode.trim();
+
+    if (!/^[1-9][0-9]{5}$/.test(pin)) {
       setDelivery({ ok: false, msg: 'Enter a valid 6-digit PIN code' });
       return;
     }
-    const fast = /^[14578]/.test(pincode.trim());
-    const days = fast ? 3 : 6;
-    const d = new Date();
-    d.setDate(d.getDate() + days);
-    setDelivery({
-      ok: true,
-      msg: `Delivery by ${d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`,
-    });
+
+    setDeliveryLoading(true);
+    try {
+      const res = await fetch(`/api/delivery/check?pincode=${encodeURIComponent(pin)}`);
+      const data = await res.json();
+
+      setDelivery(
+        data.serviceable
+          ? {
+              ok: true,
+              msg: data.etaLabel,
+              // Shown alongside the date — a customer planning to pay cash
+              // needs to know before checkout, not at the payment step.
+              cod: data.codAvailable,
+            }
+          : { ok: false, msg: data.reason || "We don't deliver here yet." }
+      );
+    } catch {
+      setDelivery({ ok: false, msg: 'Could not check delivery. Please try again.' });
+    } finally {
+      setDeliveryLoading(false);
+    }
   };
 
   const handleWishlist = () => {
@@ -119,7 +141,7 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
           <div className={styles.infoSticky}>
 
             {/* Header */}
-            <div className={styles.header}>
+            <div>
               <div className={styles.segmentRow}>
                 <span className={styles.segmentBadge} style={{ color: accentColor }}>
                   {product.segment}
@@ -239,7 +261,6 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
               <button
                 className={`${styles.addToCartBtn} ${!selectedSize || selectedSizeStock <= 0 ? styles.disabled : ''}`}
                 onClick={handleAddToCart}
-                style={{ backgroundColor: selectedSize && selectedSizeStock > 0 ? accentColor : '' }}
                 disabled={!selectedSize || selectedSizeStock <= 0}
               >
                 {added
@@ -250,8 +271,13 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
                       ? 'SOLD OUT — GET RESTOCK ALERT'
                       : `ADD TO BAG — ₹${product.price}`}
               </button>
-              <button className={styles.wishlistBtn} onClick={handleWishlist}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill={isWishlisted ? accentColor : 'none'} stroke={isWishlisted ? accentColor : 'currentColor'} strokeWidth="2">
+              <button
+                className={styles.wishlistBtn}
+                onClick={handleWishlist}
+                aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                aria-pressed={isWishlisted}
+              >
+                <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill={isWishlisted ? accentColor : 'none'} stroke={isWishlisted ? accentColor : 'currentColor'} strokeWidth="2">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                 </svg>
               </button>
@@ -309,11 +335,21 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
                   onChange={(e) => { setPincode(e.target.value); setDelivery(null); }}
                   aria-label="Delivery PIN code"
                 />
-                <button type="submit" className={styles.deliveryBtn}>CHECK</button>
+                <button type="submit" className={styles.deliveryBtn} disabled={deliveryLoading}>
+                  {deliveryLoading ? '…' : 'CHECK'}
+                </button>
               </div>
               {delivery && (
                 <p className={`${styles.deliveryMsg} ${delivery.ok ? styles.deliveryOk : styles.deliveryErr}`}>
                   {delivery.msg}
+                  {/* Only ever shown for a serviceable PIN code. Someone
+                      planning to pay cash needs to know now, not after
+                      filling in the whole checkout form. */}
+                  {delivery.ok && delivery.cod === false && (
+                    <span style={{ display: 'block', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                      Prepaid only — cash on delivery isn&apos;t available here.
+                    </span>
+                  )}
                 </p>
               )}
             </form>
@@ -321,17 +357,17 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
             {/* Trust row */}
             <div className={styles.trustRow}>
               <span className={styles.trustItem}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
                 Secure checkout
               </span>
               {/* Linked, not plain text: for an unknown brand taking COD the
                   returns policy is the thing customers check before buying. */}
               <Link href="/returns" className={styles.trustItem}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
                 7-day easy returns
               </Link>
               <span className={styles.trustItem}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6L9 17l-5-5" /></svg>
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6L9 17l-5-5" /></svg>
                 Cash on delivery
               </span>
             </div>
@@ -406,7 +442,6 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
                     .getElementById('pdp-sizes')
                     ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
           }
-          style={{ backgroundColor: selectedSize && selectedSizeStock > 0 ? accentColor : '' }}
         >
           {!selectedSize
             ? 'SELECT SIZE'

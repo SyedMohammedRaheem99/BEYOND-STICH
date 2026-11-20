@@ -36,8 +36,8 @@
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-bg);
-  background: var(--color-text-primary);
+  color: var(--accent-ink);
+  background: var(--accent);
   border-radius: var(--radius-full);
   transition: opacity var(--duration-fast) var(--ease-out);
 }

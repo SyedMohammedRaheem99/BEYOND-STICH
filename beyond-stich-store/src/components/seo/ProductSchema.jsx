@@ -3,10 +3,22 @@ export default function ProductSchema({ product }) {
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://beyondstich.com';
 
-  // Rolling 90-day priceValidUntil so it never goes stale
-  const priceValidUntil = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split('T')[0];
+  // Rolling 90-day priceValidUntil so it never goes stale.
+  // Anchored to the product's own timestamp rather than Date.now(): calling
+  // an impure function during render makes the markup differ between the
+  // server and client passes, which React flags and which can produce a
+  // hydration mismatch in this <script> tag.
+  // Falls back to a fixed far-future date rather than epoch when a product
+  // carries no timestamp — `new Date(0)` would emit priceValidUntil=1970 and
+  // invalidate the offer in Google's structured-data parser.
+  const priceAnchor = product.updatedAt || product.createdAt;
+  const parsedAnchor = priceAnchor ? new Date(priceAnchor) : null;
+  const priceValidUntil =
+    parsedAnchor && !Number.isNaN(parsedAnchor.getTime())
+      ? new Date(parsedAnchor.getTime() + 90 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0]
+      : '2099-12-31';
 
   const schema = {
     '@context': 'https://schema.org/',

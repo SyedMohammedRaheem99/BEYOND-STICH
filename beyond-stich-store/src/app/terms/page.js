@@ -71,7 +71,7 @@ export default function TermsPage() {
 
       <h2>Limitation of liability</h2>
       <p>
-        Beyond Stich provides products on an "as-is" basis. To the maximum extent
+        Beyond Stich provides products on an &quot;as-is&quot; basis. To the maximum extent
         permitted by law, we are not liable for any indirect, incidental, or
         consequential damages arising from the use of our products or website. Our
         total liability shall not exceed the amount paid by you for the specific
@@ -91,7 +91,7 @@ export default function TermsPage() {
       <p>
         If you have a concern about an order, please contact us at{' '}
         <a href="mailto:hello@beyondstich.com">hello@beyondstich.com</a> first.
-        We'll do our best to resolve it directly. If a resolution cannot be reached,
+        We&apos;ll do our best to resolve it directly. If a resolution cannot be reached,
         disputes shall be subject to arbitration under the Arbitration and
         Conciliation Act, 1996, with the seat of arbitration in Bangalore, India.
       </p>

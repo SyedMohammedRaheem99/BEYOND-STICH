@@ -4,13 +4,9 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import Skeleton from '@/components/ui/Skeleton';
+import { getOrderStatusColor } from '@/lib/constants';
 import styles from './page.module.css';
-
-const STATUS_COLORS = {
-  placed: '#F5C518', confirmed: '#3B82F6', shipped: '#06B6D4',
-  out_for_delivery: '#7C3AED', delivered: '#22C55E',
-  cancelled: '#EF4444', returned: '#94A3B8',
-};
 
 export default function AccountDashboard() {
   const { data: session } = useSession();
@@ -32,6 +28,7 @@ export default function AccountDashboard() {
       }
     };
     if (session) fetchOrders();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing state from a browser/session/URL source that is unavailable during render
     else setLoading(false);
   }, [session]);
 
@@ -79,7 +76,14 @@ export default function AccountDashboard() {
       <div className={styles.recentSection}>
         <h2>RECENT ORDERS</h2>
         {loading ? (
-          <p className={styles.emptyState}>Loading...</p>
+          <div className={styles.ordersList} aria-busy="true">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className={styles.skeletonRow}>
+                <Skeleton shape="text" width="30%" />
+                <Skeleton shape="text" width="18%" />
+              </div>
+            ))}
+          </div>
         ) : recentOrders.length > 0 ? (
           <div className={styles.ordersList}>
             {recentOrders.map(order => (
@@ -92,7 +96,7 @@ export default function AccountDashboard() {
                   <span className={styles.orderTotal}>₹{order.total?.toLocaleString('en-IN')}</span>
                   <span
                     className={styles.statusBadge}
-                    style={{ color: STATUS_COLORS[order.orderStatus] || '#888' }}
+                    style={{ color: getOrderStatusColor(order.orderStatus) }}
                   >
                     {order.orderStatus?.toUpperCase().replace(/_/g, ' ')}
                   </span>
@@ -101,7 +105,13 @@ export default function AccountDashboard() {
             ))}
           </div>
         ) : (
-          <p className={styles.emptyState}>No orders yet. Start shopping to see them here!</p>
+          <p className={styles.emptyState}>
+            No orders yet.{' '}
+            <Link href="/shop" className={styles.emptyLink}>
+              Start shopping
+            </Link>
+            .
+          </p>
         )}
       </div>
     </div>

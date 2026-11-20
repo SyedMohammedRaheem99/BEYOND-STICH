@@ -53,7 +53,7 @@
 }
 
 .emptyIcon {
-  font-size: 3rem;
+  font-size: var(--text-4xl);
   margin-bottom: var(--space-4);
   opacity: 0.5;
 }
@@ -76,8 +76,8 @@
   font-size: var(--text-sm);
   font-weight: 800;
   letter-spacing: 0.1em;
-  color: var(--color-bg);
-  background: var(--color-text-primary);
+  color: var(--accent-ink);
+  background: var(--accent);
   border: 1px solid var(--color-text-primary);
   border-radius: var(--radius-full);
   transition: opacity var(--duration-fast);

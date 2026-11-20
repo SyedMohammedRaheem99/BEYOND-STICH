@@ -188,6 +188,23 @@ export const ORDER_STATUSES = [
 
 export const PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'refunded'];
 
+// Single source of truth for order-status colour. This map was duplicated
+// verbatim in the account dashboard and the order-history page, each with its
+// own '#888' fallback that matched nothing in the palette.
+export const ORDER_STATUS_COLORS = {
+  placed: '#F5C518',
+  confirmed: '#3B82F6',
+  shipped: '#06B6D4',
+  out_for_delivery: '#7C3AED',
+  delivered: '#22C55E',
+  cancelled: '#EF4444',
+  returned: '#94A3B8',
+};
+
+export function getOrderStatusColor(status) {
+  return ORDER_STATUS_COLORS[status] || '#8A8A8A';
+}
+
 // Shipping
 export const SHIPPING = {
   FREE_THRESHOLD: 999,  // ₹ — orders at or above this amount ship free

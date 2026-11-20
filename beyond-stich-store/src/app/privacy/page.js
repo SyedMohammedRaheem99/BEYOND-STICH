@@ -87,10 +87,10 @@ export default function PrivacyPage() {
       <p>
         To exercise any of these rights, email{' '}
         <a href="mailto:hello@beyondstich.com">hello@beyondstich.com</a> with the
-        subject line "Privacy Request".
+        subject line &quot;Privacy Request&quot;.
       </p>
 
-      <h2>Children's privacy</h2>
+      <h2>Children&apos;s privacy</h2>
       <p>
         Our site is not intended for children under 18. We do not knowingly collect
         personal information from minors.

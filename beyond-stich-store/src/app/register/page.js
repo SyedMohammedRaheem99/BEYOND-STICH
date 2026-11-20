@@ -2,7 +2,6 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import PasswordInput from '@/components/ui/PasswordInput';
@@ -30,8 +29,8 @@ function RegisterForm() {
       return;
     }
 
-    if (form.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (form.password.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
     }
 
@@ -55,22 +54,15 @@ function RegisterForm() {
         return;
       }
 
-      // Sign in immediately rather than handing the customer a second form
-      // with the credentials they just typed. Preserves callbackUrl so
-      // registering mid-checkout returns them to checkout, not /account.
-      const signInResult = await signIn('credentials', {
-        email: form.email,
-        password: form.password,
-        redirect: false,
-      });
-
-      if (signInResult?.error) {
-        router.push(`/login?registered=true&callbackUrl=${encodeURIComponent(callbackUrl)}`);
-        return;
-      }
-
-      router.push(callbackUrl);
-      router.refresh();
+      // Signing in straight away is no longer possible: the account starts
+      // unverified, so the credentials provider would reject it. Send them
+      // to enter the code instead, carrying callbackUrl through so finishing
+      // verification still returns them to checkout rather than /account.
+      const next = `/login?verified=1&callbackUrl=${encodeURIComponent(callbackUrl)}`;
+      router.push(
+        `/verify-email?email=${encodeURIComponent(data.email || form.email)}` +
+          `&callbackUrl=${encodeURIComponent(next)}`
+      );
     } catch {
       setError('Something went wrong. Please try again.');
     } finally {
@@ -128,7 +120,7 @@ function RegisterForm() {
               className={styles.input}
               value={form.password}
               onChange={update('password')}
-              placeholder="Min 6 characters"
+              placeholder="Min 8 characters"
               required
               autoComplete="new-password"
             />

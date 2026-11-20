@@ -19,7 +19,7 @@ export default function SocialProofBar() {
 
   return (
     <section className={styles.section} ref={ref}>
-      <div className={`${styles.container} container`}>
+      <div className="container">
         <div className={styles.grid}>
           {metrics.map((metric, i) => (
             <motion.div

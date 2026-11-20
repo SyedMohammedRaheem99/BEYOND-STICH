@@ -26,6 +26,17 @@ export const authOptions = {
         const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
         if (!isValid) return null;
 
+        // Only block accounts that were created with verification in place.
+        // `emailVerified` is absent on documents written before that existed,
+        // and those are real customers — defaulting them to "unverified"
+        // would lock out everyone who signed up earlier. Explicit `false`
+        // means the field was set at registration, so the gate applies.
+        if (user.emailVerified === false) {
+          // Checked for by the login page, which turns it into a prompt to
+          // verify rather than the usual "invalid credentials".
+          throw new Error('EMAIL_NOT_VERIFIED');
+        }
+
         return {
           id: user._id.toString(),
           name: user.name,
@@ -52,12 +63,32 @@ export const authOptions = {
 
         const existingUser = await User.findOne({ email: user.email.toLowerCase() });
         if (existingUser) {
-          // Link Google to existing account
-          if (existingUser.provider !== 'google') {
-            existingUser.provider = 'google';
-            existingUser.image = user.image || existingUser.image;
-            await existingUser.save();
+          // Link Google to the existing account.
+          //
+          // `provider` is deliberately NOT flipped to 'google' here. It used
+          // to be, which quietly broke password login for anyone who had
+          // registered with a password and later used the Google button:
+          // their hash was still on the document, but /api/auth/forgot-password
+          // skips Google accounts, so they could neither sign in with their
+          // password nor reset it. Leaving `provider` alone keeps both
+          // methods working — the password hash is what decides whether
+          // credentials login is possible, not this field.
+          let dirty = false;
+          if (!existingUser.image && user.image) {
+            existingUser.image = user.image;
+            dirty = true;
           }
+          // Google has already proven the person controls this mailbox, so
+          // signing in with it verifies the account — including one that was
+          // registered with a password and never confirmed.
+          if (!existingUser.emailVerified) {
+            existingUser.emailVerified = true;
+            existingUser.otpHash = undefined;
+            existingUser.otpExpiry = undefined;
+            dirty = true;
+          }
+          if (dirty) await existingUser.save();
+
           user.id = existingUser._id.toString();
           user.role = existingUser.role;
         } else {
@@ -68,6 +99,8 @@ export const authOptions = {
             image: user.image || '',
             provider: 'google',
             role: 'customer',
+            // Google verified the address before we ever saw it.
+            emailVerified: true,
           });
           user.id = newUser._id.toString();
           user.role = 'customer';

@@ -1,15 +1,35 @@
 import dns from 'node:dns';
-// Force public DNS resolvers — local/private network DNS often blocks
-// the SRV lookups needed by mongodb+srv:// connection strings.
-try { dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']); } catch (_) {}
-
 import mongoose from 'mongoose';
 
-// NOTE: DNS override for mongodb+srv lookups is handled once at startup in
-// src/instrumentation.js (register()), before any DB connection is attempted.
+// Force public DNS resolvers — local/private network DNS often blocks the
+// SRV lookups that mongodb+srv:// connection strings require.
+const PUBLIC_RESOLVERS = ['8.8.8.8', '1.1.1.1', '8.8.4.4'];
 
-// NOTE: We check for MONGODB_URI inside connectDB() instead of at module-level
-// so that builds don't crash when the env var isn't set yet.
+/**
+ * Applied immediately before connecting, not once at module load.
+ *
+ * Setting them at import time was not enough under Turbopack: the module
+ * runs in its own scope, and Node had already created the resolver channel
+ * that actually performs the lookup, so the first querySrv still went to
+ * the system resolver and failed with ECONNREFUSED. Calling setServers()
+ * again at connect time rebuilds that channel with the right list — which
+ * is why a second call always succeeded where the first did not.
+ */
+// Named with a verb, not "use…": ESLint reads a use-prefixed function as a
+// React hook and rejects calling it from a plain function.
+function applyPublicResolvers() {
+  try {
+    const current = dns.getServers();
+    const alreadySet =
+      current.length === PUBLIC_RESOLVERS.length &&
+      PUBLIC_RESOLVERS.every((s, i) => current[i] === s);
+    // Re-set even when the list looks right: it is the call itself that
+    // rebuilds the channel, not the value.
+    dns.setServers(alreadySet ? [...PUBLIC_RESOLVERS] : PUBLIC_RESOLVERS);
+  } catch {
+    // A locked-down runtime may refuse; the system resolver may still work.
+  }
+}
 
 /**
  * Global is used here to maintain a cached connection across hot reloads
@@ -25,6 +45,8 @@ if (!cached) {
 async function connectDB() {
   const MONGODB_URI = process.env.MONGODB_URI;
 
+  // Checked here (not at module level) so builds don't crash when the env var
+  // isn't set yet.
   if (!MONGODB_URI) {
     throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
   }
@@ -34,6 +56,9 @@ async function connectDB() {
   }
 
   if (!cached.promise) {
+    // Must run before mongoose resolves the +srv hostname.
+    applyPublicResolvers();
+
     const opts = {
       bufferCommands: false,
       // Fail fast (12s) with a clear error instead of hanging 30s when the DB

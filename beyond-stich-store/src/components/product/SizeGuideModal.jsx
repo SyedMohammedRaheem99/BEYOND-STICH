@@ -88,9 +88,9 @@ export default function SizeGuideModal({ open, onClose, accentColor = '#F8F8F8' 
                   {SIZE_CHART.map((row) => (
                     <tr key={row.size}>
                       <th scope="row" style={{ color: accentColor }}>{row.size}</th>
-                      <td>{row.chest}"</td>
-                      <td>{row.length}"</td>
-                      <td>{row.shoulder}"</td>
+                      <td>{row.chest}&quot;</td>
+                      <td>{row.length}&quot;</td>
+                      <td>{row.shoulder}&quot;</td>
                     </tr>
                   ))}
                 </tbody>

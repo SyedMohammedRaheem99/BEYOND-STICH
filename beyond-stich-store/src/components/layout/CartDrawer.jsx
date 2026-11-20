@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useCartStore, useUIStore } from '@/lib/store';
+import { useCartStore } from '@/lib/store';
 import { SHIPPING, WELCOME_TIERS } from '@/lib/constants';
 import useFocusTrap from '@/hooks/useFocusTrap';
 import styles from './CartDrawer.module.css';
@@ -21,8 +21,6 @@ export default function CartDrawer() {
     getShipping,
     getTotal,
   } = useCartStore();
-
-  const { setCursorVariant, resetCursor } = useUIStore();
   const closeBtnRef = useRef(null);
   const trapRef = useFocusTrap(isOpen);
   const [suggestions, setSuggestions] = useState([]);
@@ -143,7 +141,21 @@ export default function CartDrawer() {
             <div className={styles.items}>
               {items.length === 0 ? (
                 <div className={styles.emptyState}>
-                  <p className={styles.emptyText}>Your bag is empty</p>
+                  {/* An empty bag was previously one muted line of text. A
+                      quiet illustration + a reason to continue is the
+                      difference between a dead end and a next step. */}
+                  <span className={styles.emptyIcon} aria-hidden="true">
+                    <svg aria-hidden="true" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
+                      <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                      <path d="M3 6h18M16 10a4 4 0 0 1-8 0" />
+                    </svg>
+                  </span>
+                  <span className={styles.emptyCopy}>
+                    <p className={styles.emptyText}>Your bag is empty</p>
+                    <p className={styles.emptySub}>
+                      Heavyweight 240 GSM tees, built to outlast the trend.
+                    </p>
+                  </span>
                   <Link
                     href="/shop"
                     className={styles.shopLink}
@@ -183,7 +195,7 @@ export default function CartDrawer() {
                         onClick={closeCart}
                       >
                         Size: {item.size} · {item.color}
-                        <span className={styles.editHint}>Change</span>
+                        <span>Change</span>
                       </Link>
                       <div className={styles.itemBottom}>
                         <div className={styles.quantityControl}>
@@ -283,8 +295,6 @@ export default function CartDrawer() {
                   href="/checkout"
                   className={styles.checkoutBtn}
                   onClick={closeCart}
-                  onMouseEnter={() => setCursorVariant('hover')}
-                  onMouseLeave={resetCursor}
                 >
                   CHECKOUT — ₹{total}
                 </Link>

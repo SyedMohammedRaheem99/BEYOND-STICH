@@ -1,5 +1,5 @@
 .section {
-  padding: var(--space-24) 0;
+  padding: var(--section-y) 0;
   background: var(--color-bg-secondary);
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
@@ -70,7 +70,7 @@
 
 @media (max-width: 768px) {
   .section {
-    padding: var(--space-16) 0;
+    padding: var(--section-y) 0;
   }
   
   .text {

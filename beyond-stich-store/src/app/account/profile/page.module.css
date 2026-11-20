@@ -69,8 +69,8 @@
 .saveBtn {
   align-self: flex-start;
   padding: var(--space-3) var(--space-8);
-  background: var(--color-text-primary);
-  color: var(--color-bg);
+  background: var(--accent);
+  color: var(--accent-ink);
   font-family: var(--font-display);
   font-size: var(--text-sm);
   font-weight: 800;

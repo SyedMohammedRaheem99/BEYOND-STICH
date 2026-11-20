@@ -18,8 +18,8 @@
 
 .addBtn {
   padding: var(--space-3) var(--space-6);
-  background: var(--color-text-primary);
-  color: var(--color-bg);
+  background: var(--accent);
+  color: var(--accent-ink);
   font-family: var(--font-display);
   font-size: var(--text-xs);
   font-weight: 800;
@@ -52,7 +52,7 @@
   top: var(--space-3);
   right: var(--space-3);
   font-family: var(--font-display);
-  font-size: 9px;
+  font-size: var(--text-2xs);
   font-weight: 800;
   letter-spacing: 0.1em;
   background: var(--color-text-primary);
@@ -90,7 +90,7 @@
 
 .addrBtn {
   font-family: var(--font-display);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   background: transparent;
@@ -101,7 +101,7 @@
 
 .editAddrBtn {
   composes: addrBtn;
-  color: #3B82F6;
+  color: var(--color-text-secondary);
 }
 
 .deleteAddrBtn {
@@ -160,7 +160,7 @@
   background: transparent;
   border: none;
   color: var(--color-text-muted);
-  font-size: 18px;
+  font-size: var(--text-lg);
   cursor: pointer;
 }
 
@@ -224,8 +224,8 @@
 
 .submitAddrBtn {
   padding: var(--space-3) var(--space-6);
-  background: var(--color-text-primary);
-  color: var(--color-bg);
+  background: var(--accent);
+  color: var(--accent-ink);
   font-family: var(--font-display);
   font-size: var(--text-sm);
   font-weight: 800;
@@ -253,7 +253,7 @@
   background: var(--color-error-bg);
   border: 1px solid var(--color-error-border);
   border-radius: var(--radius-sm);
-  color: #FCA5A5;
+  color: var(--color-error);
   font-size: var(--text-sm);
 }
 
@@ -277,10 +277,21 @@
 @media (max-width: 480px) {
   /* 14px inputs zoom the page on focus in iOS Safari. */
   .input {
-    font-size: 16px;
+    font-size: var(--text-base);
   }
 
   .modalOverlay {
     padding: 20px 12px;
   }
+}
+
+/* Loading placeholder shaped like a saved-address card. */
+.skeletonAddr {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-card);
 }

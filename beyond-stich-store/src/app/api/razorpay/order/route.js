@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/mongodb';
 import PendingOrder from '@/lib/models/PendingOrder';
 import { MAX_ITEMS, OrderError, repriceItems, computeTotals } from '@/lib/orderIntegrity';
+import { validateDeliverable } from '@/lib/serviceability';
 
 // POST /api/razorpay/order
 // Creates a real Razorpay order and returns the order_id for the frontend checkout.
@@ -37,6 +38,18 @@ export async function POST(request) {
     }
 
     await connectDB();
+
+    // Check serviceability BEFORE creating the gateway order. Letting a
+    // customer pay for an address we cannot reach means taking money we
+    // then have to refund, which is far worse than refusing up front.
+    if (shippingAddress?.pincode) {
+      const deliveryError = await validateDeliverable(shippingAddress.pincode, {
+        paymentMethod: 'online',
+      });
+      if (deliveryError) {
+        return NextResponse.json({ error: deliveryError }, { status: 400 });
+      }
+    }
 
     // Same pricing rules as /api/orders: DB prices, server-side coupon
     // validation, and shipping as a business rule.

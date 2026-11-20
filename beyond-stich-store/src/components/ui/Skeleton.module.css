@@ -1,0 +1,54 @@
+/* ============================================
+   Skeleton — loading placeholder.
+   The audit found exactly ONE skeleton in the entire app (app/loading).
+   Client-fetching sections (LatestDrop, shop filters, cart, account) had no
+   loading state at all and simply popped in.
+   ============================================ */
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  /* Prevents a zero-height skeleton when only a width is passed. */
+  min-height: 1em;
+}
+
+/* Sheen sweep. Uses transform (compositor-friendly) rather than animating
+   background-position, which repaints on every frame. */
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 100%
+  );
+  animation: sheen 1.4s var(--ease-in-out) infinite;
+}
+
+@keyframes sheen {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.text {
+  height: 0.85em;
+  border-radius: var(--radius-sm);
+}
+
+.circle {
+  border-radius: var(--radius-full);
+}
+
+/* Reduced motion: drop the sweep entirely and hold a static block. A looping
+   sheen is exactly the kind of motion this setting exists to remove. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    display: none;
+  }
+}

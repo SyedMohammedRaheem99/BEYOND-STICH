@@ -3,7 +3,6 @@ import connectDB from '@/lib/mongodb';
 import Product from '@/lib/models/Product';
 import { DUMMY_PRODUCTS } from '@/lib/dummyData';
 import ShopClient from './ShopClient';
-import ShopHero from '@/components/shop/ShopHero';
 
 // Serve catalog pages from cache for 5 minutes. Without this every
 // visit blocks on a MongoDB round trip before any HTML ships.
@@ -60,10 +59,18 @@ export default async function ShopPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
       />
 
-      {/* Real, visible H1 lives here now (ShopHero), so the crawler-only
-          list below no longer carries its own — two H1s on one page is
-          worse than none. */}
-      <ShopHero />
+      {/* ShopHero was removed: it rendered the same drops-1 artwork as the
+          promo carousel immediately below it, so the page opened with the
+          identical concrete-showroom photo twice and read as a loading
+          glitch. The carousel is the hero now.
+
+          The H1 stays here, server-rendered, rather than moving into the
+          carousel — ShopClient is a client component behind Suspense, so an
+          H1 inside it would not be in the initial HTML for a crawler. It is
+          visually hidden because the carousel states the page visually. */}
+      <h1 className="sr-only">
+        All Drops — Premium Oversized Graphic Tees | Beyond Stich
+      </h1>
 
       <div className="sr-only">
         <ul>

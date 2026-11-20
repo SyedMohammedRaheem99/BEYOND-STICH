@@ -1,0 +1,167 @@
+/* ============================================
+   Button — the single button primitive.
+   Replaces 40 one-off button classes across 26 files.
+   ============================================ */
+
+.button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  text-decoration: none;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  /* Explicit property list, never `transition: all` — the audit found 17 of
+     those, which animate layout properties and cause jank. */
+  transition: background-color var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out),
+              opacity var(--duration-fast) var(--ease-out);
+}
+
+/* ---- Sizes. Every size clears the 44px touch minimum. ---- */
+.sm {
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-2xs);
+}
+
+.md {
+  min-height: 48px;
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--text-xs);
+}
+
+.lg {
+  min-height: 56px;
+  padding: var(--space-4) var(--space-8);
+  font-size: var(--text-sm);
+}
+
+/* ---- Variants ---- */
+
+/* Primary — the accent fill. Yellow means "act". */
+.primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+
+.primary:hover:not(:disabled):not([aria-disabled='true']) {
+  filter: brightness(1.08);
+  /* 1px, not the 2-4px lifts found across the site — those read as bouncy. */
+  transform: translateY(-1px);
+}
+
+.primary:active:not(:disabled):not([aria-disabled='true']) {
+  transform: translateY(0);
+  filter: brightness(0.96);
+}
+
+/* Secondary — outline. The default for anything that isn't the one main action. */
+.secondary {
+  background: transparent;
+  color: var(--color-text-primary);
+  border-color: var(--color-border-hover);
+}
+
+.secondary:hover:not(:disabled):not([aria-disabled='true']) {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.secondary:active:not(:disabled):not([aria-disabled='true']) {
+  transform: translateY(0);
+}
+
+/* Ghost — lowest emphasis. Toolbar/inline actions. */
+.ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+  border-color: transparent;
+}
+
+.ghost:hover:not(:disabled):not([aria-disabled='true']) {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+}
+
+/* Danger — destructive. Outline at rest so it never shouts until hovered. */
+.danger {
+  background: transparent;
+  color: var(--color-error);
+  border-color: var(--color-error-border);
+}
+
+.danger:hover:not(:disabled):not([aria-disabled='true']) {
+  background: var(--color-error);
+  color: var(--color-text-primary);
+  border-color: var(--color-error);
+}
+
+/* ---- Shared states ---- */
+
+.button:disabled,
+.button[aria-disabled='true'] {
+  opacity: 0.38;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+
+/* Full-width — common enough on mobile CTAs to deserve a modifier rather
+   than a one-off override at each call site. */
+.block {
+  width: 100%;
+}
+
+/* Trailing icon nudge. Scoped to .icon so arbitrary children aren't moved. */
+.icon {
+  display: inline-flex;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.button:hover:not(:disabled):not([aria-disabled='true']) .icon {
+  transform: translateX(3px);
+}
+
+/* ---- Loading ---- */
+/* Label is hidden but keeps its box, so the button doesn't resize mid-request
+   and shift the layout around it. */
+.loading .label,
+.loading .icon {
+  opacity: 0;
+}
+
+.spinner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: var(--radius-full);
+  animation: spin 600ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* The global reduced-motion rule neutralises animation-duration, which would
+   freeze the spinner mid-rotation. Slow it down instead of stopping it. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 1.8s !important;
+  }
+}

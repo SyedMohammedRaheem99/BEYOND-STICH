@@ -25,7 +25,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 100%;
+  /* The absolutely-positioned logo centres against its nearest positioned
+     ancestor. Without this it skips .navInner and resolves against .navbar,
+     so its centring depends on the whole header's height rather than this
+     row's. Anchoring it here keeps the logo centred in the nav row itself. */
+  position: relative;
+  height: var(--nav-height);
   max-width: var(--container-max);
   margin: 0 auto;
   padding: 0 var(--container-padding);
@@ -113,7 +118,7 @@
 }
 
 .chev {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   transition: transform var(--duration-normal) var(--ease-out);
 }
 
@@ -193,7 +198,7 @@
 }
 
 .megaTag {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--color-text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -219,7 +224,7 @@
 
 .logoText {
   font-family: var(--font-display);
-  font-size: 1.4rem;
+  font-size: var(--text-2xl);
   font-weight: 900;
   letter-spacing: 0.08em;
   color: var(--color-text-primary);
@@ -227,16 +232,19 @@
 
 .logoAccent {
   font-family: var(--font-display);
-  font-size: 1.4rem;
+  font-size: var(--text-2xl);
   font-weight: 900;
   letter-spacing: 0.08em;
   color: var(--color-text-secondary);
 }
 
 .logoImage {
-  /* Derived from --nav-height rather than a fixed 84px: the bar is 70px, so a
-     hard-coded 84px logo overflowed it and got clipped along the top edge. */
-  height: calc(var(--nav-height) - 18px);
+  /* At nav-height - 18px (52px in a 70px bar) the wordmark stood taller than
+     every other element in the header — nearly 2.5x the 20px action icons —
+     so it read as the loudest thing on the page instead of a quiet mark
+     beside the nav links. Fixed at 30px keeps it legible and identifiable
+     without out-shouting SHOP/WORLDS/ABOUT or the icon row. */
+  height: 30px;
   width: auto;
   /* The wordmark is ~3.53:1, so on narrow screens it runs out of horizontal
      room long before vertical. Letting width win there (via the parent's
@@ -279,8 +287,8 @@
   height: 16px;
   border-radius: 50%;
   background: var(--accent);
-  color: var(--color-bg);
-  font-size: 10px;
+  color: var(--accent-ink);
+  font-size: var(--text-2xs);
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -298,7 +306,7 @@
   background: var(--color-text-primary);
   color: var(--color-bg);
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 900;
   display: flex;
   align-items: center;
@@ -338,6 +346,7 @@
 .searchInput::placeholder {
   color: var(--color-text-muted);
 }
+
 
 .searchClose {
   /* Was a bare glyph in ~8px padding. It's the only visible way to dismiss
@@ -435,20 +444,31 @@
 
 @media (max-width: 768px) {
   .navbar {
-    /* .hideOnMobile removes the account button, so one fewer button + gap. */
-    --nav-side-cluster: calc(3 * 44px + 2 * var(--space-2));
+    /* Wishlist, account, and cart moved to the fixed bottom tab bar
+       (BottomTabBar) on mobile — only search remains in the top bar, so the
+       side cluster is a single 44px button now instead of three. The
+       hamburger on the left is the same 44px, so reserving this on both
+       sides keeps the centred logo symmetric. */
+    --nav-side-cluster: 44px;
   }
 
-  /* A centred wordmark cannot fit here. At 360px the gap between the 44px
-     hamburger and the 148px action cluster leaves only ~24px for a centred
-     box, which is why the logo ran under the icons. Anchoring it beside the
-     hamburger instead frees ~128px — enough to render it legibly. */
+  /* The logo used to be anchored beside the hamburger because a centred
+     wordmark genuinely could not fit: the action cluster was then 148px
+     wide (search + wishlist + cart), leaving ~24px of centred space at
+     360px. That cluster is now a single 44px search button, so the widest
+     symmetric box is 360 - 2*(44 + 12) - 2*8 = ~232px — more than enough.
+     Centring it again closes the dead gap that opened up between the
+     left-anchored logo and the lone search icon.
+
+     Both sides reserve --nav-side-cluster so the box stays symmetric about
+     the true centre; the hamburger and search are the same 44px, so the
+     logo reads as optically centred rather than drifting. */
   .logo {
-    left: 44px;
+    left: 50%;
     top: 50%;
-    transform: translateY(-50%);
-    justify-content: flex-start;
-    max-width: calc(100% - 44px - var(--nav-side-cluster) - 2 * var(--space-2));
+    transform: translate(-50%, -50%);
+    justify-content: center;
+    max-width: calc(100% - 2 * var(--nav-side-cluster) - 2 * var(--space-3) - 2 * var(--space-2));
   }
 
   .hideOnMobile {
@@ -461,30 +481,35 @@
   }
 
   .logo {
-    font-size: 1.1rem;
+    font-size: var(--text-lg);
   }
 
   .logoText,
   .logoAccent {
-    font-size: 1.1rem;
+    font-size: var(--text-lg);
   }
 
-  /* Was 62px inside a 60px navbar, so the logo bled past the nav's bottom
-     border onto the page content. The -28px (32px tall) keeps the wordmark in
-     proportion with the 22px hamburger and 20px action icons; at
-     -16px it rendered ~155px wide and dominated the bar. */
+  /* The source file is a STACKED two-line lockup (BEYOND over STICH), not a
+     flat single-line wordmark — its 296x84px canvas is mostly padding around
+     two short, wide lines. Squashing that down to a flat wordmark's height
+     (22px) compressed both lines into an unreadable blob. It needs
+     proportionally more height to stay legible.
+
+     Now that the logo is centred rather than squeezed beside the hamburger,
+     it can take the height it deserves: 38px at a 3.53:1 ratio is ~134px
+     wide, comfortably inside the ~232px centred slot while staying under
+     the 44px hamburger so the bar height is unchanged. The bar no longer
+     reads as empty because the mark is doing the work the icons used to. */
   .logoImage {
-    height: calc(var(--nav-height) - 28px);
+    height: 38px;
   }
 }
 
 @media (max-width: 480px) {
-  /* At 360px the 3.53:1 wordmark is width-bound, not height-bound: a 38px
-     height implied ~134px of width, which reached under the icons. Cap the
-     height and let the parent's max-width shrink it to fit instead. */
+  /* 34px ≈ 120px wide against a ~200px slot at 360px — still centred with
+     clearance, and a visible step up from the old 30px. */
   .logoImage {
-    height: auto;
-    max-height: calc(var(--nav-height) - 28px);
+    height: 34px;
   }
 }
 
@@ -504,7 +529,7 @@
   font-size: var(--text-sm);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-text-secondary, #A0A0A0);
+  color: var(--color-text-secondary);
   transition: color var(--duration-fast) var(--ease-out);
 }
 

@@ -1,5 +1,5 @@
 .section {
-  padding: var(--space-16) 0;
+  padding: var(--section-y-tight) 0;
   background: var(--color-bg);
 }
 

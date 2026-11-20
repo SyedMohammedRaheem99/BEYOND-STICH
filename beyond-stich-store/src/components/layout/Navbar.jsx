@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCartStore, useUIStore } from '@/lib/store';
+import { useCartStore } from '@/lib/store';
 import { SEGMENTS } from '@/lib/constants';
 import useFocusTrap from '@/hooks/useFocusTrap';
 import styles from './Navbar.module.css';
@@ -21,7 +21,6 @@ export default function Navbar() {
   const { data: session } = useSession();
   const menuTrapRef = useFocusTrap(mobileMenuOpen);
   const { items, openCart } = useCartStore();
-  const { setCursorVariant, resetCursor } = useUIStore();
 
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -65,9 +64,6 @@ export default function Navbar() {
     };
   }, [mobileMenuOpen]);
 
-  const handleMouseEnter = () => setCursorVariant('hover');
-  const handleMouseLeave = () => resetCursor();
-
   return (
     <>
       <motion.nav
@@ -82,8 +78,6 @@ export default function Navbar() {
             <button
               className={styles.menuToggle}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
               aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-menu"
@@ -101,8 +95,6 @@ export default function Navbar() {
                 href="/shop"
                 className={`${styles.navLink} ${pathname === '/shop' ? styles.navLinkActive : ''}`}
                 aria-current={pathname === '/shop' ? 'page' : undefined}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
               >
                 SHOP
               </Link>
@@ -123,8 +115,6 @@ export default function Navbar() {
                   aria-haspopup="true"
                   aria-expanded={worldsOpen}
                   onClick={() => setWorldsOpen((v) => !v)}
-                  onMouseEnter={handleMouseEnter}
-                  onMouseLeave={handleMouseLeave}
                 >
                   WORLDS
                   <span className={`${styles.chev} ${worldsOpen ? styles.chevOpen : ''}`} aria-hidden="true">▾</span>
@@ -165,8 +155,6 @@ export default function Navbar() {
                 href="/about"
                 className={`${styles.navLink} ${pathname === '/about' ? styles.navLinkActive : ''}`}
                 aria-current={pathname === '/about' ? 'page' : undefined}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
               >
                 ABOUT
               </Link>
@@ -177,14 +165,16 @@ export default function Navbar() {
           <Link
             href="/"
             className={styles.logo}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
           >
             {/* Wordmark regenerated from the 6250px master. The old asset was
                 a 312x312 upscale rendered at 84px tall, which is why it looked
                 soft on retina; it also declared a square aspect ratio for a
                 3.53:1 image, so the header shifted as it loaded. srcSet lets
                 the browser pick 2x/3x only where it helps. */}
+          {/* eslint-disable-next-line @next/next/no-img-element --
+              deliberate: the wordmark uses a hand-tuned 1x/2x/3x srcSet
+              (see comment above). next/image would re-encode and re-pick
+              sources, discarding that tuning for no gain on a static asset. */}
             <img
               src="/logos/wordmark.png"
               srcSet="/logos/wordmark.png 1x, /logos/wordmark@2x.png 2x, /logos/wordmark@3x.png 3x"
@@ -201,13 +191,11 @@ export default function Navbar() {
             <button
               className={styles.actionBtn}
               onClick={() => setSearchOpen(!searchOpen)}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
               aria-label="Search"
               aria-expanded={searchOpen}
               aria-controls="search-overlay"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
@@ -215,12 +203,10 @@ export default function Navbar() {
 
             <Link
               href="/account/wishlist"
-              className={styles.actionBtn}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
+              className={`${styles.actionBtn} ${styles.hideOnMobile}`}
               aria-label="Wishlist"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
               </svg>
             </Link>
@@ -228,8 +214,6 @@ export default function Navbar() {
             <Link
               href={session ? '/account' : '/login'}
               className={`${styles.actionBtn} ${styles.hideOnMobile}`}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
               aria-label={session ? `Account — ${session.user?.name}` : 'Sign in'}
             >
               {session ? (
@@ -237,21 +221,23 @@ export default function Navbar() {
                   {session.user?.name?.charAt(0)?.toUpperCase() || 'U'}
                 </span>
               ) : (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
               )}
             </Link>
 
+            {/* Cart and Wishlist moved to the fixed bottom tab bar on mobile
+                (BottomTabBar) — they no longer need a seat in the already
+                crowded top bar there. Both stay on desktop, which has no
+                tab bar. */}
             <button
-              className={styles.cartBtn}
+              className={`${styles.cartBtn} ${styles.hideOnMobile}`}
               onClick={openCart}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
               aria-label={`Open cart, ${itemCount} ${itemCount === 1 ? 'item' : 'items'}`}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
                 <line x1="3" y1="6" x2="21" y2="6" />
                 <path d="M16 10a4 4 0 0 1-8 0" />

@@ -12,10 +12,10 @@
 @media (max-width: 768px) {
   .whatsappWrapper {
     right: 16px;
-    /* Only the PDP has a sticky add-to-cart bar to clear, and it sets
-       --fab-offset to lift the button over it. Everywhere else the flat 88px
-       left the green circle hovering over footer content for no reason. */
-    bottom: calc(var(--fab-offset, 24px) + env(safe-area-inset-bottom, 0px));
+    /* Every mobile page now has the fixed bottom tab bar to clear. The PDP
+       additionally sets --fab-offset higher still, to clear its own sticky
+       add-to-cart bar which sits above the tab bar. */
+    bottom: calc(var(--fab-offset, calc(var(--tabbar-height) + 16px)) + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -44,106 +44,3 @@
   height: 28px;
 }
 
-.popover {
-  position: absolute;
-  bottom: 70px;
-  right: 0;
-  width: 300px;
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  box-shadow: var(--shadow-elevated);
-  animation: slideUp var(--duration-normal) var(--ease-out);
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.popoverHeader {
-  background: var(--color-bg-secondary);
-  padding: var(--space-4);
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.popoverHeader strong {
-  display: block;
-  font-size: var(--text-sm);
-  color: var(--color-text-primary);
-}
-
-.popoverHeader p {
-  font-size: var(--text-xs);
-  color: var(--color-text-secondary);
-  margin: 0;
-}
-
-.avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--accent-millionaire);
-  color: var(--color-bg);
-  font-weight: 700;
-  font-size: var(--text-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.closeBtn {
-  margin-left: auto;
-  background: none;
-  border: none;
-  color: var(--color-text-secondary);
-  font-size: var(--text-xl);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-}
-
-.popoverBody {
-  padding: var(--space-4);
-}
-
-.chatBubble {
-  background: var(--color-bg-card);
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-  margin-bottom: var(--space-4);
-  line-height: 1.4;
-}
-
-.startChatBtn {
-  display: block;
-  width: 100%;
-  padding: var(--space-3);
-  background: #25d366;
-  color: #000;
-  font-weight: 600;
-  font-size: var(--text-sm);
-  text-align: center;
-  text-decoration: none;
-  border-radius: var(--radius-md);
-  transition: filter var(--duration-fast) ease;
-}
-
-.startChatBtn:hover {
-  filter: brightness(1.1);
-}

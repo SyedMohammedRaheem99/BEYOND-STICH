@@ -16,7 +16,7 @@ export default function ReturnsPage() {
       <h2>7-day return window</h2>
       <p>
         You can return or exchange any item within <strong>7 days</strong> of
-        delivery, as long as it's unworn, unwashed and has its original tags
+        delivery, as long as it&apos;s unworn, unwashed and has its original tags
         intact.
       </p>
 
@@ -27,7 +27,7 @@ export default function ReturnsPage() {
           <a href="mailto:hello@beyondstich.com">hello@beyondstich.com</a> with
           your order number and reason for the return.
         </li>
-        <li>We'll confirm eligibility and arrange a reverse pickup from your address.</li>
+        <li>We&apos;ll confirm eligibility and arrange a reverse pickup from your address.</li>
         <li>Pack the item in its original packaging with tags attached.</li>
         <li>Once we receive and inspect the item, your refund or exchange is processed.</li>
       </ol>
@@ -50,16 +50,16 @@ export default function ReturnsPage() {
 
       <h2>Exchanges</h2>
       <p>
-        Want a different size or colour? We'll ship the replacement within{' '}
+        Want a different size or colour? We&apos;ll ship the replacement within{' '}
         <strong>2–3 business days</strong> of receiving your return, subject to
-        stock availability. If the requested variant is out of stock, we'll issue a
+        stock availability. If the requested variant is out of stock, we&apos;ll issue a
         full refund instead.
       </p>
 
       <h2>Damaged or defective items</h2>
       <p>
         If you receive a damaged or defective item, email us within{' '}
-        <strong>48 hours</strong> of delivery with photos. We'll send a free
+        <strong>48 hours</strong> of delivery with photos. We&apos;ll send a free
         replacement or full refund — no questions asked.
       </p>
 
@@ -72,9 +72,9 @@ export default function ReturnsPage() {
 
       <h2>Disputes &amp; chargebacks</h2>
       <p>
-        If you're unhappy with a resolution, please reach out to us at{' '}
+        If you&apos;re unhappy with a resolution, please reach out to us at{' '}
         <a href="mailto:hello@beyondstich.com">hello@beyondstich.com</a> before
-        filing a chargeback with your bank. We're committed to resolving every
+        filing a chargeback with your bank. We&apos;re committed to resolving every
         concern fairly and quickly.
       </p>
     </InfoPageLayout>

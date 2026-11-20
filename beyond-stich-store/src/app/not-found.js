@@ -22,10 +22,10 @@ export default function NotFound() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          THIS DROP DOESN'T EXIST
+          THIS DROP DOESN&apos;T EXIST
         </motion.p>
         <motion.p 
-          className={styles.desc}
+          className={styles.subtitle}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
@@ -37,7 +37,7 @@ export default function NotFound() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <Link href="/shop" className={styles.cta}>
+          <Link href="/shop" className={styles.ctaBtn}>
             BACK TO ALL DROPS
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M5 12h14M12 5l7 7-7 7" />

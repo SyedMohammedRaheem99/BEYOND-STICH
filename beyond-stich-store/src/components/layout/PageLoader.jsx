@@ -14,6 +14,7 @@ export default function PageLoader() {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     if (seen || reduceMotion) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing state from a browser/session/URL source that is unavailable during render
       setIsLoading(false);
       return;
     }
@@ -40,6 +41,8 @@ export default function PageLoader() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             >
+              {/* eslint-disable-next-line @next/next/no-img-element --
+                  same hand-tuned wordmark srcSet as the navbar. */}
               <img
                 src="/logos/wordmark.png"
                 srcSet="/logos/wordmark.png 1x, /logos/wordmark@2x.png 2x, /logos/wordmark@3x.png 3x"

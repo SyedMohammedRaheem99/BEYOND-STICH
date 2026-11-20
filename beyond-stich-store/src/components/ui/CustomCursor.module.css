@@ -1,0 +1,46 @@
+/* The ring itself. Position comes from a transform written by rAF, so this
+   file never animates left/top — only the compositor-friendly properties. */
+.ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 26px;
+  height: 26px;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  /* Above page content but below the navbar and modals: the ring is
+     decoration and must never sit over a dialog or the cart drawer. */
+  z-index: var(--z-sticky);
+  pointer-events: none;
+  will-change: transform;
+  transition: width var(--duration-fast) var(--ease-out),
+              height var(--duration-fast) var(--ease-out),
+              background-color var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out),
+              opacity var(--duration-fast) var(--ease-out);
+}
+
+/* Over a link, button or field the ring swells and fills faintly. */
+.ringHover {
+  width: 54px;
+  height: 54px;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border-color: var(--accent);
+}
+
+/* Hide the native arrow ONLY where the ring actually renders.
+ *
+ * The previous implementation set `cursor: none` unconditionally, which left
+ * reduced-motion and touch-hybrid users with no visible pointer at all. Both
+ * conditions here must hold, and they are the same two the component checks
+ * before mounting — so the arrow is never hidden without a ring to replace it.
+ *
+ * Text and form fields keep their native cursors regardless: an I-beam tells
+ * you text is selectable and a ring cannot convey that. */
+@media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  body:has(.ring) a,
+  body:has(.ring) button,
+  body:has(.ring) [role='button'] {
+    cursor: none;
+  }
+}

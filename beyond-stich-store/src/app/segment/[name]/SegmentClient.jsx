@@ -32,7 +32,7 @@ export default function SegmentClient({ segmentData, initialProducts }) {
           <div className={styles.editorialQuote}>
             <div className={styles.verticalAccent} />
             <blockquote>
-              "IN THIS WORLD, BASIC DOESN'T EXIST. WE BUILT THIS COLLECTION TO REFLECT THE MINDSET OF THE {segmentData.name} HUSTLE."
+              &quot;IN THIS WORLD, BASIC DOESN&apos;T EXIST. WE BUILT THIS COLLECTION TO REFLECT THE MINDSET OF THE {segmentData.name} HUSTLE.&quot;
             </blockquote>
           </div>
           <div className={styles.editorialStats}>

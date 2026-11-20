@@ -5,22 +5,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion, useInView } from 'framer-motion';
 import { SEGMENTS, getSegmentImage } from '@/lib/constants';
-import { useUIStore } from '@/lib/store';
 import styles from './SegmentGrid.module.css';
 
 export default function SegmentGrid() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
-  const { setCursorVariant, setCursorText, resetCursor } = useUIStore();
-
-  const handleMouseEnter = (name) => {
-    setCursorVariant('text');
-    setCursorText('ENTER');
-  };
-
-  const handleMouseLeave = () => {
-    resetCursor();
-  };
 
   return (
     <section className={styles.section} ref={ref}>
@@ -50,8 +39,6 @@ export default function SegmentGrid() {
               <Link
                 href={`/segment/${segment.id}`}
                 className={styles.tileLink}
-                onMouseEnter={() => handleMouseEnter(segment.name)}
-                onMouseLeave={handleMouseLeave}
                 style={{
                   '--tile-accent': segment.accent,
                   '--tile-glow': `${segment.accent}33`,

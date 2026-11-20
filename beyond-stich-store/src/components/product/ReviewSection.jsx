@@ -73,7 +73,7 @@ export default function ReviewSection({
             <div className={styles.summary}>
               <div className={styles.stars}>
                 {[1, 2, 3, 4, 5].map((s) => (
-                  <svg key={s} width="20" height="20" viewBox="0 0 24 24" fill={s <= rounded ? accentColor : 'none'} stroke={accentColor} strokeWidth="2">
+                  <svg aria-hidden="true" key={s} width="20" height="20" viewBox="0 0 24 24" fill={s <= rounded ? accentColor : 'none'} stroke={accentColor} strokeWidth="2">
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                   </svg>
                 ))}
@@ -137,7 +137,7 @@ export default function ReviewSection({
                     onClick={() => set('rating', s)}
                     aria-label={`${s} star${s > 1 ? 's' : ''}`}
                   >
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill={s <= (hover || form.rating) ? accentColor : 'none'} stroke={accentColor} strokeWidth="1.6">
+                    <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill={s <= (hover || form.rating) ? accentColor : 'none'} stroke={accentColor} strokeWidth="1.6">
                       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                     </svg>
                   </button>
@@ -154,7 +154,7 @@ export default function ReviewSection({
 
             {msg && <p className={`${styles.msg} ${msg.ok ? styles.msgOk : styles.msgErr}`}>{msg.text}</p>}
 
-            <button type="submit" className={styles.submitBtn} disabled={submitting} style={{ background: accentColor }}>
+            <button type="submit" className={styles.submitBtn} disabled={submitting}>
               {submitting ? 'SUBMITTING…' : 'SUBMIT REVIEW'}
             </button>
           </motion.form>
@@ -179,7 +179,7 @@ export default function ReviewSection({
                   <span className={styles.author}>{review.authorName}</span>
                   {review.verified && (
                     <span className={styles.verified}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                      <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
                       Verified Buyer
                     </span>
                   )}
@@ -189,7 +189,7 @@ export default function ReviewSection({
 
               <div className={styles.reviewStars}>
                 {[...Array(5)].map((_, idx) => (
-                  <svg key={idx} width="14" height="14" viewBox="0 0 24 24" fill={idx < review.rating ? accentColor : 'none'} stroke={accentColor} strokeWidth="2">
+                  <svg aria-hidden="true" key={idx} width="14" height="14" viewBox="0 0 24 24" fill={idx < review.rating ? accentColor : 'none'} stroke={accentColor} strokeWidth="2">
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                   </svg>
                 ))}

@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useUIStore } from '@/lib/store';
 import styles from './ProductGallery.module.css';
 
 export default function ProductGallery({ images, name }) {
@@ -30,16 +29,6 @@ export default function ProductGallery({ images, name }) {
     container.querySelectorAll('[data-index]').forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, [images]);
-  const { setCursorVariant, setCursorText, resetCursor } = useUIStore();
-
-  const handleMouseEnter = () => {
-    setCursorVariant('text');
-    setCursorText('ZOOM');
-  };
-
-  const handleMouseLeave = () => {
-    resetCursor();
-  };
 
   const handleImageClick = (i) => {
     setActiveIndex(i);
@@ -69,8 +58,6 @@ export default function ProductGallery({ images, name }) {
           <div 
             key={i} 
             className={styles.imageBlock}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
             onClick={() => handleImageClick(i)}
           >
             {/* `priority` is deprecated in Next 16 in favour of `preload`.

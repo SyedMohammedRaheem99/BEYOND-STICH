@@ -84,10 +84,12 @@
 
 .title {
   font-family: var(--font-display);
-  font-size: var(--text-5xl);
+  /* Fluid, so the product name doesn't overwhelm a narrow buy column at
+     mid widths or look undersized on a large screen. */
+  font-size: var(--display-sm);
   font-weight: 900;
-  line-height: 1.1;
-  letter-spacing: 0.02em;
+  line-height: 1.05;
+  letter-spacing: var(--tracking-tight);
   text-transform: uppercase;
   margin-bottom: var(--space-4);
 }
@@ -228,7 +230,13 @@
   font-family: var(--font-display);
   font-size: var(--text-lg);
   font-weight: 700;
-  transition: all var(--duration-fast);
+  transition: background-color var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out),
+              opacity var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out),
+              filter var(--duration-fast) var(--ease-out);
 }
 
 .sizeBtn:not(.sizeOos):hover {
@@ -253,7 +261,7 @@
 
 .stockLabel {
   font-family: var(--font-body);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   margin-top: -2px;
   font-weight: 500;
 }
@@ -280,17 +288,32 @@
   color: var(--color-text-muted);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  transition: all var(--duration-normal);
+  transition: background-color var(--duration-normal) var(--ease-out),
+              border-color var(--duration-normal) var(--ease-out),
+              color var(--duration-normal) var(--ease-out),
+              transform var(--duration-normal) var(--ease-out),
+              opacity var(--duration-normal) var(--ease-out),
+              box-shadow var(--duration-normal) var(--ease-out),
+              filter var(--duration-normal) var(--ease-out);
 }
 
+/* The accent fill was previously injected inline from the segment colour,
+   so the buy button changed colour on every product. It is now always the
+   brand accent — one colour means "act" across the whole store. */
 .addToCartBtn:not(.disabled) {
-  color: #0A0A0A;
-  border-color: transparent;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
 }
 
 .addToCartBtn:not(.disabled):hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.addToCartBtn:not(.disabled):active {
+  transform: translateY(0);
+  filter: brightness(0.96);
 }
 
 .wishlistBtn {
@@ -302,7 +325,13 @@
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  transition: all var(--duration-fast);
+  transition: background-color var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out),
+              opacity var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out),
+              filter var(--duration-fast) var(--ease-out);
 }
 
 .wishlistBtn:hover {
@@ -501,7 +530,7 @@
   }
 
   .breadcrumb {
-    font-size: 10px;
+    font-size: var(--text-2xs);
     gap: var(--space-1);
   }
 
@@ -520,9 +549,12 @@
   /* The WhatsApp button is a sibling of <main>, not a descendant of .pdp, so
      a variable set on .pdp can't reach it — CSS custom properties inherit
      down, not sideways. :has() lets the PDP raise it from the root while
-     every other page keeps the default 24px. */
+     every other page keeps the default (tab bar + margin) offset.
+     The sticky bar now sits tabbar-height above the viewport bottom (it
+     used to sit flush with it), so this must clear the tab bar AND the
+     sticky bar's own height, not just the old flat 88px. */
   :root:has(.pdp) {
-    --fab-offset: 88px;
+    --fab-offset: calc(var(--tabbar-height) + 72px);
   }
 
   /* The sticky bar IS the mobile add-to-cart. Leaving the in-flow one visible
@@ -543,17 +575,16 @@
 
   .stickyBar {
     position: fixed;
-    bottom: 0;
+    /* Sits above the fixed bottom tab bar now, not the raw viewport edge —
+       otherwise the tab bar covered the ADD TO BAG button. */
+    bottom: var(--tabbar-height);
     left: 0;
     right: 0;
     z-index: var(--z-sticky-bar);
     display: flex;
     align-items: center;
     gap: var(--space-4);
-    /* Extra bottom padding clears the iPhone home indicator, which was
-       overlapping the ADD TO BAG button. */
-    padding: var(--space-3) var(--space-4)
-      calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+    padding: var(--space-3) var(--space-4);
     background: rgba(10, 10, 10, 0.92);
     backdrop-filter: blur(20px);
     border-top: 1px solid var(--color-border);
@@ -578,15 +609,19 @@
     text-decoration: line-through;
   }
 
+  /* Matches the in-page add-to-cart button: same accent, same ink. It was
+     white-on-dark here and segment-tinted above, so the same action had two
+     different appearances on one screen. */
   .stickyBtn {
     flex: 1;
+    min-height: 48px;
     padding: var(--space-4);
-    background: var(--color-text-primary);
-    color: var(--color-bg);
+    background: var(--accent);
+    color: var(--accent-ink);
     font-family: var(--font-display);
     font-size: var(--text-base);
     font-weight: 800;
-    letter-spacing: 0.08em;
+    letter-spacing: var(--tracking-wide);
     border-radius: var(--radius-md);
     cursor: pointer;
   }
@@ -623,7 +658,7 @@
   color: var(--color-text-primary);
   font-family: var(--font-body);
   /* 16px stops iOS zooming the page on focus. */
-  font-size: 16px;
+  font-size: var(--text-base);
   min-height: 48px;
 }
 
@@ -635,8 +670,8 @@
 .notifyBtn {
   min-height: 48px;
   padding: 0 var(--space-5);
-  background: var(--color-text-primary);
-  color: var(--color-bg);
+  background: var(--accent);
+  color: var(--accent-ink);
   border: none;
   border-radius: var(--radius-sm);
   font-family: var(--font-display);

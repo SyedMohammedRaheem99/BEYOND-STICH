@@ -52,7 +52,7 @@ export default function BangalorePage() {
             <h1 className={styles.h1}>BEYOND STICH — BANGALORE</h1>
             <p className={styles.intro}>
               Born in Bangalore, built for the bold. Beyond Stich started in the
-              heart of India's tech and culture capital — a city that runs on
+              heart of India&apos;s tech and culture capital — a city that runs on
               coffee, code, and creativity. Every tee we make carries that
               Bangalore DNA: sharp design, premium craft, zero compromise.
             </p>
@@ -66,22 +66,22 @@ export default function BangalorePage() {
                 <h3 className={styles.appealTitle}>Designed Here</h3>
                 <p className={styles.appealText}>
                   Every graphic is conceptualised in Bangalore. We draw from the
-                  city's street art, startup energy, and nightlife to create
-                  designs you won't find anywhere else.
+                  city&apos;s street art, startup energy, and nightlife to create
+                  designs you won&apos;t find anywhere else.
                 </p>
               </div>
               <div className={styles.appealCard}>
                 <h3 className={styles.appealTitle}>Premium Quality</h3>
                 <p className={styles.appealText}>
-                  240 GSM combed cotton that survives Bangalore's monsoons and
-                  weekend rides. Oversized fit that feels right whether you're at
+                  240 GSM combed cotton that survives Bangalore&apos;s monsoons and
+                  weekend rides. Oversized fit that feels right whether you&apos;re at
                   a co-working space or a rooftop gig.
                 </p>
               </div>
               <div className={styles.appealCard}>
                 <h3 className={styles.appealTitle}>COD Available</h3>
                 <p className={styles.appealText}>
-                  Cash on delivery across Bangalore. Pay when you're happy with
+                  Cash on delivery across Bangalore. Pay when you&apos;re happy with
                   what you see — no risk, no fuss.
                 </p>
               </div>

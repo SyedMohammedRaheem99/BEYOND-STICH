@@ -1,17 +1,27 @@
 .wrapper {
   position: relative;
   width: 100%;
-  border-radius: var(--radius-lg);
+  /* Square corners now that this is the page's hero band rather than a card
+     inset inside the container — rounded edges would read as a widget. */
   overflow: hidden;
-  aspect-ratio: 3.5 / 1;
-  margin-bottom: var(--space-6);
+  /* Sized from the same rule as the home hero (HeroSection.module.css uses
+     min(88svh, 900px)) so the two pages open the same way. Slightly shorter
+     here because /shop must also show product above the fold: 68svh clears
+     the hero, the trust strip and the filters, and still lands the first
+     row of tees on screen. svh, not vh — vh includes the retracting mobile
+     URL bar and pushes the CTA below the fold on first paint. */
+  min-height: min(68svh, 640px);
 }
 
 /* ---- Slide ---- */
+/* The wrapper sizes itself with min-height, and a percentage height has no
+   definite parent height to resolve against — so `height: 100%` collapsed to
+   the image's own height and left the rest of the band empty black. Filling
+   the wrapper absolutely makes the slide adopt whatever height it resolves
+   to, at any viewport. */
 .slide {
-  position: relative;
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
 }
@@ -19,6 +29,14 @@
 .bgWrap {
   position: absolute;
   inset: 0;
+}
+
+/* <picture> is an inline wrapper by default, so it would not stretch and the
+   img inside it would size to the wrapper's text box instead of the band. */
+.bgWrap picture {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .bgImg {
@@ -31,10 +49,15 @@
 .bgOverlay {
   position: absolute;
   inset: 0;
+  /* Tuned for the old stock PNGs, which were bright flatlays needing a heavy
+     scrim to carry white text. The drops-* photography is already dark and
+     low-key, so 0.92/0.6 crushed it to near-black and the headline and CTA
+     lost contrast against it. Lighter stops keep the copy readable while the
+     product stays visible — the left end still does the work for the text. */
   background: linear-gradient(
     105deg,
-    rgba(17, 17, 17, 0.92) 0%,
-    rgba(17, 17, 17, 0.6) 50%,
+    rgba(17, 17, 17, 0.82) 0%,
+    rgba(17, 17, 17, 0.35) 55%,
     transparent 100%
   );
 }
@@ -47,24 +70,69 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: var(--space-8) var(--space-10);
+  /* The band bleeds to the screen edges, but its copy belongs on the same
+     left edge as the filters and product grid below — that shared spine is
+     what makes /shop and / read as one site rather than two layouts stacked.
+     max-width + auto margins reproduce the global .container here; the
+     padding then matches it and additionally clears the carousel arrows
+     (absolutely positioned at --space-4, 36px wide), which previously ate
+     into the subtext as "0% off above ₹949". */
+  max-width: var(--container-max);
+  margin: 0 auto;
+  /* Exactly the container's padding — no more. The extra 36px+gap that used
+     to be added here to clear the carousel arrows pushed the headline off the
+     shared left edge; the arrows now sit at the container edge themselves
+     (see .arrowLeft) and are vertically centred, so the copy no longer has to
+     dodge them. */
+  padding: var(--space-10) var(--container-padding);
   gap: var(--space-6);
 }
 
+/* Mirrors .eyebrow in HeroSection.module.css — same accent rule, same
+   tracking — so both pages introduce their headline identically. */
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.eyebrow::before {
+  content: '';
+  width: 24px;
+  height: 2px;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+/* Same rhythm as the home hero's .content stack. */
 .textGroup {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-4);
+  min-width: 0;
 }
 
+/* Sized and tracked like the home hero's .line: this was 35px against home's
+   80px, so /shop opened with what read as a caption while / opened with a
+   statement. --display-lg is the same token the home headline uses; the tight
+   tracking and 0.92 leading are what make a condensed face at this size look
+   deliberate rather than merely stretched. */
 .headline {
   font-family: var(--font-display);
-  font-size: clamp(1.4rem, 3vw, 2.2rem);
+  font-size: var(--display-lg);
   font-weight: 900;
   color: var(--color-text-primary);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-tight);
   text-transform: uppercase;
-  line-height: 1.15;
+  line-height: 0.92;
+  /* Authored as one line; never let it reflow mid-phrase. */
+  max-width: min(100%, max-content);
 }
 
 .sub {
@@ -80,17 +148,23 @@
   align-items: center;
   gap: 8px;
   padding: 12px 28px;
-  background: var(--accent, #F5C518);
-  color: #111;
+  background: var(--accent, var(--accent));
+  color: var(--accent-ink);
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.18em;
   text-decoration: none;
   text-transform: uppercase;
   border-radius: var(--radius-sm);
   white-space: nowrap;
-  transition: all 0.3s ease;
+  transition: background-color var(--duration-normal) var(--ease-out),
+              border-color var(--duration-normal) var(--ease-out),
+              color var(--duration-normal) var(--ease-out),
+              transform var(--duration-normal) var(--ease-out),
+              opacity var(--duration-normal) var(--ease-out),
+              box-shadow var(--duration-normal) var(--ease-out),
+              filter var(--duration-normal) var(--ease-out);
 }
 
 .cta:hover {
@@ -108,10 +182,13 @@
 }
 
 /* ---- Arrows ---- */
+/* Moved down beside the dots rather than vertically centred. At the hero's
+   new height, centred arrows landed directly on the headline. Sitting them on
+   the dots' baseline groups all the carousel controls together and leaves the
+   copy an uninterrupted column. */
 .arrow {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  bottom: var(--space-4);
   z-index: 5;
   width: 36px;
   height: 36px;
@@ -124,20 +201,31 @@
   border-radius: var(--radius-full);
   color: white;
   cursor: pointer;
-  font-size: 1.2rem;
-  transition: all 0.25s ease;
+  font-size: var(--text-xl);
+  transition: background-color var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out),
+              opacity var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out),
+              filter var(--duration-fast) var(--ease-out);
 }
 
 .arrow:hover {
   background: rgba(255, 255, 255, 0.18);
 }
 
+/* Anchored to the container edge, not the screen edge. The wrapper is
+   full-bleed now, so `left: --space-4` would strand the arrows ~160px away
+   from the copy they belong to on a wide monitor. max() keeps them at the
+   container edge on wide screens and falls back to a small inset once the
+   viewport is narrower than the container. */
 .arrowLeft {
-  left: var(--space-4);
+  left: max(var(--space-4), calc((100% - var(--container-max)) / 2 + var(--container-padding)));
 }
 
 .arrowRight {
-  right: var(--space-4);
+  right: max(var(--space-4), calc((100% - var(--container-max)) / 2 + var(--container-padding)));
 }
 
 /* ---- Dots ---- */
@@ -152,14 +240,27 @@
 }
 
 .dot {
+  position: relative;
   width: 8px;
   height: 8px;
   border-radius: var(--radius-full);
   background: rgba(255, 255, 255, 0.25);
   border: none;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background-color var(--duration-normal) var(--ease-out),
+              border-color var(--duration-normal) var(--ease-out),
+              color var(--duration-normal) var(--ease-out),
+              transform var(--duration-normal) var(--ease-out),
+              opacity var(--duration-normal) var(--ease-out),
+              box-shadow var(--duration-normal) var(--ease-out),
+              filter var(--duration-normal) var(--ease-out);
   padding: 0;
+}
+
+.dot::after {
+  content: '';
+  position: absolute;
+  inset: -18px -8px;
 }
 
 .dot:hover {
@@ -167,23 +268,26 @@
 }
 
 .dotActive {
-  background: #F5C518;
+  background: var(--accent);
   width: 24px;
   border-radius: 4px;
 }
 
 /* ---- Mobile responsive ---- */
 @media (max-width: 768px) {
+  /* Shorter than desktop so the first row of tees is reachable with one
+     swipe. No radius — the band is full-bleed here too, and rounded corners
+     on a screen-width element read as a stray card. */
   .wrapper {
-    aspect-ratio: 2 / 1;
-    border-radius: var(--radius-md);
+    min-height: min(58svh, 460px);
+    border-radius: 0;
   }
 
   .content {
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-end;
-    padding: var(--space-6);
+    padding: var(--space-6) var(--container-padding);
     gap: var(--space-4);
   }
 
@@ -208,16 +312,21 @@
 }
 
 @media (max-width: 480px) {
+  /* aspect-ratio here would override the min-height set above and snap the
+     band back to a short strip on the narrowest phones. */
   .wrapper {
-    aspect-ratio: 1.6 / 1;
+    min-height: min(54svh, 420px);
   }
 
+  /* Capped at 24px, this was a caption next to the home hero's 44px. The
+     display token already scales down on its own; let it, so both pages open
+     at the same weight on a phone. */
   .headline {
-    font-size: clamp(1.1rem, 5vw, 1.5rem);
+    font-size: var(--display-md);
   }
 
   .content {
-    padding: var(--space-4);
-    gap: var(--space-3);
+    padding: var(--space-6) var(--container-padding);
+    gap: var(--space-4);
   }
 }

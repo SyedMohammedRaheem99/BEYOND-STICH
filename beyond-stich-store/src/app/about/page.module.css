@@ -1,0 +1,302 @@
+/* About / Our Story.
+   Previously this used the generic InfoPageLayout — the same wrapper as the
+   privacy policy and shipping terms. The brand story reading exactly like a
+   legal page is a missed opportunity, so it now has its own composition:
+   a statement, hard specs as proof, then build detail and founder. */
+
+.page {
+  background: var(--color-bg);
+}
+
+/* ---- Hero ---- */
+.hero {
+  padding: var(--section-y) 0 var(--section-y-tight);
+}
+
+.eyebrow {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-6);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--display-lg);
+  font-weight: 900;
+  line-height: 0.94;
+  letter-spacing: var(--tracking-tight);
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+
+/* One accent word carries the whole statement — the rest stays white. */
+.titleAccent {
+  color: var(--accent);
+}
+
+.intro {
+  margin-top: var(--space-8);
+  max-width: 54ch;
+  font-size: var(--text-lg);
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+
+/* ---- Spec strip ---- */
+/* Numbers directly under the claim: the proof arrives before the reader has
+   to take anything on faith. */
+.specStrip {
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  padding: var(--section-y-tight) 0;
+}
+
+.specGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-6);
+}
+
+.spec {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  text-align: center;
+}
+
+.specValue {
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-text-primary);
+}
+
+.specUnit {
+  font-size: var(--text-lg);
+  margin-left: var(--space-1);
+  color: var(--accent);
+}
+
+.specLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* ---- Sections ---- */
+.section {
+  padding: var(--section-y) 0;
+}
+
+.sectionAlt {
+  background: var(--color-bg-secondary);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Measure capped for readability — long lines are the fastest way to make
+   body copy feel like homework. */
+.narrow {
+  max-width: 720px;
+}
+
+.kicker {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: var(--space-5);
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: var(--display-sm);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: var(--tracking-tight);
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-8);
+  max-width: 20ch;
+}
+
+/* Opening line of a section, set larger than body to carry the argument. */
+.lead {
+  font-size: var(--text-xl);
+  line-height: 1.55;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-6);
+  max-width: 40ch;
+}
+
+.body {
+  font-size: var(--text-base);
+  line-height: 1.8;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-4);
+}
+
+.body strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.inlineCta {
+  margin-top: var(--space-6);
+}
+
+/* ---- Build grid ---- */
+.buildGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-6);
+}
+
+.buildCard {
+  padding: var(--space-8);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.buildNum {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  letter-spacing: var(--tracking-wide);
+  color: var(--accent);
+  margin-bottom: var(--space-4);
+}
+
+.buildTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  letter-spacing: var(--tracking-tight);
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-3);
+}
+
+.buildBody {
+  font-size: var(--text-sm);
+  line-height: 1.75;
+  color: var(--color-text-secondary);
+}
+
+/* ---- Founder ---- */
+.quote {
+  font-family: var(--font-display);
+  font-size: var(--display-sm);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-text-primary);
+  border-left: 2px solid var(--accent);
+  padding-left: var(--space-6);
+  margin-bottom: var(--space-8);
+}
+
+.signature {
+  margin-top: var(--space-6);
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* ---- Closing ---- */
+.closing {
+  padding: var(--section-y) 0;
+  text-align: center;
+}
+
+.closingTitle {
+  font-family: var(--font-display);
+  font-size: var(--display-md);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: var(--tracking-tight);
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+
+.closingBody {
+  margin-top: var(--space-4);
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+}
+
+.closingActions {
+  margin-top: var(--space-8);
+  display: flex;
+  gap: var(--space-4);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.contactLine {
+  margin-top: var(--space-8);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.contactLine a {
+  color: var(--color-text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.contactLine a:hover {
+  color: var(--accent);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .specGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-8) var(--space-4);
+  }
+
+  .buildGrid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .buildCard {
+    padding: var(--space-6);
+  }
+
+  .lead {
+    font-size: var(--text-lg);
+    max-width: 100%;
+  }
+
+  .sectionTitle {
+    max-width: 100%;
+  }
+
+  .quote {
+    padding-left: var(--space-4);
+  }
+
+  .closingActions {
+    flex-direction: column;
+  }
+}

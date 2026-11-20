@@ -50,7 +50,13 @@
   border: 1px solid;
   border-radius: var(--radius-full);
   background: transparent;
-  transition: all var(--duration-fast);
+  transition: background-color var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out),
+              opacity var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out),
+              filter var(--duration-fast) var(--ease-out);
 }
 
 /* Grid */
@@ -90,7 +96,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--color-success);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -229,15 +235,30 @@
   min-height: 90px;
   resize: vertical;
 }
+/* The fill used to be injected inline from the segment colour, so this
+   button had no background of its own and changed colour per product. */
 .submitBtn {
   align-self: flex-start;
+  min-height: 48px;
   padding: var(--space-3) var(--space-8);
-  color: #0A0A0A;
+  background: var(--accent);
+  color: var(--accent-ink);
   font-family: var(--font-display);
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-wide);
   border-radius: var(--radius-full);
   cursor: pointer;
+  transition: filter var(--duration-fast) var(--ease-out),
+              opacity var(--duration-fast) var(--ease-out);
+}
+
+.submitBtn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.submitBtn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
 }
 .submitBtn:disabled {
   opacity: 0.6;
@@ -258,6 +279,6 @@
 @media (max-width: 768px) {
   .input,
   .textarea {
-    font-size: 16px;
+    font-size: var(--text-base);
   }
 }

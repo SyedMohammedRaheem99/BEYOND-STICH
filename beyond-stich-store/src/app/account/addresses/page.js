@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
+import Skeleton from '@/components/ui/Skeleton';
 import styles from './page.module.css';
 
 const EMPTY_ADDR = { fullName: '', phone: '', street: '', city: '', state: '', pincode: '', isDefault: false };
@@ -21,7 +22,9 @@ export default function AddressesPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability -- function is defined below and hoisted at call time; effect only invokes it
     if (session) fetchAddresses();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing state from a browser/session/URL source that is unavailable during render
     else setLoading(false);
   }, [session]);
 
@@ -141,7 +144,14 @@ export default function AddressesPage() {
       <button className={styles.addBtn} onClick={openAdd}>+ ADD NEW ADDRESS</button>
 
       {loading ? (
-        <p className={styles.emptyState}>Loading...</p>
+        <div aria-busy="true" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className={styles.skeletonAddr}>
+              <Skeleton shape="text" width="35%" height="1.2em" />
+              <Skeleton shape="text" lines={2} />
+            </div>
+          ))}
+        </div>
       ) : addresses.length > 0 ? (
         <div className={styles.addressList}>
           {addresses.map((addr, i) => (

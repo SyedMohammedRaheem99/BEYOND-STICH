@@ -4,138 +4,210 @@
 }
 
 /* ---- Promotional Banner Section ---- */
-.bannerSection {
-  /* <main> already offsets by --header-height (see ClientLayout), so adding
-     another --nav-height here left ~176px blank above the first content on
-     mobile — the page looked empty on landing. */
-  padding: var(--space-6) var(--space-4) 0;
+/* Hero band. Full-bleed with no padding of its own: the artwork runs to the
+   screen edges exactly like the home page hero, and the copy inside
+   ShopBanner is what sits in the shared container. */
+.heroSection {
   background: var(--color-bg);
 }
 
-/* ---- Trust / Benefits Marquee Strip ---- */
-.trustStrip {
-  overflow: hidden;
-  background: var(--color-bg-secondary);
-  border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
-  padding: var(--space-3) 0;
-}
-
-.trustTrack {
-  display: flex;
+/* ---- Catalogue: filter rail + results ----
+   Replaces three stacked full-width bands (trust strip, pill row, toolbar)
+   that cost 875px — 81% of a 1080p screen — before the first product. The
+   rail is a column, so it costs no vertical space at all. */
+.catalogue {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
   gap: var(--space-10);
-  animation: trustScroll 25s linear infinite;
-  white-space: nowrap;
-  width: max-content;
+  align-items: start;
+  padding-top: var(--space-10);
+  padding-bottom: var(--space-12);
 }
 
-.trustItem {
+.rail {
+  /* Sticks below the fixed header so the categories stay reachable through a
+     6000px grid instead of scrolling away after the first row. */
+  position: sticky;
+  top: calc(var(--header-height) + var(--space-6));
+}
+
+.railInner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.railHeading {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.railList {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+}
+
+/* A text row, not a pill. 13 pills wrapped or scrolled horizontally and the
+   last ones ("RANDOMS") were clipped off-screen; as rows every category is
+   visible at once and the list can grow without a layout change. */
+.railItem {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  flex-shrink: 0;
-}
-
-.trustIcon {
-  font-size: 1.1rem;
-}
-
-.trustText {
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.15em;
-  color: var(--color-text-muted);
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  /* 44px min target even though these are compact rows. */
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: none;
+  border: none;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: var(--color-text-muted);
+  text-align: left;
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out),
+              background-color var(--duration-fast) var(--ease-out);
 }
 
-@keyframes trustScroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+.railItem:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-card);
 }
 
+/* The segment's own accent marks the selection — a 2px bar rather than a
+   filled pill, so thirteen rows don't turn into thirteen colour blocks. */
+.railItemActive {
+  color: var(--color-text-primary);
+  background: var(--color-bg-card);
+  box-shadow: inset 2px 0 0 var(--seg-accent, var(--accent));
+}
 
-/* Header */
-.header {
-  padding: var(--space-20) 0 var(--space-10);
-  background: var(--color-bg-secondary);
-  border-bottom: 1px solid var(--color-border);
-  text-align: center;
+.railCount {
+  font-family: var(--font-body);
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--color-text-muted);
+}
+
+/* 10 of the 13 segments currently have no stock. Rather than let a customer
+   click through to an empty grid, an empty category is dimmed and disabled —
+   the count already tells them why. They re-enable themselves automatically
+   as soon as products are assigned to that segment. */
+.railItemEmpty {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.railItemEmpty:hover {
+  color: var(--color-text-muted);
+  background: none;
+}
+
+.results {
+  min-width: 0;
+}
+
+/* One row above the grid: filter trigger (mobile only), count, sort. */
+.resultsBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding-bottom: var(--space-6);
+}
+
+/* Desktop shows the rail itself, so the trigger is mobile-only. */
+.filterBtn {
+  display: none;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   position: relative;
+}
+
+/* Signals an active filter when the rail is hidden and the customer cannot
+   otherwise see that the grid is filtered. */
+.filterDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* ---- Mobile filter sheet ---- */
+.sheetOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: var(--z-modal);
+}
+
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-modal-content);
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: var(--space-5) var(--space-5) var(--space-10);
+  background: var(--color-bg-secondary);
+  border-top: 1px solid var(--color-border);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.sheetHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-4);
+}
+
+.sheetClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: none;
+  color: var(--color-text-primary);
+  font-size: var(--text-lg);
+  cursor: pointer;
 }
 
 .count {
   font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  letter-spacing: 0.15em;
-  color: var(--color-text-muted);
-}
-
-/* Filters */
-.filterStrip {
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-bg);
-  position: sticky;
-  top: var(--header-height);
-  z-index: var(--z-sticky);
-}
-
-.filterScroll {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  overflow-x: auto;
-  padding-top: var(--space-4);
-  padding-bottom: var(--space-4);
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.filterScroll::-webkit-scrollbar {
-  display: none;
-}
-
-.filterPill {
-  font-family: var(--font-display);
-  font-size: var(--text-base);
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: var(--color-text-muted);
-  padding: var(--space-2) var(--space-6);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  background: var(--color-bg-card);
   white-space: nowrap;
-  transition: all var(--duration-fast);
+  /* Pushes sort to the right edge while the count trails the search field. */
+  margin-left: auto;
 }
 
-.filterPill:hover {
-  border-color: var(--hover-accent, var(--color-text-primary));
-  color: var(--hover-accent, var(--color-text-primary));
-}
-
-.activePill {
-  background: var(--active-accent, var(--color-text-primary));
-  border-color: var(--active-accent, var(--color-text-primary)) !important;
-  color: var(--color-bg) !important;
-}
-
-/* Search + Sort toolbar */
-.toolbar {
-  background: var(--color-bg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.toolbarInner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding-top: var(--space-4);
-  padding-bottom: var(--space-4);
-}
 
 .searchWrap {
   position: relative;
@@ -193,14 +265,17 @@
   background-position: right var(--space-3) center;
 }
 
-/* Product Grid */
+/* Product Grid — padding now lives on .catalogue, which owns the whole
+   two-column block. */
 .productSection {
-  padding: var(--space-12) var(--container-padding);
+  padding: 0;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  /* auto-fill against a 240px rail gave 4 cramped columns; 3 wider cards
+     show the garment better and keep the row height sane. */
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   column-gap: var(--space-6);
   row-gap: var(--space-12);
 }
@@ -245,6 +320,34 @@
   color: var(--color-bg);
 }
 
+/* Below 1024px there isn't room for a 240px rail beside a usable grid, so
+   the rail collapses into the Filter sheet and the grid takes the full
+   width. */
+@media (max-width: 1024px) {
+  .catalogue {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding-top: var(--space-6);
+  }
+
+  .rail {
+    display: none;
+  }
+
+  .filterBtn {
+    display: inline-flex;
+  }
+
+  /* Count trails the filter button; sort stays pinned right. */
+  .count {
+    margin-left: 0;
+  }
+
+  .sortWrap {
+    margin-left: auto;
+  }
+}
+
 @media (max-width: 768px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);
@@ -252,30 +355,51 @@
     row-gap: var(--space-8);
   }
 
-  .toolbarInner {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
   .searchWrap {
     max-width: none;
   }
 
+  .resetBtn {
+    min-height: 44px;
+  }
+
+  /* 14px triggers iOS zoom on focus. */
+  .sortSelect {
+    font-size: var(--text-base);
+  }
+}
+
+@media (max-width: 560px) {
+  /* Filter + count + sort cannot share one row below ~560px: the select has
+     a 181px intrinsic width and pushed the bar to 427px on a 400px screen.
+     Filter and sort take a row, the count sits under them. */
+  .resultsBar {
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
   .sortWrap {
-    justify-content: space-between;
+    margin-left: auto;
+    min-width: 0;
   }
 
   .sortSelect {
-    flex: 1;
+    /* Was sized by its longest option ("Price: Low to High"); let it shrink
+       and ellipsise instead of forcing the row wider than the viewport. */
+    min-width: 0;
+    max-width: 44vw;
+    text-overflow: ellipsis;
   }
 
-  .filterPill {
-    font-size: var(--text-sm);
-    padding: var(--space-2) var(--space-4);
+  .count {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
   }
 
-  .resetBtn {
-    min-height: 44px;
+  /* The select reads as sort on its own at this width. */
+  .sortLabel {
+    display: none;
   }
 }
 
@@ -285,34 +409,30 @@
     column-gap: var(--space-3);
     row-gap: var(--space-6);
   }
-
-  .header {
-    padding: var(--space-16) 0 var(--space-6);
-  }
-
-  .filterPill {
-    font-size: var(--text-xs);
-    padding: var(--space-2) var(--space-3);
-  }
 }
 
-@media (max-width: 768px) {
-  /* The sticky filter strip sits under a 92px fixed header; at its desktop
-     padding the two together occupied ~26% of a 640px viewport before any
-     product was visible. */
-  .filterScroll {
-    padding-top: var(--space-2);
-    padding-bottom: var(--space-2);
-  }
-
-  /* 14px triggers iOS zoom on focus. */
-  .sortSelect {
-    font-size: 16px;
-  }
-}
-
-/* The heading moved to ShopHero; this band now only carries the product
-   count, so it no longer needs the full header padding. */
+/* This band carries only the product count — the page heading lives in the
+   hero carousel (and as the server-rendered H1 in page.js) — so it does not
+   need the full header padding. */
 .headerCompact {
   padding: var(--space-6) 0;
+}
+
+/* ---- Loading skeletons ----
+   Sized to match the real ProductCard so nothing shifts when results land. */
+.skeletonCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-card);
+}
+
+.skeletonImage {
+  width: 100%;
+  aspect-ratio: 4/5;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-2);
 }

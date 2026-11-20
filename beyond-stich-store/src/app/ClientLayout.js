@@ -5,12 +5,12 @@ import { SessionProvider } from 'next-auth/react';
 import { MotionConfig } from 'framer-motion';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import BottomTabBar from '@/components/layout/BottomTabBar';
 import CartDrawer from '@/components/layout/CartDrawer';
-import CustomCursor from '@/components/layout/CustomCursor';
 import PageLoader from '@/components/layout/PageLoader';
-import ScrollProgress from '@/components/layout/ScrollProgress';
 import AnnouncementBar from '@/components/layout/AnnouncementBar';
 import WhatsAppWidget from '@/components/ui/WhatsAppWidget';
+import CustomCursor from '@/components/ui/CustomCursor';
 import StoreHydration from '@/components/layout/StoreHydration';
 
 export default function ClientLayout({ children }) {
@@ -31,19 +31,22 @@ export default function ClientLayout({ children }) {
           Skip to content
         </a>
         <PageLoader />
-        <ScrollProgress />
-        <AnnouncementBar />
+        {/* Self-disables on touch devices and under reduced-motion — see
+            CustomCursor.jsx for why the previous version was removed. */}
         <CustomCursor />
+        <AnnouncementBar />
         <Navbar />
         <CartDrawer />
         <main
           id="main-content"
+          className="app-main"
           style={{ minHeight: '100vh', paddingTop: 'var(--header-height)' }}
         >
           {children}
         </main>
         <Footer />
         <WhatsAppWidget />
+        <BottomTabBar />
       </SessionProvider>
     </MotionConfig>
   );

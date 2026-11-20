@@ -6,10 +6,31 @@ import Link from 'next/link';
 import { SHOP_BANNERS } from '@/lib/banners';
 import styles from './ShopBanner.module.css';
 
+// Art for each promo slide, keyed by banner id. Each image is chosen to show
+// what its headline claims, rather than just being on-brand wallpaper:
+//
+//  · the first-order offer shows the RANGE (six designs across gamer, floral
+//    and typography) — it previously used an empty showroom with no garment
+//    in it at all, which is a poor argument for "save 25% on your first order";
+//  · the price slide shows the GARMENT close up, where the drop-shoulder cut
+//    and the 240 GSM weight are actually legible;
+//  · the shipping slide shows the BOX — branded mailer, tissue and hangtag.
+//
+// Mobile crops are separate files, not the desktop image squeezed: at a phone's
+// aspect ratio the desktop frames crop to a wall or a sleeve.
 const IMAGES = {
-  'new-this-week': '/banners/shop/new-this-week.png',
-  'starting-price': '/banners/shop/starting-price.png',
-  'free-shipping': '/banners/shop/free-shipping.png',
+  'new-this-week': {
+    desktop: '/banners/hero/home-2-desktop.webp',
+    mobile: '/banners/hero/home-2-mobile.webp',
+  },
+  'starting-price': {
+    desktop: '/banners/shop/drops-2-desktop.webp',
+    mobile: '/banners/shop/drops-2-mobile.webp',
+  },
+  'free-shipping': {
+    desktop: '/banners/shop/drops-3-desktop.webp',
+    mobile: '/banners/shop/drops-3-mobile.webp',
+  },
 };
 
 const AUTOPLAY_INTERVAL = 4500;
@@ -71,12 +92,24 @@ export default function ShopBanner() {
         >
           {/* Background image */}
           <div className={styles.bgWrap}>
-            <img
-              src={bgImage}
-              alt={banner.headline}
-              className={styles.bgImg}
-              loading="lazy"
-            />
+            {/* <picture> rather than a bare <img>: the browser picks the
+                mobile crop and never downloads the desktop file on a phone.
+                The first slide is the page's LCP element, so it loads eagerly
+                with high priority — `loading="lazy"` on it delayed the largest
+                paint until after hydration. */}
+            {/* eslint-disable-next-line @next/next/no-img-element --
+                banner art is chosen at runtime from CMS-ish config; the
+                height is fixed in CSS so there is no layout shift. */}
+            <picture>
+              <source media="(max-width: 768px)" srcSet={bgImage.mobile} />
+              <img
+                src={bgImage.desktop}
+                alt={banner.headline}
+                className={styles.bgImg}
+                loading={current === 0 ? 'eager' : 'lazy'}
+                fetchPriority={current === 0 ? 'high' : 'auto'}
+              />
+            </picture>
             <div
               className={styles.bgOverlay}
               style={{ '--accent': banner.accent }}
@@ -86,6 +119,17 @@ export default function ShopBanner() {
           {/* Content */}
           <div className={styles.content}>
             <div className={styles.textGroup}>
+              {/* Accent rule + label, matching the home hero's eyebrow. It
+                  anchors the headline to the brand colour and gives the copy
+                  stack a top edge instead of starting cold on the image. */}
+              <motion.span
+                className={styles.eyebrow}
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.08, duration: 0.5 }}
+              >
+                All Drops
+              </motion.span>
               <motion.h2
                 className={styles.headline}
                 initial={{ y: 20, opacity: 0 }}
@@ -114,7 +158,7 @@ export default function ShopBanner() {
                 style={{ '--accent': banner.accent }}
               >
                 {banner.cta.label}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </Link>

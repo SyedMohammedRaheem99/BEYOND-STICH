@@ -134,7 +134,7 @@ export default function OrderDetailPage(props) {
               className={`${styles.progressStep} ${i <= currentStep ? styles.progressDone : ''}`}
             >
               <span className={styles.progressDot} aria-hidden="true" />
-              <span className={styles.progressLabel}>{STATUS_LABEL[step]}</span>
+              <span>{STATUS_LABEL[step]}</span>
             </li>
           ))}
         </ol>

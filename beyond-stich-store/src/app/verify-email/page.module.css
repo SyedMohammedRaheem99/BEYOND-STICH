@@ -1,0 +1,84 @@
+/* Six single-character boxes. The rest of the auth card's styling comes from
+   ../login/page.module.css — only the code field is specific to this page. */
+
+.codeRow {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+  margin: var(--space-6) 0;
+}
+
+.codeBox {
+  /* Equal share of the row rather than a fixed width, so six boxes always
+     fit a 320px screen without overflowing. */
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 56px;
+  aspect-ratio: 3 / 4;
+
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+
+  /* The global input rule sets a horizontal padding that would squeeze a
+     centred single character off-centre in a box this narrow. */
+  padding: 0;
+
+  transition: border-color var(--duration-fast) var(--ease-out),
+              background-color var(--duration-fast) var(--ease-out);
+}
+
+.codeBox:focus {
+  border-color: var(--accent);
+  background: var(--color-bg-elevated);
+}
+
+.codeBox:disabled {
+  opacity: 0.55;
+}
+
+/* --- Resend --- */
+
+.resendRow {
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-5);
+}
+
+.resendBtn {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  /* Clears the 44px touch minimum without pushing the sentence apart. */
+  padding: var(--space-2) var(--space-1);
+}
+
+.resendBtn:disabled {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  cursor: default;
+}
+
+.hint {
+  text-align: center;
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  color: var(--color-text-muted);
+  margin-top: var(--space-3);
+}
+
+@media (max-width: 380px) {
+  .codeRow {
+    gap: var(--space-1);
+  }
+}

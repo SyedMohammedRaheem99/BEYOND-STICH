@@ -310,11 +310,21 @@ export const useWishlistStore = create(
 // ============================================
 export const useUIStore = create((set) => ({
   isLoading: true,
-  cursorVariant: 'default',
-  cursorText: '',
 
   setLoading: (isLoading) => set({ isLoading }),
-  setCursorVariant: (variant) => set({ cursorVariant: variant }),
-  setCursorText: (text) => set({ cursorText: text }),
-  resetCursor: () => set({ cursorVariant: 'default', cursorText: '' }),
+
+  // The custom cursor was removed in the UI overhaul: it hid the native
+  // cursor on every element (leaking `cursor: none` past the reduced-motion
+  // guard in globals.css), was invisible to all touch traffic, and is not a
+  // convention premium storefronts follow.
+  //
+  // These setters are kept as no-ops rather than deleted because eight
+  // components call them on hover. Removing them outright would throw
+  // "setCursorVariant is not a function" on first mouseover. They are inert,
+  // cost nothing, and let the call sites be cleaned up incrementally.
+  cursorVariant: 'default',
+  cursorText: '',
+  setCursorVariant: () => {},
+  setCursorText: () => {},
+  resetCursor: () => {},
 }));

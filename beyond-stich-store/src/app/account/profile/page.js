@@ -66,6 +66,7 @@ export default function ProfilePage() {
       }
     };
     if (session) fetchProfile();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing state from a browser/session/URL source that is unavailable during render
     else setLoading(false);
   }, [session]);
 

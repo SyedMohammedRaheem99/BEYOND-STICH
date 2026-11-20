@@ -2,39 +2,80 @@
   display: flex;
   flex-direction: column;
   text-decoration: none;
-  cursor: none; /* Let custom cursor handle it */
   position: relative;
+  /* Cards used to be a bare image + two lines of text floating directly on
+     the page background — no edge, no container, nothing to tell a shopper
+     where one product tile ends and the page begins. A hairline border and
+     a card fill (matching the image placeholder tone, so the seam at the
+     image edge disappears) plus a hover lift give the grid actual structure. */
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  transition: border-color var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.card:hover {
+  border-color: var(--color-border-hover);
+  /* 3px was barely perceptible against a dark tile on a dark page. 6px with a
+     stronger shadow reads as a deliberate lift without the card detaching.
+     The image scale stays at 1.03 — 1.05 was tried and rejected because
+     `contain` made the garment visibly jump size (see note below). */
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-elevated);
+}
+
+/* Someone navigating by keyboard should get the same affordance as a mouse. */
+.card:focus-within {
+  border-color: var(--color-border-hover);
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-elevated);
 }
 
 .imageContainer {
   position: relative;
   width: 100%;
   aspect-ratio: 4/5;
-  background: var(--color-bg-card);
+  /* A slightly lifted, neutral stage rather than the page background. Product
+     shots sit ON something instead of floating, which is what makes a grid
+     read as a considered catalogue instead of loose cutouts. */
+  background: var(--color-bg-elevated);
   overflow: hidden;
   border-radius: var(--radius-sm);
   margin-bottom: var(--space-4);
+  /* Breathing room so the garment is never flush against the tile edge. */
+  padding: var(--space-5);
 }
 
+/* `contain`, not `cover`. cover crops a 4:5 window out of the source, which
+   sliced the top and bottom off every tee — exactly the graphic the customer
+   is shopping for. The PDP gallery gave the image room, which is why cards
+   looked wrong while the product page looked fine. The padding above plus
+   contain means the whole garment is always visible, at a consistent size,
+   whatever aspect ratio the source photo happens to be. */
 .primaryImage {
-  object-fit: cover;
+  object-fit: contain;
   transition: opacity var(--duration-normal) var(--ease-out), transform var(--duration-slow) var(--ease-out);
 }
 
 .secondaryImage {
-  object-fit: cover;
+  object-fit: contain;
   opacity: 0;
   transition: opacity var(--duration-normal) var(--ease-out), transform var(--duration-slow) var(--ease-out);
 }
 
+/* A restrained lift. 1.05 pushed the garment into the tile edges and, with
+   contain, made it visibly jump size on hover. */
 .card:hover .primaryImage {
   opacity: 0;
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
 
 .card:hover .secondaryImage {
   opacity: 1;
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
 
 /* Sold-out image treatment */
@@ -46,15 +87,22 @@
 /* Badges */
 .badge {
   position: absolute;
-  top: var(--space-3);
-  left: var(--space-3);
+  top: var(--space-2);
+  left: var(--space-2);
   font-family: var(--font-display);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 800;
   letter-spacing: 0.1em;
   padding: 4px 8px;
   border-radius: var(--radius-sm);
   z-index: 10;
+}
+
+/* NEW DROP is a brand-level signal, not a segment one, so it carries the
+   brand accent rather than the product's segment colour. */
+.badgeNew {
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 
 .badgeSoldOut {
@@ -85,7 +133,7 @@
 }
 
 .ratingCount {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--color-text-muted);
 }
 
@@ -106,7 +154,7 @@
 }
 
 .swatchMore {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   color: var(--color-text-muted);
   margin-left: 2px;
 }
@@ -118,8 +166,8 @@
   min-width: 44px;
   min-height: 44px;
   position: absolute;
-  top: var(--space-3);
-  right: var(--space-3);
+  top: var(--space-2);
+  right: var(--space-2);
   width: 36px;
   height: 36px;
   background: rgba(10, 10, 10, 0.4);
@@ -131,9 +179,14 @@
   color: var(--color-text-primary);
   opacity: 0;
   transform: scale(0.9);
-  transition: all var(--duration-fast);
+  transition: background-color var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out),
+              opacity var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out),
+              filter var(--duration-fast) var(--ease-out);
   z-index: 10;
-  cursor: none;
 }
 
 .wishlisted {
@@ -141,7 +194,8 @@
   transform: scale(1) !important;
 }
 
-.card:hover .wishlistBtn {
+.card:hover .wishlistBtn,
+.wishlistBtn:focus-visible {
   opacity: 1;
   transform: scale(1);
 }
@@ -156,7 +210,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: var(--space-4);
+  bottom: var(--space-2);
   text-align: center;
   font-family: var(--font-display);
   font-size: var(--text-xs);
@@ -171,7 +225,8 @@
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
 }
 
-.card:hover .viewCue {
+.card:hover .viewCue,
+.card:focus-visible .viewCue {
   opacity: 1;
   transform: translateY(0);
 }
@@ -198,7 +253,7 @@
 }
 
 .fitType {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -250,17 +305,13 @@
   }
 }
 
+/* Merged from two duplicate max-width:480px blocks — the first set
+   .productName to --text-base and was silently overridden by the second. */
 @media (max-width: 480px) {
-  .productName {
-    font-size: var(--text-base);
-  }
-
   .pricing {
     flex-wrap: wrap;
   }
-}
 
-@media (max-width: 480px) {
   /* Cards are ~162px wide at 360px, so long names wrapped to three lines and
      left cards in a row visually mismatched. Clamp to two. */
   .productName {

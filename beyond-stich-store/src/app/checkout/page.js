@@ -80,6 +80,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(ADDRESS_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing state from a browser/session/URL source that is unavailable during render
       if (saved) setFormData({ ...EMPTY_FORM, ...JSON.parse(saved) });
     } catch {}
   }, []);
@@ -108,6 +109,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (status !== 'authenticated') return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing state from a browser/session/URL source that is unavailable during render
     setFormData((prev) => ({
       ...prev,
       email: prev.email || session?.user?.email || '',
@@ -124,7 +126,7 @@ export default function CheckoutPage() {
       .catch(() => {});
   }, [status, session]);
 
-  const useSavedAddress = (addr) => {
+  const applySavedAddress = (addr) => {
     const [firstName, ...rest] = (addr.fullName || '').split(' ');
     setFormData({
       firstName: firstName || '',
@@ -486,7 +488,7 @@ export default function CheckoutPage() {
     <div className={styles.checkoutPage}>
       <div className={`${styles.container} container`}>
         {/* Left Col: Flow */}
-        <div className={styles.mainFlow}>
+        <div>
           {/* Anything that changed while the cart sat in localStorage. Shown
               before payment so a COD customer is never surprised at the door. */}
           {cartNotices.length > 0 && (
@@ -542,7 +544,7 @@ export default function CheckoutPage() {
                           key={addr._id}
                           type="button"
                           className={styles.savedCard}
-                          onClick={() => useSavedAddress(addr)}
+                          onClick={() => applySavedAddress(addr)}
                         >
                           <span className={styles.savedName}>{addr.fullName}</span>
                           <span className={styles.savedLine}>
@@ -580,7 +582,6 @@ export default function CheckoutPage() {
             {step === STEPS.SUMMARY && (
               <motion.div
                 key="summary"
-                className={styles.summaryBlock}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}

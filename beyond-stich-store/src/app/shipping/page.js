@@ -57,7 +57,7 @@ export default function ShippingPage() {
 
       <h2>Order tracking</h2>
       <p>
-        Once your order ships, you'll receive a tracking link via email. You can
+        Once your order ships, you&apos;ll receive a tracking link via email. You can
         also track your order anytime on our{' '}
         <a href="/track">Track Order</a> page using your order number and
         registered email or phone number.
@@ -66,7 +66,7 @@ export default function ShippingPage() {
       <h2>Non-serviceable areas</h2>
       <p>
         In rare cases, certain remote PIN codes may not be serviceable by our
-        courier partners. If your area is non-serviceable, we'll notify you within
+        courier partners. If your area is non-serviceable, we&apos;ll notify you within
         24 hours of placing the order and issue a full refund.
       </p>
 
@@ -74,7 +74,7 @@ export default function ShippingPage() {
       <p>
         Email us at{' '}
         <a href="mailto:hello@beyondstich.com">hello@beyondstich.com</a> and
-        we'll help you out.
+        we&apos;ll help you out.
       </p>
     </InfoPageLayout>
   );

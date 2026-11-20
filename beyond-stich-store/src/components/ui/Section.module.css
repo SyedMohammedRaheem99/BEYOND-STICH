@@ -1,0 +1,97 @@
+/* ============================================
+   Section — page section wrapper.
+   Enforces one vertical rhythm (--section-y) and ONE eyebrow/heading
+   pattern. The audit found 3 competing section-label styles and sections
+   using space-16/20/24 interchangeably.
+   ============================================ */
+
+.section {
+  padding: var(--section-y) 0;
+}
+
+.tight {
+  padding: var(--section-y-tight) 0;
+}
+
+.bordered {
+  border-top: 1px solid var(--color-border);
+}
+
+.secondary {
+  background: var(--color-bg-secondary);
+}
+
+/* ---- Header ---- */
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-6);
+  margin-bottom: var(--space-12);
+}
+
+.headings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.centered .header {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.centered .headings {
+  align-items: center;
+}
+
+/* Eyebrow — Space Grotesk, not the condensed display face. Barlow Condensed
+   loses legibility badly at label sizes. */
+.eyebrow {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--display-md);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: var(--tracking-tight);
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+
+.subtitle {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  max-width: 52ch;
+}
+
+/* Trailing action ("VIEW ALL"). Sits on the heading baseline on desktop. */
+.action {
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .header {
+    /* Stack rather than squeezing a heading and an action onto one line. */
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
+  }
+
+  .centered .header {
+    align-items: center;
+  }
+}

@@ -20,7 +20,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Without min-width:0 a flex item refuses to shrink below its content, so
+     a long message pushed the track wider than the bar instead of clipping. */
   min-width: 0;
+  overflow: hidden;
 }
 
 .msg {
@@ -31,9 +34,15 @@
   text-transform: uppercase;
   white-space: nowrap;
   text-align: center;
+  /* Last-resort guard: messages are written to fit a 360px phone, but if one
+     is ever edited to be longer it now ellipsises inside the bar rather than
+     bleeding off both edges of the screen. */
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .static {
-  font-size: 9px;
+  font-size: var(--text-2xs);
   opacity: 0.6;
 }

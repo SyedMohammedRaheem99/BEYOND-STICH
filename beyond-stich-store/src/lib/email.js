@@ -1,345 +1,580 @@
-import { Resend } from 'resend';
+import { sendMail, mailerConfigured } from '@/lib/mailer';
 
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
+// Templates live here; delivery lives in lib/mailer.js. The split matters
+// because every function below used to begin by checking a provider SDK
+// handle — so swapping transports meant editing five call sites and their
+// five different "not configured" branches.
+//
+// `From`, headers, the plain-text alternative and delivery logging are all
+// handled by sendMail(). These functions only build HTML.
 
-const FROM = process.env.EMAIL_FROM || 'Beyond Stich <noreply@beyondstich.com>';
-// Used to build links in emails. NEXTAUTH_URL is already set in production.
-const SITE_URL = process.env.NEXTAUTH_URL || 'https://beyondstich.com';
+// Used to build links in emails. Prefer the public site URL; NEXTAUTH_URL is
+// the next best thing since it is already set wherever auth works.
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.NEXTAUTH_URL ||
+  'https://beyondstich.com';
+
+// Images in email must be absolute and publicly reachable — a relative path
+// or a localhost URL renders as a broken icon in the recipient's client.
+// During local development the logo therefore won't appear; that is expected
+// and resolves itself once NEXT_PUBLIC_SITE_URL points at the live domain.
+const LOGO_URL = `${SITE_URL}/logos/wordmark.png`;
+const LOGO_URL_2X = `${SITE_URL}/logos/wordmark@2x.png`;
+
+// Palette mirrors globals.css. Email clients strip <style> blocks and have no
+// CSS-variable support, so every value has to be inlined literally — these
+// constants are what keep the six templates from drifting apart.
+const C = {
+  bg: '#0A0A0A',
+  card: '#151515',
+  border: '#2A2A2A',
+  text: '#F8F8F8',
+  muted: '#A0A0A0',
+  dim: '#8A8A8A',
+  accent: '#F5C518',
+  accentInk: '#0A0A0A',
+  success: '#22C55E',
+  info: '#06B6D4',
+};
+
+const FONT = "'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif";
+const DISPLAY = "'Barlow Condensed', 'Arial Narrow', Arial, sans-serif";
 
 /**
- * Send order confirmation email
+ * Masthead.
+ *
+ * The wordmark image sits ABOVE a text version of the same name, and the
+ * text is never hidden. Most clients block remote images until the reader
+ * allows them — Outlook by default — so a logo-only header would leave a
+ * blank box where the brand should be. With both, images-off still reads
+ * "BEYOND STICH".
+ */
+function header() {
+  return `
+    <tr>
+      <td align="center" style="padding:32px 24px 24px;border-bottom:1px solid ${C.border};">
+        <img src="${LOGO_URL}" srcset="${LOGO_URL} 1x, ${LOGO_URL_2X} 2x"
+             width="170" alt="Beyond Stich"
+             style="display:block;width:170px;max-width:60%;height:auto;border:0;outline:none;text-decoration:none;margin:0 auto 10px;" />
+        <div style="font-family:${DISPLAY};font-size:11px;font-weight:700;letter-spacing:0.22em;color:${C.dim};text-transform:uppercase;">
+          Wear the thought
+        </div>
+      </td>
+    </tr>`;
+}
+
+function footer(extra = '') {
+  return `
+    <tr>
+      <td align="center" style="padding:24px;border-top:1px solid ${C.border};">
+        <div style="font-family:${FONT};font-size:12px;color:${C.dim};line-height:1.7;">
+          ${extra ? `${extra}<br/><br/>` : ''}
+          Questions? Just reply to this email — a human reads it.<br/>
+          <a href="${SITE_URL}" style="color:${C.accent};text-decoration:none;font-weight:600;">beyondstich.com</a>
+          &nbsp;·&nbsp; Bangalore, India
+        </div>
+      </td>
+    </tr>`;
+}
+
+/**
+ * Outer shell.
+ *
+ * Tables, not divs: Outlook's rendering engine is Microsoft Word, which has
+ * no meaningful support for modern CSS layout. The nested-table pattern is
+ * ugly but it is the only structure that renders identically everywhere.
+ */
+function shell(innerHtml, preheader = '') {
+  return `
+<div style="background:${C.bg};margin:0;padding:0;width:100%;">
+  ${preheader ? `
+  <!-- Inbox preview text. Hidden in the body, but it is what the reader sees
+       beside the subject line, so leaving it empty shows raw markup instead. -->
+  <div style="display:none;font-size:1px;color:${C.bg};line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">
+    ${preheader}
+  </div>` : ''}
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${C.bg};">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600"
+               style="width:100%;max-width:600px;background:${C.bg};border:1px solid ${C.border};border-radius:12px;overflow:hidden;">
+          ${innerHtml}
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>`;
+}
+
+/** Primary call to action. Padded <a>, since many clients drop button CSS. */
+function button(href, label) {
+  return `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;">
+      <tr>
+        <td align="center" style="background:${C.accent};border-radius:6px;">
+          <a href="${href}"
+             style="display:inline-block;padding:14px 30px;font-family:${DISPLAY};font-size:15px;font-weight:800;letter-spacing:0.1em;color:${C.accentInk};text-decoration:none;text-transform:uppercase;">
+            ${label}
+          </a>
+        </td>
+      </tr>
+    </table>`;
+}
+
+/** Section heading, consistent across templates. */
+function h2(text, color = C.text) {
+  return `<h2 style="margin:0 0 8px;font-family:${DISPLAY};font-size:26px;font-weight:800;letter-spacing:0.04em;color:${color};text-transform:uppercase;">${text}</h2>`;
+}
+
+function lead(text) {
+  return `<p style="margin:0 0 24px;font-family:${FONT};font-size:14px;line-height:1.7;color:${C.muted};">${text}</p>`;
+}
+
+/** Small uppercase label above a block of detail. */
+function label(text) {
+  return `<div style="font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:0.18em;color:${C.dim};text-transform:uppercase;margin:0 0 10px;">${text}</div>`;
+}
+
+/**
+ * Order confirmation — sent to the customer the moment an order is created,
+ * on every payment path (COD, online-via-browser, online-via-webhook).
  */
 export async function sendOrderConfirmation(order) {
-  if (!resend) {
-    console.log('[EMAIL] Resend not configured — skipping order confirmation for', order.orderNumber);
-    return;
-  }
+  if (!order?.email) return { ok: false, error: 'no recipient' };
+
+  const isCod = order.paymentMethod === 'cod';
+  const addr = order.shippingAddress || {};
+  const money = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
+  const firstName = String(addr.fullName || '').split(' ')[0];
 
   const itemsHtml = (order.items || [])
     .map(
-      (item) => `
+      (i) => `
       <tr>
-        <td style="padding:8px 12px;border-bottom:1px solid #2A2A2A;">
-          ${item.name} (${item.size}${item.color ? `, ${item.color}` : ''})
+        <td style="padding:12px 0;border-bottom:1px solid ${C.border};font-family:${FONT};font-size:14px;color:${C.text};">
+          ${i.name}
+          <div style="font-size:12px;color:${C.dim};margin-top:3px;">
+            Size ${i.size}${i.color ? ` &middot; ${i.color}` : ''} &middot; Qty ${i.quantity}
+          </div>
         </td>
-        <td style="padding:8px 12px;border-bottom:1px solid #2A2A2A;text-align:center;">
-          ${item.quantity}
-        </td>
-        <td style="padding:8px 12px;border-bottom:1px solid #2A2A2A;text-align:right;">
-          ₹${(item.price * item.quantity).toLocaleString('en-IN')}
+        <td align="right" style="padding:12px 0;border-bottom:1px solid ${C.border};font-family:${FONT};font-size:14px;font-weight:700;color:${C.text};white-space:nowrap;">
+          ${money(i.price * i.quantity)}
         </td>
       </tr>`
     )
     .join('');
 
-  const html = `
-    <div style="max-width:600px;margin:0 auto;background:#0A0A0A;color:#F8F8F8;font-family:'Space Grotesk',Arial,sans-serif;">
-      <div style="padding:32px;text-align:center;border-bottom:1px solid #2A2A2A;">
-        <h1 style="font-size:28px;font-weight:900;letter-spacing:0.05em;margin:0;">BEYOND STICH</h1>
-        <p style="color:#808080;font-size:12px;margin-top:4px;letter-spacing:0.1em;">WEAR THE THOUGHT</p>
-      </div>
-      <div style="padding:32px;">
-        <h2 style="font-size:20px;font-weight:800;letter-spacing:0.05em;margin-bottom:8px;">ORDER CONFIRMED</h2>
-        <p style="color:#A0A0A0;font-size:14px;margin-bottom:24px;">
-          Thank you for your order! Here are your details.
-        </p>
-        <div style="background:#151515;border:1px solid #2A2A2A;border-radius:8px;padding:20px;margin-bottom:24px;">
-          <table style="width:100%;font-size:13px;">
-            <tr>
-              <td style="color:#808080;padding:4px 0;">Order Number</td>
-              <td style="text-align:right;font-weight:700;">${order.orderNumber}</td>
-            </tr>
-            <tr>
-              <td style="color:#808080;padding:4px 0;">Date</td>
-              <td style="text-align:right;">${new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-            </tr>
-            <tr>
-              <td style="color:#808080;padding:4px 0;">Total</td>
-              <td style="text-align:right;font-weight:700;font-size:16px;">₹${order.total?.toLocaleString('en-IN')}</td>
-            </tr>
-          </table>
-        </div>
-        <h3 style="font-size:11px;letter-spacing:0.15em;color:#808080;margin-bottom:12px;">ITEMS</h3>
-        <table style="width:100%;font-size:13px;border-collapse:collapse;">
-          <thead>
-            <tr style="border-bottom:1px solid #2A2A2A;">
-              <th style="text-align:left;padding:8px 12px;color:#808080;font-size:10px;letter-spacing:0.1em;">ITEM</th>
-              <th style="text-align:center;padding:8px 12px;color:#808080;font-size:10px;letter-spacing:0.1em;">QTY</th>
-              <th style="text-align:right;padding:8px 12px;color:#808080;font-size:10px;letter-spacing:0.1em;">PRICE</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${itemsHtml}
-          </tbody>
-        </table>
-        ${order.shippingAddress ? `
-        <div style="margin-top:24px;">
-          <h3 style="font-size:11px;letter-spacing:0.15em;color:#808080;margin-bottom:8px;">SHIPPING TO</h3>
-          <p style="font-size:13px;line-height:1.6;">
-            ${order.shippingAddress.fullName}<br/>
-            ${order.shippingAddress.street}<br/>
-            ${order.shippingAddress.city}, ${order.shippingAddress.state} — ${order.shippingAddress.pincode}
-          </p>
-        </div>
-        ` : ''}
-        <div style="margin-top:32px;text-align:center;">
-          <!-- The email had no links at all, so a customer wanting to check
-               their order had to find the site and retype the number. -->
-          <a href="${SITE_URL}/track?order=${encodeURIComponent(order.orderNumber)}"
-             style="display:inline-block;padding:14px 28px;background:#F5F5F5;color:#0A0A0A;text-decoration:none;font-weight:700;letter-spacing:0.08em;border-radius:4px;">
-            TRACK YOUR ORDER
-          </a>
-          <p style="color:#808080;font-size:12px;margin-top:16px;">Estimated delivery: 3–6 business days</p>
-        </div>
-      </div>
-      <div style="padding:24px;text-align:center;border-top:1px solid #2A2A2A;color:#808080;font-size:11px;">
-        Beyond Stich · Wear the thought.
-      </div>
-    </div>
-  `;
+  // Rows are built by a helper so a zero discount can be omitted entirely —
+  // a "₹0 off" line is noise on a receipt.
+  const totalRow = (name, value, opts = {}) => `
+      <tr>
+        <td style="padding:5px 0;font-family:${FONT};font-size:${opts.big ? '15px' : '13px'};color:${opts.big ? C.text : C.muted};${opts.big ? 'font-weight:700;' : ''}">${name}</td>
+        <td align="right" style="padding:5px 0;font-family:${FONT};font-size:${opts.big ? '18px' : '13px'};font-weight:700;color:${opts.color || C.text};white-space:nowrap;">${value}</td>
+      </tr>`;
 
-  try {
-    await resend.emails.send({
-      from: FROM,
-      to: order.email,
-      subject: `Order Confirmed — ${order.orderNumber} | Beyond Stich`,
-      html,
-    });
-  } catch (err) {
-    console.error('[EMAIL] Failed to send order confirmation:', err);
-  }
+  const html = shell(
+    `
+    ${header()}
+    <tr>
+      <td style="padding:32px 28px;">
+        ${h2('Order confirmed')}
+        ${lead(`Thanks${firstName ? `, ${firstName}` : ''} &mdash; we have your order and we are packing it now.`)}
+
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+               style="background:${C.card};border:1px solid ${C.border};border-radius:8px;margin:0 0 28px;">
+          <tr>
+            <td style="padding:18px 20px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td style="font-family:${FONT};font-size:12px;color:${C.dim};">Order number</td>
+                  <td align="right" style="font-family:${DISPLAY};font-size:17px;font-weight:800;letter-spacing:0.05em;color:${C.accent};">${order.orderNumber}</td>
+                </tr>
+                <tr>
+                  <td style="padding-top:8px;font-family:${FONT};font-size:12px;color:${C.dim};">Placed on</td>
+                  <td align="right" style="padding-top:8px;font-family:${FONT};font-size:13px;color:${C.text};">
+                    ${new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-top:8px;font-family:${FONT};font-size:12px;color:${C.dim};">Payment</td>
+                  <td align="right" style="padding-top:8px;font-family:${FONT};font-size:13px;font-weight:700;color:${isCod ? C.accent : C.success};">
+                    ${isCod ? 'Cash on delivery' : 'Paid online'}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+
+        ${label('Your order')}
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 20px;">
+          ${itemsHtml}
+        </table>
+
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 28px;">
+          ${totalRow('Subtotal', money(order.subtotal))}
+          ${order.discount > 0 ? totalRow(`Discount${order.couponCode ? ` (${order.couponCode})` : ''}`, `&minus; ${money(order.discount)}`, { color: C.success }) : ''}
+          ${totalRow('Shipping', order.shipping > 0 ? money(order.shipping) : 'FREE', { color: order.shipping > 0 ? C.text : C.success })}
+          <tr><td colspan="2" style="padding:8px 0 0;border-top:1px solid ${C.border};"></td></tr>
+          ${totalRow(isCod ? 'To pay on delivery' : 'Total paid', money(order.total), { big: true, color: C.accent })}
+        </table>
+
+        ${isCod ? `
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+               style="background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.3);border-radius:8px;margin:0 0 28px;">
+          <tr>
+            <td style="padding:14px 18px;font-family:${FONT};font-size:13px;line-height:1.6;color:${C.text};">
+              <strong style="color:${C.accent};">Keep ${money(order.total)} ready.</strong>
+              Please have the exact amount for the delivery partner.
+            </td>
+          </tr>
+        </table>` : ''}
+
+        ${addr.fullName ? `
+        ${label('Delivering to')}
+        <p style="margin:0 0 28px;font-family:${FONT};font-size:14px;line-height:1.7;color:${C.muted};">
+          <span style="color:${C.text};font-weight:600;">${addr.fullName}</span><br/>
+          ${addr.street || ''}<br/>
+          ${addr.city || ''}${addr.state ? `, ${addr.state}` : ''} &mdash; ${addr.pincode || ''}<br/>
+          ${addr.phone ? `<span style="color:${C.dim};">${addr.phone}</span>` : ''}
+        </p>` : ''}
+
+        ${button(`${SITE_URL}/track?order=${encodeURIComponent(order.orderNumber)}`, 'Track your order')}
+
+        <p style="margin:20px 0 0;text-align:center;font-family:${FONT};font-size:12px;color:${C.dim};">
+          Estimated delivery: 3&ndash;6 business days
+        </p>
+      </td>
+    </tr>
+    ${footer('Need to change something? Reply within 24 hours and we will sort it.')}
+  `,
+    `Order ${order.orderNumber} confirmed — ${money(order.total)}`
+  );
+
+  return sendMail({
+    to: order.email,
+    subject: `Order Confirmed — ${order.orderNumber} | Beyond Stich`,
+    html,
+    type: 'order-confirmation',
+  });
 }
 
 /**
- * Send shipping update email
+ * Shipping update — sent when the admin marks an order 'shipped'.
  */
 export async function sendShippingUpdate(order) {
-  if (!resend) {
-    console.log('[EMAIL] Resend not configured — skipping shipping update for', order.orderNumber);
-    return;
-  }
+  if (!order?.email) return { ok: false, error: 'no recipient' };
 
-  const html = `
-    <div style="max-width:600px;margin:0 auto;background:#0A0A0A;color:#F8F8F8;font-family:'Space Grotesk',Arial,sans-serif;">
-      <div style="padding:32px;text-align:center;border-bottom:1px solid #2A2A2A;">
-        <h1 style="font-size:28px;font-weight:900;letter-spacing:0.05em;margin:0;">BEYOND STICH</h1>
-        <p style="color:#808080;font-size:12px;margin-top:4px;letter-spacing:0.1em;">WEAR THE THOUGHT</p>
-      </div>
-      <div style="padding:32px;">
-        <h2 style="font-size:20px;font-weight:800;letter-spacing:0.05em;margin-bottom:8px;">YOUR ORDER HAS SHIPPED!</h2>
-        <p style="color:#A0A0A0;font-size:14px;margin-bottom:24px;">
-          Great news — your order is on its way.
+  const addr = order.shippingAddress || {};
+  const firstName = String(addr.fullName || '').split(' ')[0];
+
+  const html = shell(
+    `
+    ${header()}
+    <tr>
+      <td style="padding:32px 28px;">
+        ${h2('On its way')}
+        ${lead(`Good news${firstName ? `, ${firstName}` : ''} &mdash; your order has left our studio and is heading to you.`)}
+
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+               style="background:${C.card};border:1px solid ${C.border};border-radius:8px;margin:0 0 28px;">
+          <tr>
+            <td style="padding:18px 20px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td style="font-family:${FONT};font-size:12px;color:${C.dim};">Order number</td>
+                  <td align="right" style="font-family:${DISPLAY};font-size:17px;font-weight:800;letter-spacing:0.05em;color:${C.accent};">${order.orderNumber}</td>
+                </tr>
+                ${order.trackingNumber ? `
+                <tr>
+                  <td style="padding-top:8px;font-family:${FONT};font-size:12px;color:${C.dim};">Tracking number</td>
+                  <td align="right" style="padding-top:8px;font-family:${FONT};font-size:14px;font-weight:700;color:${C.text};">${order.trackingNumber}</td>
+                </tr>` : ''}
+                <tr>
+                  <td style="padding-top:8px;font-family:${FONT};font-size:12px;color:${C.dim};">Status</td>
+                  <td align="right" style="padding-top:8px;font-family:${FONT};font-size:13px;font-weight:700;color:${C.info};">SHIPPED</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+
+        ${addr.city ? `
+        ${label('Heading to')}
+        <p style="margin:0 0 28px;font-family:${FONT};font-size:14px;line-height:1.7;color:${C.muted};">
+          ${addr.city}${addr.state ? `, ${addr.state}` : ''} &mdash; ${addr.pincode || ''}
+        </p>` : ''}
+
+        ${button(`${SITE_URL}/track?order=${encodeURIComponent(order.orderNumber)}`, 'Track your order')}
+
+        <p style="margin:20px 0 0;text-align:center;font-family:${FONT};font-size:12px;color:${C.dim};">
+          Most orders arrive within 3&ndash;6 business days.
         </p>
-        <div style="background:#151515;border:1px solid #2A2A2A;border-radius:8px;padding:20px;">
-          <table style="width:100%;font-size:13px;">
-            <tr>
-              <td style="color:#808080;padding:6px 0;">Order Number</td>
-              <td style="text-align:right;font-weight:700;">${order.orderNumber}</td>
-            </tr>
-            ${order.trackingNumber ? `
-            <tr>
-              <td style="color:#808080;padding:6px 0;">Tracking Number</td>
-              <td style="text-align:right;font-weight:700;">${order.trackingNumber}</td>
-            </tr>
-            ` : ''}
-            <tr>
-              <td style="color:#808080;padding:6px 0;">Status</td>
-              <td style="text-align:right;color:#06B6D4;font-weight:700;">SHIPPED</td>
-            </tr>
-          </table>
-        </div>
-        <div style="margin-top:32px;text-align:center;">
-          <a href="${SITE_URL}/track?order=${encodeURIComponent(order.orderNumber)}"
-             style="display:inline-block;padding:14px 28px;background:#F5F5F5;color:#0A0A0A;text-decoration:none;font-weight:700;letter-spacing:0.08em;border-radius:4px;">
-            TRACK YOUR ORDER
-          </a>
-        </div>
-      </div>
-      <div style="padding:24px;text-align:center;border-top:1px solid #2A2A2A;color:#808080;font-size:11px;">
-        Beyond Stich · Wear the thought.
-      </div>
-    </div>
-  `;
+      </td>
+    </tr>
+    ${footer()}
+  `,
+    `${order.orderNumber} has shipped${order.trackingNumber ? ` — tracking ${order.trackingNumber}` : ''}`
+  );
 
-  try {
-    await resend.emails.send({
-      from: FROM,
-      to: order.email,
-      subject: `Your Order Has Shipped — ${order.orderNumber} | Beyond Stich`,
-      html,
-    });
-  } catch (err) {
-    console.error('[EMAIL] Failed to send shipping update:', err);
-  }
+  return sendMail({
+    to: order.email,
+    subject: `Your Order Has Shipped — ${order.orderNumber} | Beyond Stich`,
+    html,
+    type: 'shipping-update',
+  });
 }
 
 /**
- * Send password reset email
+ * Password reset link.
  */
 export async function sendPasswordReset(email, resetUrl) {
-  if (!resend) {
-    console.log('[EMAIL] Resend not configured — reset link:', resetUrl);
-    return;
+  // Without a transport the link is logged rather than lost, so a developer
+  // can still complete a reset locally.
+  if (!mailerConfigured()) {
+    console.warn('[mail] SMTP not configured — reset link:', resetUrl);
   }
 
-  const html = `
-    <div style="max-width:600px;margin:0 auto;background:#0A0A0A;color:#F8F8F8;font-family:'Space Grotesk',Arial,sans-serif;">
-      <div style="padding:32px;text-align:center;border-bottom:1px solid #2A2A2A;">
-        <h1 style="font-size:28px;font-weight:900;letter-spacing:0.05em;margin:0;">BEYOND STICH</h1>
-        <p style="color:#808080;font-size:12px;margin-top:4px;letter-spacing:0.1em;">WEAR THE THOUGHT</p>
-      </div>
-      <div style="padding:32px;">
-        <h2 style="font-size:20px;font-weight:800;letter-spacing:0.05em;margin-bottom:8px;">RESET YOUR PASSWORD</h2>
-        <p style="color:#A0A0A0;font-size:14px;margin-bottom:24px;">
-          We received a request to reset your password. Click the button below to set a new one.
-        </p>
-        <div style="text-align:center;margin:32px 0;">
-          <a href="${resetUrl}" style="display:inline-block;padding:14px 32px;background:#F8F8F8;color:#0A0A0A;font-weight:800;font-size:13px;letter-spacing:0.08em;text-decoration:none;border-radius:50px;">
-            RESET PASSWORD
-          </a>
-        </div>
-        <p style="color:#808080;font-size:12px;text-align:center;">
-          This link expires in 1 hour. If you didn&apos;t request this, you can safely ignore this email.
-        </p>
-      </div>
-      <div style="padding:24px;text-align:center;border-top:1px solid #2A2A2A;color:#808080;font-size:11px;">
-        Beyond Stich · Wear the thought.
-      </div>
-    </div>
-  `;
+  const html = shell(
+    `
+    ${header()}
+    <tr>
+      <td style="padding:32px 28px;">
+        ${h2('Reset your password')}
+        ${lead('We received a request to reset your password. Choose a new one using the button below.')}
 
-  try {
-    await resend.emails.send({
-      from: FROM,
-      to: email,
-      subject: 'Reset Your Password | Beyond Stich',
-      html,
-    });
-  } catch (err) {
-    console.error('[EMAIL] Failed to send password reset:', err);
-  }
+        ${button(resetUrl, 'Reset password')}
+
+        <p style="margin:28px 0 0;text-align:center;font-family:${FONT};font-size:12px;line-height:1.7;color:${C.dim};">
+          This link expires in 1 hour and can be used once.<br/>
+          If you did not request this, you can safely ignore this email &mdash;
+          your password stays as it is.
+        </p>
+
+        <p style="margin:24px 0 0;padding-top:20px;border-top:1px solid ${C.border};font-family:${FONT};font-size:11px;line-height:1.6;color:${C.dim};word-break:break-all;">
+          Button not working? Paste this into your browser:<br/>
+          <span style="color:${C.muted};">${resetUrl}</span>
+        </p>
+      </td>
+    </tr>
+    ${footer()}
+  `,
+    'Reset your Beyond Stich password — link expires in 1 hour'
+  );
+
+  return sendMail({
+    to: email,
+    subject: 'Reset Your Password | Beyond Stich',
+    html,
+    type: 'password-reset',
+    // A reset link is security-sensitive: no pixel, so nothing about when or
+    // whether it was read is recorded beyond the send itself.
+    track: false,
+  });
 }
 
 /**
- * Send refund confirmation email
+ * Refund confirmation — sent when the admin marks a refund 'processed'.
  */
 export async function sendRefundEmail(order) {
-  if (!resend || !order.email) {
-    console.log('[EMAIL] Skipping refund email for', order.orderNumber);
-    return;
-  }
+  if (!order?.email) return { ok: false, error: 'no recipient' };
 
-  const html = `
-    <div style="max-width:600px;margin:0 auto;background:#0A0A0A;color:#F8F8F8;font-family:'Space Grotesk',Arial,sans-serif;">
-      <div style="padding:32px;text-align:center;border-bottom:1px solid #2A2A2A;">
-        <h1 style="font-size:28px;font-weight:900;letter-spacing:0.05em;margin:0;">BEYOND STICH</h1>
-        <p style="color:#808080;font-size:12px;margin-top:4px;letter-spacing:0.1em;">WEAR THE THOUGHT</p>
-      </div>
-      <div style="padding:32px;">
-        <h2 style="font-size:20px;font-weight:800;letter-spacing:0.05em;margin-bottom:8px;">REFUND PROCESSED</h2>
-        <p style="color:#A0A0A0;font-size:14px;margin-bottom:24px;">
-          Your refund has been processed. Here are the details.
+  const money = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
+
+  const html = shell(
+    `
+    ${header()}
+    <tr>
+      <td style="padding:32px 28px;">
+        ${h2('Refund processed')}
+        ${lead('Your refund is on its way back to you.')}
+
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+               style="background:${C.card};border:1px solid ${C.border};border-radius:8px;margin:0 0 28px;">
+          <tr>
+            <td style="padding:18px 20px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td style="font-family:${FONT};font-size:12px;color:${C.dim};">Order number</td>
+                  <td align="right" style="font-family:${DISPLAY};font-size:17px;font-weight:800;letter-spacing:0.05em;color:${C.accent};">${order.orderNumber}</td>
+                </tr>
+                <tr>
+                  <td style="padding-top:10px;font-family:${FONT};font-size:13px;font-weight:700;color:${C.text};">Refund amount</td>
+                  <td align="right" style="padding-top:10px;font-family:${FONT};font-size:18px;font-weight:700;color:${C.success};">
+                    ${money(order.refundAmount || order.total)}
+                  </td>
+                </tr>
+                ${order.refundReason ? `
+                <tr>
+                  <td colspan="2" style="padding-top:10px;font-family:${FONT};font-size:12px;color:${C.dim};line-height:1.6;">
+                    Reason: ${order.refundReason}
+                  </td>
+                </tr>` : ''}
+              </table>
+            </td>
+          </tr>
+        </table>
+
+        <p style="margin:0;font-family:${FONT};font-size:13px;line-height:1.7;color:${C.muted};">
+          Refunds usually reach your account in
+          <strong style="color:${C.text};">5&ndash;7 business days</strong>, depending on
+          your bank. For cash-on-delivery orders we will be in touch about the
+          transfer.
         </p>
-        <div style="background:#151515;border:1px solid #2A2A2A;border-radius:8px;padding:20px;">
-          <table style="width:100%;font-size:13px;">
-            <tr>
-              <td style="color:#808080;padding:6px 0;">Order Number</td>
-              <td style="text-align:right;font-weight:700;">${order.orderNumber}</td>
-            </tr>
-            <tr>
-              <td style="color:#808080;padding:6px 0;">Refund Amount</td>
-              <td style="text-align:right;font-weight:700;color:#22C55E;">₹${(order.refundAmount || order.total)?.toLocaleString('en-IN')}</td>
-            </tr>
-            ${order.refundReason ? `
-            <tr>
-              <td style="color:#808080;padding:6px 0;">Reason</td>
-              <td style="text-align:right;">${order.refundReason}</td>
-            </tr>
-            ` : ''}
-          </table>
-        </div>
-        <div style="margin-top:24px;text-align:center;">
-          <p style="color:#808080;font-size:12px;">The refund will be credited to your original payment method within 5-7 business days.</p>
-        </div>
-      </div>
-      <div style="padding:24px;text-align:center;border-top:1px solid #2A2A2A;color:#808080;font-size:11px;">
-        Beyond Stich · Wear the thought.
-      </div>
-    </div>
-  `;
+      </td>
+    </tr>
+    ${footer()}
+  `,
+    `Refund of ${money(order.refundAmount || order.total)} processed for ${order.orderNumber}`
+  );
 
-  try {
-    await resend.emails.send({
-      from: FROM,
-      to: order.email,
-      subject: `Refund Processed — ${order.orderNumber} | Beyond Stich`,
-      html,
-    });
-  } catch (err) {
-    console.error('[EMAIL] Failed to send refund email:', err);
-  }
+  return sendMail({
+    to: order.email,
+    subject: `Refund Processed — ${order.orderNumber} | Beyond Stich`,
+    html,
+    type: 'refund',
+  });
 }
 
 /**
  * Alert the shop owner that an order came in.
  *
- * Without this the only way to learn about a new order is to open the admin
- * and look — so overnight and weekend orders sat unnoticed against a stated
- * 24-hour dispatch promise.
+ * Without this the only way to learn about an order is to open the admin
+ * panel and look, which is no use against a 24-hour dispatch promise.
  *
- * Sends to ADMIN_ALERT_EMAIL, falling back to EMAIL_FROM's address.
+ * Sends to ADMIN_ALERT_EMAIL; skipped entirely when that isn't set.
  */
 export async function sendNewOrderAlert(order) {
   const to = process.env.ADMIN_ALERT_EMAIL;
-  if (!resend || !to) {
-    console.log('[EMAIL] Admin alert not configured — skipping for', order.orderNumber);
-    return;
+  if (!to) {
+    console.warn('[mail] ADMIN_ALERT_EMAIL not set — no alert for', order.orderNumber);
+    return { ok: false, error: 'ADMIN_ALERT_EMAIL not set' };
   }
 
   const addr = order.shippingAddress || {};
+  const isCod = order.paymentMethod === 'cod';
+  const money = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
+
   const itemsHtml = (order.items || [])
     .map(
-      (i) =>
-        `<tr>
-          <td style="padding:6px 10px;border-bottom:1px solid #2A2A2A;">${i.name} (${i.size}${i.color ? `, ${i.color}` : ''})</td>
-          <td style="padding:6px 10px;border-bottom:1px solid #2A2A2A;text-align:center;">${i.quantity}</td>
-          <td style="padding:6px 10px;border-bottom:1px solid #2A2A2A;text-align:right;">₹${i.price * i.quantity}</td>
-        </tr>`
+      (i) => `
+      <tr>
+        <td style="padding:8px 0;border-bottom:1px solid ${C.border};font-family:${FONT};font-size:13px;color:${C.text};">
+          ${i.name}
+          <span style="color:${C.dim};">&mdash; ${i.size}${i.color ? `/${i.color}` : ''} &times; ${i.quantity}</span>
+        </td>
+        <td align="right" style="padding:8px 0;border-bottom:1px solid ${C.border};font-family:${FONT};font-size:13px;font-weight:700;color:${C.text};white-space:nowrap;">
+          ${money(i.price * i.quantity)}
+        </td>
+      </tr>`
     )
     .join('');
 
-  const isCod = order.paymentMethod === 'cod';
+  const html = shell(
+    `
+    ${header()}
+    <tr>
+      <td style="padding:28px;">
+        ${h2(`New ${isCod ? 'COD ' : ''}order`, C.accent)}
+        <p style="margin:0 0 24px;font-family:${DISPLAY};font-size:20px;font-weight:800;letter-spacing:0.05em;color:${C.text};">
+          ${order.orderNumber}
+          <span style="font-family:${FONT};font-size:14px;font-weight:600;color:${isCod ? C.accent : C.success};">
+            &middot; ${isCod ? `collect ${money(order.total)}` : `${money(order.total)} paid`}
+          </span>
+        </p>
 
-  try {
-    await resend.emails.send({
-      from: FROM,
-      to,
-      subject: `New ${isCod ? 'COD ' : ''}order ${order.orderNumber} — ₹${order.total}`,
-      html: `
-        <div style="font-family:sans-serif;background:#0A0A0A;color:#F5F5F5;padding:24px;">
-          <h2 style="margin:0 0 4px;">NEW ORDER — ${order.orderNumber}</h2>
-          <p style="margin:0 0 16px;color:#9A9A9A;">
-            ${isCod ? 'Cash on delivery — collect ' : 'Paid online — '}<strong style="color:#F5F5F5;">₹${order.total}</strong>
-          </p>
+        ${label('Items to pack')}
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 24px;">
+          ${itemsHtml}
+        </table>
 
-          <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">${itemsHtml}</table>
+        ${label('Deliver to')}
+        <p style="margin:0 0 20px;font-family:${FONT};font-size:14px;line-height:1.7;color:${C.muted};">
+          <span style="color:${C.text};font-weight:600;">${addr.fullName || '—'}</span><br/>
+          ${addr.street || ''}<br/>
+          ${addr.city || ''}${addr.state ? `, ${addr.state}` : ''} &mdash; ${addr.pincode || ''}<br/>
+          ${addr.phone ? `<a href="tel:${addr.phone}" style="color:${C.success};text-decoration:none;font-weight:600;">${addr.phone}</a>` : 'no phone'}
+          ${order.email ? ` &middot; <span style="color:${C.dim};">${order.email}</span>` : ''}
+        </p>
 
-          <h3 style="margin:0 0 6px;font-size:14px;">DELIVER TO</h3>
-          <p style="margin:0 0 4px;line-height:1.5;">
-            ${addr.fullName || ''}<br/>
-            ${addr.street || ''}<br/>
-            ${addr.city || ''}, ${addr.state || ''} — ${addr.pincode || ''}
-          </p>
-          <p style="margin:0;">
-            <a href="tel:${addr.phone || ''}" style="color:#4ADE80;">${addr.phone || 'no phone'}</a>
-            ${order.email ? ` &nbsp;·&nbsp; <span style="color:#9A9A9A;">${order.email}</span>` : ''}
-          </p>
-        </div>
-      `,
-    });
-  } catch (err) {
-    console.error('[EMAIL] Failed to send admin order alert:', err);
-  }
+        ${button(`${SITE_URL}/track?order=${encodeURIComponent(order.orderNumber)}`, 'View order')}
+      </td>
+    </tr>
+    ${footer()}
+  `,
+    `${isCod ? 'COD' : 'Paid'} · ${money(order.total)} · ${addr.city || ''}`
+  );
+
+  return sendMail({
+    to,
+    subject: `New ${isCod ? 'COD ' : ''}order ${order.orderNumber} — ${money(order.total)}`,
+    html,
+    type: 'admin-alert',
+    track: false,
+  });
+}
+
+/**
+ * Send the 6-digit signup verification code.
+ *
+ * The code is shown as text rather than a link because most signups happen
+ * on a phone, where a link means leaving the browser for the mail app and
+ * finding the way back. A code can be read and typed without losing the page.
+ */
+export async function sendVerificationOtp(email, code, name = '') {
+  const firstName = String(name || '').split(' ')[0];
+
+  const html = shell(
+    `
+    ${header()}
+    <tr>
+      <td style="padding:32px 28px;">
+        ${h2('Confirm your email')}
+        ${lead(`${firstName ? `Hi ${firstName}, enter` : 'Enter'} this code to finish setting up your account.`)}
+
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 24px;">
+          <tr>
+            <td align="center" style="background:${C.card};border:1px solid ${C.border};border-radius:10px;padding:20px 34px;">
+              <div style="font-family:${DISPLAY};font-size:40px;font-weight:900;letter-spacing:0.28em;color:${C.accent};line-height:1;">
+                ${code}
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <p style="margin:0;text-align:center;font-family:${FONT};font-size:12px;line-height:1.7;color:${C.dim};">
+          This code expires in 15 minutes.<br/>
+          If you did not create a Beyond Stich account, you can safely ignore
+          this email &mdash; nothing will happen.
+        </p>
+      </td>
+    </tr>
+    ${footer()}
+  `,
+    `${code} — your Beyond Stich verification code`
+  );
+
+  // The derived text part would render the code inside a wall of markup;
+  // spelling it out keeps it readable in clients that show text only.
+  const text = [
+    'BEYOND STICH — CONFIRM YOUR EMAIL',
+    '',
+    `${firstName ? `Hi ${firstName}, enter` : 'Enter'} this code to finish setting up your account:`,
+    '',
+    `    ${code}`,
+    '',
+    'This code expires in 15 minutes. If you did not create an account with',
+    'Beyond Stich, you can safely ignore this email.',
+  ].join('\n');
+
+  return sendMail({
+    to: email,
+    subject: `${code} is your Beyond Stich verification code`,
+    html,
+    text,
+    type: 'otp',
+    // A verification code is a credential — no pixel on it.
+    track: false,
+  });
 }

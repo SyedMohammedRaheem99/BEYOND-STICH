@@ -94,12 +94,32 @@
   text-align: center;
 }
 
+.emptyIcon {
+  color: var(--color-text-muted);
+  opacity: 0.55;
+}
+
+.emptyCopy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
 .emptyText {
   font-family: var(--font-display);
   font-size: var(--text-xl);
   font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-text-primary);
+}
+
+.emptySub {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: 1.6;
   color: var(--color-text-muted);
+  max-width: 30ch;
 }
 
 .shopLink {
@@ -300,17 +320,25 @@
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-bg);
-  background: var(--color-text-primary);
+  color: var(--accent-ink);
+  background: var(--accent);
   border-radius: var(--radius-md);
+  min-height: 56px;
   text-decoration: none;
   transition: transform var(--duration-fast) var(--ease-out),
               box-shadow var(--duration-fast) var(--ease-out);
 }
 
+/* The white glow was the last "0 4px 20px rgba(255,255,255,…)" halo left in
+   the app — the exact treatment the direction removed as cheap. */
 .checkoutBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(248, 248, 248, 0.2);
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+.checkoutBtn:active {
+  transform: translateY(0);
+  filter: brightness(0.96);
 }
 
 /* Complete the fit (cross-sell) */
@@ -352,7 +380,7 @@
 
 .crossSellName {
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   letter-spacing: 0.02em;
   color: var(--color-text-secondary);
@@ -362,7 +390,7 @@
 }
 
 .crossSellPrice {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   color: var(--color-text-primary);
 }
@@ -384,7 +412,7 @@
 }
 
 .discountText strong {
-  color: #F5C518;
+  color: var(--accent);
 }
 
 /* The + button now stops at available stock; without a disabled style it

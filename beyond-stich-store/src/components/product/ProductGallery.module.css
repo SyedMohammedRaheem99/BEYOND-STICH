@@ -16,7 +16,11 @@
   background: var(--color-bg-card);
   border-radius: var(--radius-md);
   overflow: hidden;
-  cursor: none;
+  /* This block opens the fullscreen zoom. It previously carried
+     `cursor: none` and relied on the custom cursor's "ZOOM" label to
+     advertise that. With the custom cursor gone, zoom-in is the native
+     affordance for the same affordance. */
+  cursor: zoom-in;
 }
 
 .image {

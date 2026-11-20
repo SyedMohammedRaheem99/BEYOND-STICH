@@ -50,8 +50,8 @@
 
 .newsletterBtn {
   padding: var(--space-3) var(--space-6);
-  background: var(--color-text-primary);
-  color: var(--color-bg);
+  background: var(--accent);
+  color: var(--accent-ink);
   font-family: var(--font-display);
   font-size: var(--text-sm);
   font-weight: 800;
@@ -277,6 +277,6 @@
 /* 16px stops iOS zooming the page when this field is focused. */
 @media (max-width: 768px) {
   .newsletterInput {
-    font-size: 16px;
+    font-size: var(--text-base);
   }
 }

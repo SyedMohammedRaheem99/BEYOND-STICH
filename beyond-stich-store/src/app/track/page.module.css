@@ -55,8 +55,8 @@
 
 .btn {
   padding: var(--space-4) var(--space-8);
-  background: var(--color-text-primary);
-  color: var(--color-bg);
+  background: var(--accent);
+  color: var(--accent-ink);
   font-family: var(--font-display);
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -92,7 +92,7 @@
 
 .label {
   display: block;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 0.15em;
   color: var(--color-text-muted);
@@ -170,7 +170,7 @@
 }
 
 .stepLabel {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--color-text-muted);
   max-width: 80px;
 }
@@ -258,7 +258,7 @@
   }
 
   .input {
-    font-size: 16px;
+    font-size: var(--text-base);
   }
 
   .timeline {

@@ -45,7 +45,7 @@
 .brand {
   position: absolute;
   font-family: var(--font-display);
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   font-weight: 800;
   letter-spacing: 0.2em;
   color: var(--color-text-primary);

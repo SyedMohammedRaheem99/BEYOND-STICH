@@ -83,7 +83,7 @@
 
 .categoryBadge {
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;

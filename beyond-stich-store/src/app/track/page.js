@@ -31,6 +31,7 @@ function TrackContent() {
 
   useEffect(() => {
     const o = searchParams.get('order');
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing state from a browser/session/URL source that is unavailable during render
     if (o) setOrderNumber(o);
   }, [searchParams]);
 
@@ -39,6 +40,7 @@ function TrackContent() {
   // "TRACK YOUR ORDER" link in their confirmation email.
   useEffect(() => {
     if (status === 'authenticated' && session?.user?.email) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing state from a browser/session/URL source that is unavailable during render
       setContact((c) => c || session.user.email);
     }
   }, [status, session]);

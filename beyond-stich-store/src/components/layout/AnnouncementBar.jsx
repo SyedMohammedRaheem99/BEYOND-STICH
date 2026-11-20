@@ -8,10 +8,15 @@ import styles from './AnnouncementBar.module.css';
 // which did not exist in the database — customers reached checkout, typed it,
 // and got "Invalid coupon code". It also announced a "new" Gamer collection
 // and a Floral Women's Edit as fresh drops when neither had launched.
+// Keep every line short enough to fit a 360px phone. The first-order offer
+// used to be one 62-character line ("...10% off above ₹949 — 25% off above
+// ₹1999") which needed ~480px and bled off both edges of the bar; it is now
+// split across two slides that rotate like the rest.
 const MESSAGES = [
   // ₹949 is the cheapest tee, so this is the real entry point — ₹799 was a
   // threshold no basket could actually sit below.
-  '🎉 First order? Get 10% off above ₹949 — 25% off above ₹1999',
+  '🎉 First order? Get 10% off above ₹949',
+  '🎉 Get 25% off above ₹1999',
   '🚚 FREE shipping on all orders over ₹999',
   '📦 Cash on Delivery available across India',
   '🔁 7-day easy returns & exchanges',

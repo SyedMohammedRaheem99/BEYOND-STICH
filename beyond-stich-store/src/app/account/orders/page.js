@@ -4,13 +4,10 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import EmptyState from '@/components/ui/EmptyState';
+import Skeleton from '@/components/ui/Skeleton';
+import { getOrderStatusColor } from '@/lib/constants';
 import styles from './page.module.css';
-
-const STATUS_COLORS = {
-  placed: '#F5C518', confirmed: '#3B82F6', shipped: '#06B6D4',
-  out_for_delivery: '#7C3AED', delivered: '#22C55E',
-  cancelled: '#EF4444', returned: '#94A3B8',
-};
 
 export default function OrderHistoryPage() {
   const { data: session } = useSession();
@@ -40,6 +37,7 @@ export default function OrderHistoryPage() {
       }
     };
     if (session) fetchOrders();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing state from a browser/session/URL source that is unavailable during render
     else setLoading(false);
   }, [session, retry]);
 
@@ -61,7 +59,15 @@ export default function OrderHistoryPage() {
       <p>Track and manage all your purchases.</p>
 
       {loading ? (
-        <p className={styles.emptyState}>Loading your orders...</p>
+        <div className={styles.ordersList} aria-busy="true">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className={styles.skeletonOrder}>
+              <Skeleton shape="text" width="35%" />
+              <Skeleton shape="text" width="55%" height="1.3em" />
+              <Skeleton shape="text" width="25%" />
+            </div>
+          ))}
+        </div>
       ) : orders.length > 0 ? (
         <div className={styles.ordersList}>
           {orders.map((order, i) => (
@@ -79,7 +85,7 @@ export default function OrderHistoryPage() {
                   </div>
                   <span
                     className={styles.statusBadge}
-                    style={{ color: STATUS_COLORS[order.orderStatus] || '#888' }}
+                    style={{ color: getOrderStatusColor(order.orderStatus) }}
                   >
                     {order.orderStatus?.toUpperCase().replace(/_/g, ' ')}
                   </span>
@@ -92,6 +98,10 @@ export default function OrderHistoryPage() {
                     {order.items.slice(0, 3).map((item, j) => (
                       <li key={j} className={styles.itemRow}>
                         {item.image ? (
+                          // Order thumbnails are arbitrary remote URLs from
+                          // historical orders; not all hosts are configured in
+                          // next.config images.remotePatterns.
+                          // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={item.image}
                             alt=""
@@ -155,11 +165,18 @@ export default function OrderHistoryPage() {
           </button>
         </div>
       ) : (
-        <div className={styles.emptyState}>
-          <h2>NO ORDERS YET</h2>
-          <p>When you place an order, it will appear here.</p>
-          <Link href="/shop" className={styles.shopBtn}>START SHOPPING</Link>
-        </div>
+        <EmptyState
+          icon={
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" aria-hidden="true">
+              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+              <path d="M3 6h18M16 10a4 4 0 0 1-8 0" />
+            </svg>
+          }
+          title="No orders yet"
+          message="When you place an order, it will appear here."
+          actionLabel="Start shopping"
+          actionHref="/shop"
+        />
       )}
     </div>
   );

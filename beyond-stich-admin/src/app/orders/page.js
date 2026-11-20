@@ -1,7 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import styles from '../products/page.module.css';
+import ConfirmDialog from '@/components/ConfirmDialog';
+import {
+  allowedNext,
+  nextStatus as getNextStatus,
+  describeTransition,
+  isTerminal,
+} from '@/lib/orderFlow';
 
 const STATUS_COLORS = {
   placed: { border: '#F5C518', color: '#F5C518' },
@@ -13,8 +20,10 @@ const STATUS_COLORS = {
   returned: { border: '#94A3B8', color: '#94A3B8' },
 };
 
-const STATUS_FLOW = ['placed', 'confirmed', 'shipped', 'out_for_delivery', 'delivered'];
-const ALL_STATUSES = ['placed', 'confirmed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled', 'returned'];
+// The legal flow lives in lib/orderFlow.js, shared with the API so the
+// dropdown can never offer a move the server will reject. It used to list
+// all seven statuses unconditionally, which is how a delivered order could
+// be cancelled.
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
@@ -26,16 +35,16 @@ export default function AdminOrders() {
   const [savingFulfil, setSavingFulfil] = useState(false);
   const [refund, setRefund] = useState({ refundAmount: 0, refundReason: '', refundStatus: 'none' });
   const [savingRefund, setSavingRefund] = useState(false);
+  // Pending destructive action, held until the user confirms it.
+  // { title, message, effects, danger, confirmLabel, run }
+  const [confirm, setConfirm] = useState(null);
+  const [confirmBusy, setConfirmBusy] = useState(false);
 
-  // Re-query on search too, debounced. Previously only Enter triggered a
-  // fetch, and a second client-side filter then hid any row the server
-  // matched on a field the client didn't check (phone, email).
-  useEffect(() => {
-    const t = setTimeout(fetchOrders, searchTerm ? 350 : 0);
-    return () => clearTimeout(t);
-  }, [statusFilter, searchTerm]);
-
-  const fetchOrders = async () => {
+  // Declared before the effect that schedules it, and memoised on the
+  // filters it reads. Previously it was a plain function defined *after* the
+  // effect: the effect captured whichever instance existed at mount, so a
+  // later change to statusFilter/searchTerm re-ran a stale closure.
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -52,35 +61,86 @@ export default function AdminOrders() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter, searchTerm]);
+
+  // Re-query on search too, debounced. Previously only Enter triggered a
+  // fetch, and a second client-side filter then hid any row the server
+  // matched on a field the client didn't check (phone, email).
+  useEffect(() => {
+    const t = setTimeout(fetchOrders, searchTerm ? 350 : 0);
+    return () => clearTimeout(t);
+  }, [fetchOrders, searchTerm]);
 
   const handleSearch = () => fetchOrders();
 
-  const updateOrderStatus = async (orderId, newStatus) => {
-    try {
-      const res = await fetch(`/api/orders/${orderId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderStatus: newStatus }),
-      });
+  // Performs the status change. Callers are responsible for confirming
+  // anything destructive first — see requestStatusChange.
+  const applyStatusChange = async (order, newStatus) => {
+    const res = await fetch(`/api/orders/${order._id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderStatus: newStatus }),
+    });
 
-      if (res.ok) {
-        setOrders(prev => prev.map(o =>
-          o._id === orderId ? { ...o, orderStatus: newStatus } : o
-        ));
-      } else {
-        const data = await res.json();
-        alert(data.error || 'Failed to update');
-      }
-    } catch {
-      alert('Network error');
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      // The API is the authority on what is legal, so surface its reason
+      // verbatim rather than a generic failure.
+      alert(data.error || 'Failed to update');
+      return false;
     }
+
+    setOrders((prev) =>
+      prev.map((o) => (o._id === order._id ? { ...o, ...data.order } : o))
+    );
+    if (selectedOrder?._id === order._id) {
+      setSelectedOrder((prev) => ({ ...prev, ...data.order }));
+      setFulfil((f) => ({ ...f, orderStatus: newStatus }));
+    }
+
+    if (data.stockRestored > 0) {
+      alert(`Order updated. ${data.stockRestored} unit(s) returned to stock.`);
+    }
+    return true;
   };
 
-  const getNextStatus = (current) => {
-    const idx = STATUS_FLOW.indexOf(current);
-    if (idx >= 0 && idx < STATUS_FLOW.length - 1) return STATUS_FLOW[idx + 1];
-    return null;
+  /**
+   * Entry point for every status change in the UI.
+   *
+   * Destructive moves (cancel, return) are routed through a confirmation
+   * that spells out what will happen — stock movement, emails sent, money
+   * already taken — instead of firing on a single click.
+   */
+  const requestStatusChange = (order, newStatus) => {
+    const { destructive, effects } = describeTransition(order, newStatus);
+
+    if (!destructive) {
+      applyStatusChange(order, newStatus);
+      return;
+    }
+
+    setConfirm({
+      title: newStatus === 'cancelled' ? 'Cancel this order?' : 'Mark as returned?',
+      message: `Order ${order.orderNumber} — ${order.shippingAddress?.fullName || 'Guest'}`,
+      effects,
+      danger: true,
+      confirmLabel: newStatus === 'cancelled' ? 'Cancel order' : 'Mark returned',
+      cancelLabel: 'Keep as is',
+      run: () => applyStatusChange(order, newStatus),
+    });
+  };
+
+  // Runs whatever the open dialog is guarding, then closes it.
+  const runConfirmed = async () => {
+    if (!confirm?.run) return;
+    setConfirmBusy(true);
+    try {
+      await confirm.run();
+    } finally {
+      setConfirmBusy(false);
+      setConfirm(null);
+    }
   };
 
   const openOrder = (order) => {
@@ -126,8 +186,7 @@ export default function AdminOrders() {
     }
   };
 
-  const saveFulfilment = async () => {
-    if (!selectedOrder) return;
+  const doSaveFulfilment = async () => {
     setSavingFulfil(true);
     try {
       const res = await fetch(`/api/orders/${selectedOrder._id}`, {
@@ -135,14 +194,18 @@ export default function AdminOrders() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(fulfil),
       });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setOrders(prev => prev.map(o =>
-          o._id === selectedOrder._id ? { ...o, ...fulfil } : o
+          o._id === selectedOrder._id ? { ...o, ...data.order } : o
         ));
-        setSelectedOrder(prev => (prev ? { ...prev, ...fulfil } : prev));
-        alert('Order updated');
+        setSelectedOrder(prev => (prev ? { ...prev, ...data.order } : prev));
+        alert(
+          data.stockRestored > 0
+            ? `Order updated. ${data.stockRestored} unit(s) returned to stock.`
+            : 'Order updated'
+        );
       } else {
-        const data = await res.json();
         alert(data.error || 'Failed to update');
       }
     } catch {
@@ -152,8 +215,57 @@ export default function AdminOrders() {
     }
   };
 
-  const saveRefund = async () => {
+  const saveFulfilment = () => {
     if (!selectedOrder) return;
+
+    // Saving the panel can change status too, so it needs the same guard as
+    // the quick-action buttons — otherwise cancelling via the dropdown would
+    // skip the confirmation entirely.
+    const { destructive, effects } = describeTransition(selectedOrder, fulfil.orderStatus);
+    if (!destructive || fulfil.orderStatus === selectedOrder.orderStatus) {
+      doSaveFulfilment();
+      return;
+    }
+
+    setConfirm({
+      title: fulfil.orderStatus === 'cancelled' ? 'Cancel this order?' : 'Mark as returned?',
+      message: `Order ${selectedOrder.orderNumber} — ${selectedOrder.shippingAddress?.fullName || 'Guest'}`,
+      effects,
+      danger: true,
+      confirmLabel: fulfil.orderStatus === 'cancelled' ? 'Cancel order' : 'Mark returned',
+      cancelLabel: 'Keep as is',
+      run: doSaveFulfilment,
+    });
+  };
+
+  const saveRefund = () => {
+    if (!selectedOrder) return;
+
+    // Marking a refund 'processed' flips the order to refunded AND emails
+    // the customer that their money is on the way. If that is wrong, the
+    // message cannot be unsent — so it is the one refund state that needs
+    // confirming.
+    if (refund.refundStatus === 'processed' && selectedOrder.refundStatus !== 'processed') {
+      setConfirm({
+        title: 'Process this refund?',
+        message: `Order ${selectedOrder.orderNumber} — ${selectedOrder.shippingAddress?.fullName || 'Guest'}`,
+        effects: [
+          `₹${Number(refund.refundAmount || 0).toLocaleString('en-IN')} will be recorded as refunded.`,
+          'The order will be marked PAYMENT: REFUNDED.',
+          'The customer will be emailed that their refund is on the way.',
+          'Transfer the money through Razorpay or your bank separately — this only records it.',
+        ],
+        danger: true,
+        confirmLabel: 'Process refund',
+        run: doSaveRefund,
+      });
+      return;
+    }
+
+    doSaveRefund();
+  };
+
+  const doSaveRefund = async () => {
     setSavingRefund(true);
     try {
       const res = await fetch(`/api/orders/${selectedOrder._id}`, {
@@ -272,7 +384,7 @@ export default function AdminOrders() {
                           <button
                             className={styles.editBtn}
                             style={{ color: '#22C55E' }}
-                            onClick={() => updateOrderStatus(order._id, nextStatus)}
+                            onClick={() => requestStatusChange(order, nextStatus)}
                           >
                             MARK {nextStatus.toUpperCase().replace('_', ' ')}
                           </button>
@@ -362,11 +474,29 @@ export default function AdminOrders() {
                     value={fulfil.orderStatus}
                     onChange={e => setFulfil(f => ({ ...f, orderStatus: e.target.value }))}
                     style={fulfilStyles.input}
+                    disabled={isTerminal(selectedOrder.orderStatus)}
                   >
-                    {ALL_STATUSES.map(s => (
+                    {/* Current status first, then only what may legally
+                        follow it. Listing all seven regardless is what
+                        allowed delivered -> cancelled. */}
+                    <option value={selectedOrder.orderStatus}>
+                      {selectedOrder.orderStatus?.toUpperCase().replace(/_/g, ' ')} (current)
+                    </option>
+                    {allowedNext(selectedOrder.orderStatus).map(s => (
                       <option key={s} value={s}>{s.toUpperCase().replace(/_/g, ' ')}</option>
                     ))}
                   </select>
+                  {isTerminal(selectedOrder.orderStatus) && (
+                    <span style={{ color: '#8A8A8A', fontSize: '11px', lineHeight: 1.5 }}>
+                      {selectedOrder.orderStatus === 'cancelled' ? 'Cancelled' : 'Returned'} is
+                      final — the status can no longer be changed.
+                    </span>
+                  )}
+                  {selectedOrder.orderStatus === 'delivered' && (
+                    <span style={{ color: '#8A8A8A', fontSize: '11px', lineHeight: 1.5 }}>
+                      Delivered orders can only be RETURNED, not cancelled.
+                    </span>
+                  )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <label style={{ color: '#888', fontSize: '11px' }}>Tracking number</label>
@@ -504,6 +634,20 @@ export default function AdminOrders() {
           </div>
         </div>
       )}
+
+      {/* Guards every irreversible action: cancel, return, process refund. */}
+      <ConfirmDialog
+        open={Boolean(confirm)}
+        title={confirm?.title}
+        message={confirm?.message}
+        effects={confirm?.effects || []}
+        danger={confirm?.danger}
+        confirmLabel={confirm?.confirmLabel}
+        cancelLabel={confirm?.cancelLabel}
+        busy={confirmBusy}
+        onConfirm={runConfirmed}
+        onCancel={() => !confirmBusy && setConfirm(null)}
+      />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import Order from '@/lib/models/Order';
 import User from '@/lib/models/User';
 import Coupon from '@/lib/models/Coupon';
 import { sendOrderConfirmation, sendNewOrderAlert } from '@/lib/email';
+import { validateDeliverable } from '@/lib/serviceability';
 import {
   MAX_ITEMS,
   OrderError,
@@ -82,6 +83,17 @@ export async function POST(request) {
     }
 
     await connectDB();
+
+    // Refuse addresses we can't actually reach. Checked here, not only in
+    // the browser, because this endpoint is reachable directly — and an
+    // accepted COD order for an unserviceable PIN code costs us the
+    // courier's round trip and the customer their confidence.
+    const deliveryError = await validateDeliverable(shippingAddress?.pincode, {
+      paymentMethod: reqPaymentMethod,
+    });
+    if (deliveryError) {
+      return NextResponse.json({ error: deliveryError }, { status: 400 });
+    }
 
     // Attach user if logged in
     let userId = null;

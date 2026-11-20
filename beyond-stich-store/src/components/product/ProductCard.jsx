@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useWishlistStore, useCartStore, useUIStore } from '@/lib/store';
+import { useWishlistStore, useCartStore } from '@/lib/store';
 import { getSegmentAccent, getColorHex, LOW_STOCK_THRESHOLD } from '@/lib/constants';
 import { discountPercent } from '@/lib/utils';
 import styles from './ProductCard.module.css';
@@ -13,7 +13,6 @@ export default function ProductCard({ product, index = 0 }) {
   const [isHovered, setIsHovered] = useState(false);
   const { items: wishlistItems, addToWishlist, removeFromWishlist } = useWishlistStore();
   const { openCart } = useCartStore();
-  const { setCursorVariant, resetCursor } = useUIStore();
 
   const isWishlisted = wishlistItems.some(i => i._id === product._id);
   const accentColor = getSegmentAccent(product.segment);
@@ -41,20 +40,27 @@ export default function ProductCard({ product, index = 0 }) {
 
   const handleMouseEnter = () => {
     setIsHovered(true);
-    setCursorVariant('hover');
   };
 
   const handleMouseLeave = () => {
     setIsHovered(false);
-    resetCursor();
   };
 
   return (
+    // Deliberately restrained: a 30px rise over 600ms with up to 300ms of
+    // stagger made the grid visibly assemble itself on every scroll, and on a
+    // fast scroll cards were still arriving after they'd been read. A short
+    // fade with a small lift reads as "settled", not "animating". Stagger is
+    // capped at the first row so later rows never lag.
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 12 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "0px 0px -50px 0px" }}
-      transition={{ duration: 0.6, delay: (index % 4) * 0.1, ease: [0.16, 1, 0.3, 1] }}
+      viewport={{ once: true, margin: "0px 0px -80px 0px" }}
+      transition={{
+        duration: 0.35,
+        delay: Math.min(index, 3) * 0.04,
+        ease: [0.16, 1, 0.3, 1],
+      }}
     >
       <Link
         href={`/product/${product.slug}`}
@@ -77,7 +83,7 @@ export default function ProductCard({ product, index = 0 }) {
             sizes="(max-width: 600px) 100vw, (max-width: 1024px) 50vw, 33vw"
             loading={index < 2 ? 'eager' : 'lazy'}
             fetchPriority={index === 0 ? 'high' : 'auto'}
-            className={`${styles.primaryImage} ${!images[1] ? styles.onlyImage : ''}`}
+            className={styles.primaryImage}
           />
 
           {/* Hover Image */}
@@ -99,7 +105,7 @@ export default function ProductCard({ product, index = 0 }) {
               LOW STOCK
             </span>
           ) : product.tags?.includes('new') ? (
-            <span className={styles.badge} style={{ backgroundColor: accentColor, color: '#0A0A0A' }}>
+            <span className={`${styles.badge} ${styles.badgeNew}`}>
               NEW DROP
             </span>
           ) : null}
@@ -110,7 +116,7 @@ export default function ProductCard({ product, index = 0 }) {
             onClick={handleWishlistToggle}
             aria-label="Add to wishlist"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill={isWishlisted ? accentColor : 'none'} stroke={isWishlisted ? accentColor : 'currentColor'} strokeWidth="2">
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill={isWishlisted ? accentColor : 'none'} stroke={isWishlisted ? accentColor : 'currentColor'} strokeWidth="2">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
             </svg>
           </button>

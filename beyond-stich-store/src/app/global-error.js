@@ -49,6 +49,10 @@ export default function GlobalError({ error, reset }) {
           >
             TRY AGAIN
           </button>
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages --
+              global-error renders when the root layout itself has failed, so
+              the router may be unusable. A hard navigation is the only
+              reliable escape hatch here. */}
           <a
             href="/"
             style={{
