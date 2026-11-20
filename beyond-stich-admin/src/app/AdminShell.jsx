@@ -7,6 +7,7 @@ import styles from './layout.module.css';
 const ADMIN_NAV = [
   { label: 'OVERVIEW', href: '/', icon: '📊' },
   { label: 'PRODUCTS', href: '/products', icon: '🏷️' },
+  { label: 'TYPES', href: '/product-types', icon: '🏗️' },
   { label: 'ORDERS', href: '/orders', icon: '📦' },
   { label: 'INVENTORY', href: '/inventory', icon: '⚡' },
   { label: 'DELIVERY', href: '/delivery', icon: '🚚' },
