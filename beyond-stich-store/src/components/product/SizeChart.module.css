@@ -1,0 +1,213 @@
+/* Size chart — shared by the PDP modal and /size-guide.
+   The previous markup had one media query in 157 lines and a fixed 32px
+   padding, so on a 360px screen the table was wider than its container and
+   the text ran under the edges. */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* --- Toolbar: note + unit toggle --- */
+
+.toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.note {
+  flex: 1 1 240px;
+  min-width: 0;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+.unitToggle {
+  display: flex;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.unitBtn {
+  /* 44px minimum touch target, as everywhere else. */
+  min-height: 36px;
+  padding: var(--space-2) var(--space-4);
+  font-family: var(--font-body);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out),
+              background-color var(--duration-fast) var(--ease-out);
+}
+
+.unitActive {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* --- Table --- */
+
+.tableScroll {
+  /* A last resort for a very narrow screen with many columns. The table
+     below is sized so this rarely engages. */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  /* Fixed layout stops one long value (a cap's "21–23") from stealing the
+     width of every other column. */
+  table-layout: fixed;
+}
+
+.table th,
+.table td {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  /* Measurements are short; wrapping them mid-range reads as two values. */
+  white-space: nowrap;
+}
+
+.table thead th {
+  font-family: var(--font-body);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  /* Keeps the header visible while a long chart scrolls inside a modal. */
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.table tbody tr:not(:last-child) {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.table tbody th[scope='row'] {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--color-text-primary);
+}
+
+.table tbody td {
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The size the customer has already selected on the product page. */
+.current {
+  background: var(--accent-soft);
+}
+
+/* --- How to measure --- */
+
+.guide {
+  padding-top: var(--space-2);
+}
+
+.guideTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  margin-bottom: var(--space-3);
+}
+
+.guideList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.guideRow {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.6fr) 2fr;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.guideRow dt {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.guideRow dd {
+  color: var(--color-text-muted);
+}
+
+.tip {
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  color: var(--color-text-muted);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+
+.empty {
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+/* --- Responsive --- */
+
+@media (max-width: 600px) {
+  .toolbar {
+    /* Toggle above the note, so neither is squeezed into a narrow column. */
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: var(--space-3);
+  }
+
+  .unitToggle {
+    align-self: flex-start;
+  }
+
+  .table th,
+  .table td {
+    padding: var(--space-3);
+    font-size: var(--text-xs);
+  }
+
+  .guideRow {
+    /* Two columns at this width left the label wrapping over three lines. */
+    grid-template-columns: 1fr;
+    gap: var(--space-0-5);
+  }
+
+  .guideRow dt {
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+}
+
+@media (max-width: 380px) {
+  .table th,
+  .table td {
+    padding: var(--space-2);
+  }
+}

@@ -1,38 +1,89 @@
 import InfoPageLayout from '@/components/layout/InfoPageLayout';
+import SizeChart from '@/components/product/SizeChart';
+import connectDB from '@/lib/mongodb';
+import ProductType from '@/lib/models/ProductType';
 
 export const metadata = {
   title: 'Size Guide | Beyond Stich',
-  description: 'Oversized fit measurements and how to measure for the perfect Beyond Stich tee.',
+  description:
+    'Measurements and how to measure for every Beyond Stich product — tees, hoodies, sweatshirts and more.',
   alternates: { canonical: 'https://beyondstich.com/size-guide' },
 };
 
-export default function SizeGuidePage() {
+// Charts change rarely; serve from cache rather than hitting the database
+// on every visit.
+export const revalidate = 3600;
+
+/**
+ * Every type that has a chart, in display order.
+ *
+ * This page used to carry its own hard-coded copy of a tee chart as a
+ * bulleted list, while the product-page modal carried the same numbers as
+ * a table. Correcting a measurement meant remembering to edit both, and
+ * the two had already drifted apart.
+ */
+async function getCharts() {
+  try {
+    await connectDB();
+    const types = await ProductType.find({ active: true })
+      .sort({ sortOrder: 1, name: 1 })
+      .lean();
+
+    return types
+      .filter((t) => t.chartRows?.length)
+      .map((t) => ({
+        name: t.name,
+        columns: t.chartColumns?.length
+          ? t.chartColumns
+          : Object.keys(t.chartRows[0]?.measurements || {}),
+        // Mongoose returns a Map; the client component expects a plain
+        // object it can index by column name.
+        rows: t.chartRows.map((r) => ({
+          size: r.size,
+          measurements:
+            r.measurements instanceof Map
+              ? Object.fromEntries(r.measurements)
+              : { ...(r.measurements || {}) },
+        })),
+        note: t.chartNote || '',
+        measureGuide: (t.measureGuide || []).map((g) => ({
+          label: g.label,
+          defaultValue: g.defaultValue,
+        })),
+      }));
+  } catch {
+    // An outage shows the page without charts rather than a 500.
+    return [];
+  }
+}
+
+export default async function SizeGuidePage() {
+  const charts = await getCharts();
+
   return (
     <InfoPageLayout
       eyebrow="HELP"
       title="Size Guide"
-      intro="Our tees run oversized. Prefer a regular look? Size down."
+      intro="Measurements for everything we make. Switch between inches and centimetres, and compare against a garment you already own."
     >
-      <h2>Measurements (inches)</h2>
-      <ul>
-        <li><strong>S</strong> — Chest 42&quot; · Length 27&quot; · Shoulder 21&quot;</li>
-        <li><strong>M</strong> — Chest 44&quot; · Length 28&quot; · Shoulder 22&quot;</li>
-        <li><strong>L</strong> — Chest 46&quot; · Length 29&quot; · Shoulder 23&quot;</li>
-        <li><strong>XL</strong> — Chest 48&quot; · Length 30&quot; · Shoulder 24&quot;</li>
-        <li><strong>XXL</strong> — Chest 50&quot; · Length 31&quot; · Shoulder 25&quot;</li>
-      </ul>
-
-      <h2>How to measure</h2>
-      <ul>
-        <li><strong>Chest:</strong> measure across the fullest part, armpit to armpit, and double it.</li>
-        <li><strong>Length:</strong> from the highest point of the shoulder straight down to the hem.</li>
-        <li><strong>Shoulder:</strong> from one shoulder seam across to the other.</li>
-      </ul>
-
-      <p>
-        Tip: lay a tee you already love flat and compare it to the numbers above
-        for the most accurate fit.
-      </p>
+      {charts.length === 0 ? (
+        <p>
+          Size measurements aren&apos;t available right now. Message us on
+          WhatsApp and we&apos;ll send them straight over.
+        </p>
+      ) : (
+        charts.map((c) => (
+          <section key={c.name} style={{ marginBottom: 'var(--space-12)' }}>
+            <h2>{c.name}</h2>
+            <SizeChart
+              columns={c.columns}
+              rows={c.rows}
+              note={c.note}
+              measureGuide={c.measureGuide}
+            />
+          </section>
+        ))
+      )}
     </InfoPageLayout>
   );
 }

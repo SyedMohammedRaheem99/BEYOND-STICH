@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import connectDB from '@/lib/mongodb';
 import Product from '@/lib/models/Product';
+import ProductType from '@/lib/models/ProductType';
 import Review from '@/lib/models/Review';
 import { DUMMY_PRODUCTS, DUMMY_REVIEWS } from '@/lib/dummyData';
 import ProductSchema from '@/components/seo/ProductSchema';
@@ -74,6 +75,57 @@ async function getReviews(slug) {
   return { reviews: [], average: 0, count: 0, distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } };
 }
 
+/**
+ * The size chart to show for this product.
+ *
+ * A product may carry its own chart for a one-off whose measurements
+ * differ from the house pattern; otherwise it inherits the chart from its
+ * type. Resolved on the server so the modal needs no fetch of its own and
+ * the numbers are in the initial HTML.
+ */
+async function getSizeChart(product) {
+  const columnsFromRows = (rows) => {
+    // Falls back to deriving columns from the first row — a per-product
+    // chart has no `chartColumns` field of its own.
+    const first = rows?.[0]?.measurements;
+    if (!first) return [];
+    return first instanceof Map ? [...first.keys()] : Object.keys(first);
+  };
+
+  const normalise = (rows) =>
+    (rows || []).map((r) => ({
+      size: r.size,
+      measurements:
+        r.measurements instanceof Map
+          ? Object.fromEntries(r.measurements)
+          : { ...(r.measurements || {}) },
+    }));
+
+  if (product.sizeChart?.length) {
+    const rows = normalise(product.sizeChart);
+    return { columns: columnsFromRows(product.sizeChart), rows, note: '', measureGuide: [] };
+  }
+
+  try {
+    await connectDB();
+    const type = await ProductType.findOne({ name: product.productType || 'T-Shirt' }).lean();
+    if (!type?.chartRows?.length) return null;
+
+    return {
+      columns: type.chartColumns?.length ? type.chartColumns : columnsFromRows(type.chartRows),
+      rows: normalise(type.chartRows),
+      note: type.chartNote || '',
+      measureGuide: (type.measureGuide || []).map((g) => ({
+        label: g.label,
+        defaultValue: g.defaultValue,
+      })),
+    };
+  } catch {
+    // A missing chart hides the guide; it must never break the page.
+    return null;
+  }
+}
+
 export default async function ProductDetailPage({ params }) {
   const { slug } = await params;
 
@@ -84,7 +136,10 @@ export default async function ProductDetailPage({ params }) {
 
   if (!product) notFound();
 
-  const relatedProducts = await getRelated(slug, product.segment);
+  const [relatedProducts, sizeChart] = await Promise.all([
+    getRelated(slug, product.segment),
+    getSizeChart(product),
+  ]);
 
   // Only ever advertise ratings backed by real, approved reviews.
   // `|| product.averageRating` fell back to a DB field that is never
@@ -115,6 +170,7 @@ export default async function ProductDetailPage({ params }) {
         product={product}
         relatedProducts={relatedProducts}
         initialReviewData={reviewData}
+        sizeChart={sizeChart}
       />
     </>
   );

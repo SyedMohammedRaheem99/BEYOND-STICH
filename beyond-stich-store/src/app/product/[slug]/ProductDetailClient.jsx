@@ -12,7 +12,7 @@ import ReviewSection from '@/components/product/ReviewSection';
 import SizeGuideModal from '@/components/product/SizeGuideModal';
 import styles from './page.module.css';
 
-export default function ProductDetailClient({ product, relatedProducts, initialReviewData }) {
+export default function ProductDetailClient({ product, relatedProducts, initialReviewData, sizeChart = null }) {
   const [reviewData, setReviewData] = useState(initialReviewData);
   const [selectedSize, setSelectedSize] = useState(null);
   // Restock alerts for a sold-out size.
@@ -480,6 +480,9 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
         open={sizeGuideOpen}
         onClose={() => setSizeGuideOpen(false)}
         accentColor={accentColor}
+        chart={sizeChart}
+        productType={product.productType}
+        selectedSize={selectedSize}
       />
 
       {/* Sticky mobile add-to-cart */}
