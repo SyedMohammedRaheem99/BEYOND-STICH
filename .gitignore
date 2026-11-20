@@ -28,3 +28,4 @@ credentials.md
 # Holds real credentials for pasting into the host's dashboard.
 # Never commit — this is the same mistake env.md made.
 DEPLOY.md
+VERCEL-ADD.md
