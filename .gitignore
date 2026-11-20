@@ -15,3 +15,12 @@ pnpm-debug.log*
 # Full-resolution hero source PNGs (~49MB). The optimised WebP files that the
 # site actually serves live in beyond-stich-store/public/banners/.
 design-assets/
+
+# Credential scratch files. `.env*` above does not match a name with no
+# leading dot, which is how env.md — holding a live Razorpay key and secret
+# in plaintext — was committed. Match those spellings explicitly.
+env.md
+env.txt
+secrets.md
+credentials.md
+*.env
