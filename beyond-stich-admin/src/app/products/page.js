@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import styles from './page.module.css';
 
@@ -17,16 +17,10 @@ export default function AdminProducts() {
   const [selected, setSelected] = useState(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
 
-  useEffect(() => {
-    fetchProducts();
-  }, [segmentFilter, statusFilter]);
-
-  // Clear selection whenever the underlying list changes.
-  useEffect(() => {
-    setSelected(new Set());
-  }, [segmentFilter, statusFilter]);
-
-  const fetchProducts = async () => {
+  // Declared before the effect that calls it and memoised on the filters it
+  // reads, so the effect cannot capture a stale closure and re-run an
+  // outdated query when a filter changes.
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -37,13 +31,25 @@ export default function AdminProducts() {
       if (res.ok) {
         const data = await res.json();
         setProducts(data.products);
+        // Clearing here rather than in a second effect: the selection is
+        // only stale once new rows have actually arrived, and a separate
+        // effect setting state synchronously caused a cascading render.
+        setSelected(new Set());
       }
     } catch (err) {
       console.error('Fetch products error:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [segmentFilter, statusFilter]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!cancelled) await fetchProducts();
+    })();
+    return () => { cancelled = true; };
+  }, [fetchProducts]);
 
   const handleDelete = async (id, name) => {
     if (!confirm(`Are you sure you want to delete "${name}"? This cannot be undone.`)) return;
@@ -285,23 +291,78 @@ export default function AdminProducts() {
 function ProductFormModal({ product, onClose, onSubmit }) {
   const [form, setForm] = useState({
     name: product?.name || '',
+    productType: product?.productType || '',
     segment: product?.segment || 'GYM',
     price: product?.price || '',
     mrp: product?.mrp || '',
     description: product?.description || '',
-    fitType: product?.fitType || 'Oversized',
-    material: product?.material || '240 GSM Cotton',
+    shortDescription: product?.shortDescription || '',
+    highlights: product?.highlights?.length ? product.highlights : [''],
+    // Free text now — the enum ['Oversized','Super Oversized'] could not
+    // describe a hoodie, a pant or a cap.
+    fitType: product?.fitType || '',
+    material: product?.material || '',
+    careInstructions: product?.careInstructions || '',
+    specs: product?.specs?.length ? product.specs : [],
     colors: product?.colors?.join(', ') || 'Black',
     tags: product?.tags?.join(', ') || '',
     images: product?.images || [],
-    sizes: product?.sizes || [
-      { size: 'S', stock: 0 }, { size: 'M', stock: 0 },
-      { size: 'L', stock: 0 }, { size: 'XL', stock: 0 },
-      { size: 'XXL', stock: 0 },
-    ],
+    // Starts empty for a new product: the sizes come from whichever type is
+    // chosen, rather than assuming a t-shirt's run.
+    sizes: product?.sizes || [],
   });
 
   const [uploading, setUploading] = useState(false);
+  const [types, setTypes] = useState([]);
+
+  /**
+   * Adopt a type's template.
+   *
+   * Everything it writes is a starting point the operator can change —
+   * nothing here is enforced later. Existing stock is preserved by size
+   * name, so switching type on a product that already has stock does not
+   * silently zero it.
+   *
+   * Declared before the effect that uses it, and as a plain updater, so the
+   * effect does not capture a stale closure.
+   */
+  const applyType = useCallback((type) => {
+    if (!type) return;
+    setForm((prev) => {
+      const bySize = new Map((prev.sizes || []).map((s) => [s.size, s.stock]));
+      return {
+        ...prev,
+        productType: type.name,
+        sizes: (type.sizes || []).map((size) => ({ size, stock: bySize.get(size) ?? 0 })),
+        // Don't trample spec rows the operator has already filled in.
+        specs: prev.specs?.length
+          ? prev.specs
+          : (type.specTemplate || []).map((s) => ({ label: s.label, value: s.defaultValue || '' })),
+      };
+    });
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/product-types');
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        const active = (data.types || []).filter((t) => t.active !== false);
+        if (cancelled) return;
+        setTypes(active);
+        // A brand-new product adopts the first type so the form is never
+        // in a state with no sizes and no spec rows.
+        if (!product && active.length) applyType(active[0]);
+      } catch {
+        /* the form still works; the operator types sizes by hand */
+      }
+    })();
+    return () => { cancelled = true; };
+    // `product` is the modal's own prop and never changes while it is open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on open
+  }, [applyType]);
 
   const handleChange = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -344,14 +405,72 @@ function ProductFormModal({ product, onClose, onSubmit }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const sizes = form.sizes
+      .map((s) => ({ size: String(s.size || '').trim(), stock: parseInt(s.stock, 10) || 0 }))
+      .filter((s) => s.size);
+
+    if (sizes.length === 0) {
+      alert('Add at least one size.');
+      return;
+    }
+
     onSubmit({
       ...form,
       price: parseFloat(form.price),
       mrp: parseFloat(form.mrp),
+      sizes,
+      // Blank rows are an artefact of the editor, not data.
+      specs: form.specs
+        .map((s) => ({ label: String(s.label || '').trim(), value: String(s.value || '').trim() }))
+        .filter((s) => s.label && s.value),
+      highlights: form.highlights.map((h) => String(h || '').trim()).filter(Boolean),
       colors: form.colors.split(',').map(c => c.trim()).filter(Boolean),
       tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
     });
   };
+
+  // --- sizes: add, rename, remove ---
+  const addSize = () =>
+    setForm((f) => ({ ...f, sizes: [...f.sizes, { size: '', stock: 0 }] }));
+
+  const setSizeName = (i, value) =>
+    setForm((f) => {
+      const sizes = [...f.sizes];
+      sizes[i] = { ...sizes[i], size: value };
+      return { ...f, sizes };
+    });
+
+  const removeSize = (i) =>
+    setForm((f) => ({ ...f, sizes: f.sizes.filter((_, idx) => idx !== i) }));
+
+  // --- specs ---
+  const setSpec = (i, field, value) =>
+    setForm((f) => {
+      const specs = [...f.specs];
+      specs[i] = { ...specs[i], [field]: value };
+      return { ...f, specs };
+    });
+
+  const addSpec = () =>
+    setForm((f) => ({ ...f, specs: [...f.specs, { label: '', value: '' }] }));
+
+  const removeSpec = (i) =>
+    setForm((f) => ({ ...f, specs: f.specs.filter((_, idx) => idx !== i) }));
+
+  // --- highlights ---
+  const setHighlight = (i, value) =>
+    setForm((f) => {
+      const highlights = [...f.highlights];
+      highlights[i] = value;
+      return { ...f, highlights };
+    });
+
+  const addHighlight = () =>
+    setForm((f) => ({ ...f, highlights: [...f.highlights, ''] }));
+
+  const removeHighlight = (i) =>
+    setForm((f) => ({ ...f, highlights: f.highlights.filter((_, idx) => idx !== i) }));
 
   return (
     <div style={modalStyles.overlay} onClick={onClose}>
@@ -385,17 +504,121 @@ function ProductFormModal({ product, onClose, onSubmit }) {
               <input type="number" value={form.mrp} onChange={e => handleChange('mrp', e.target.value)} required style={modalStyles.input} />
             </div>
             <div style={modalStyles.field}>
-              <label>Fit Type</label>
-              <select value={form.fitType} onChange={e => handleChange('fitType', e.target.value)} style={modalStyles.input}>
-                <option value="Oversized">Oversized</option>
-                <option value="Super Oversized">Super Oversized</option>
-              </select>
+              {/* Free text: the old two-option dropdown was a t-shirt
+                  vocabulary a hoodie or a cap could not answer. */}
+              <label>Fit</label>
+              <input
+                value={form.fitType}
+                onChange={e => handleChange('fitType', e.target.value)}
+                placeholder="Oversized / Regular / Relaxed"
+                style={modalStyles.input}
+              />
             </div>
+          </div>
+
+          {/* Product type — drives the default sizes and spec rows below. */}
+          <div style={modalStyles.row}>
+            <div style={modalStyles.field}>
+              <label>Product Type *</label>
+              <select
+                value={form.productType}
+                onChange={(e) => applyType(types.find((t) => t.name === e.target.value))}
+                style={modalStyles.input}
+              >
+                {types.length === 0 && <option value="">No types defined</option>}
+                {types.map((t) => <option key={t._id} value={t.name}>{t.name}</option>)}
+              </select>
+              <span style={hint}>
+                Sets the starting sizes and specifications — all editable below.
+              </span>
+            </div>
+            <div style={modalStyles.field}>
+              <label>Material</label>
+              <input
+                value={form.material}
+                onChange={e => handleChange('material', e.target.value)}
+                placeholder="240 GSM Combed Cotton"
+                style={modalStyles.input}
+              />
+              <span style={hint}>
+                Shown on the product page. Previously had no field at all.
+              </span>
+            </div>
+          </div>
+
+          <div style={modalStyles.field}>
+            <label>Short Description</label>
+            <input
+              value={form.shortDescription}
+              onChange={e => handleChange('shortDescription', e.target.value)}
+              maxLength={300}
+              placeholder="One line for cards, search results and social previews."
+              style={modalStyles.input}
+            />
           </div>
 
           <div style={modalStyles.field}>
             <label>Description *</label>
             <textarea value={form.description} onChange={e => handleChange('description', e.target.value)} required style={{ ...modalStyles.input, minHeight: '80px', resize: 'vertical' }} />
+          </div>
+
+          {/* Highlights */}
+          <div style={modalStyles.field}>
+            <div style={sectionHead}>
+              <label style={{ margin: 0 }}>Highlights</label>
+              <button type="button" onClick={addHighlight} style={addRowBtn}>+ ADD</button>
+            </div>
+            <span style={hint}>Three to five scannable points — most shoppers read only these.</span>
+            {form.highlights.map((h, i) => (
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 32px', gap: '6px', marginTop: '6px' }}>
+                <input
+                  value={h}
+                  onChange={(e) => setHighlight(i, e.target.value)}
+                  placeholder="Heavyweight 240 GSM — holds its shape wash after wash"
+                  style={modalStyles.input}
+                />
+                <button type="button" onClick={() => removeHighlight(i)} style={rowRemoveBtn}>✕</button>
+              </div>
+            ))}
+          </div>
+
+          {/* Specifications */}
+          <div style={modalStyles.field}>
+            <div style={sectionHead}>
+              <label style={{ margin: 0 }}>Specifications</label>
+              <button type="button" onClick={addSpec} style={addRowBtn}>+ ADD ROW</button>
+            </div>
+            <span style={hint}>
+              Rendered as a table on the product page, and fed to Google&apos;s
+              product markup.
+            </span>
+            {form.specs.map((s, i) => (
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr 32px', gap: '6px', marginTop: '6px' }}>
+                <input
+                  value={s.label}
+                  onChange={(e) => setSpec(i, 'label', e.target.value)}
+                  placeholder="Fabric"
+                  style={modalStyles.input}
+                />
+                <input
+                  value={s.value}
+                  onChange={(e) => setSpec(i, 'value', e.target.value)}
+                  placeholder="100% Combed Cotton"
+                  style={modalStyles.input}
+                />
+                <button type="button" onClick={() => removeSpec(i)} style={rowRemoveBtn}>✕</button>
+              </div>
+            ))}
+          </div>
+
+          <div style={modalStyles.field}>
+            <label>Care Instructions</label>
+            <input
+              value={form.careInstructions}
+              onChange={e => handleChange('careInstructions', e.target.value)}
+              placeholder="Machine wash cold, inside out. Do not bleach."
+              style={modalStyles.input}
+            />
           </div>
 
           <div style={modalStyles.row}>
@@ -411,20 +634,52 @@ function ProductFormModal({ product, onClose, onSubmit }) {
 
           {/* Sizes */}
           <div style={modalStyles.field}>
-            <label>Stock by Size</label>
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={sectionHead}>
+              <label style={{ margin: 0 }}>Stock by Size</label>
+              <button type="button" onClick={addSize} style={addRowBtn}>+ ADD SIZE</button>
+            </div>
+            <span style={hint}>
+              Size names are free text — S/M/L for a tee, 28/30/32 for a pant,
+              Free Size for a cap.
+            </span>
+            {/* Was a fixed five-column S–XXL row. Sizes are editable and
+                removable now, keyed by index rather than by name so
+                renaming a size does not remount and lose focus. */}
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '8px' }}>
               {form.sizes.map((s, i) => (
-                <div key={s.size} style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 700, marginBottom: '4px', color: '#888' }}>{s.size}</div>
+                <div key={i} style={{ textAlign: 'center', position: 'relative' }}>
+                  <input
+                    value={s.size}
+                    onChange={(e) => setSizeName(i, e.target.value)}
+                    placeholder="Size"
+                    style={{ ...modalStyles.input, width: '74px', textAlign: 'center', fontSize: '12px', fontWeight: 700, marginBottom: '4px' }}
+                  />
                   <input
                     type="number"
                     min="0"
                     value={s.stock}
                     onChange={e => handleSizeStock(i, e.target.value)}
-                    style={{ ...modalStyles.input, width: '60px', textAlign: 'center' }}
+                    style={{ ...modalStyles.input, width: '74px', textAlign: 'center' }}
                   />
+                  <button
+                    type="button"
+                    onClick={() => removeSize(i)}
+                    aria-label={`Remove size ${s.size || i + 1}`}
+                    style={{
+                      position: 'absolute', top: '-6px', right: '-6px', width: '18px', height: '18px',
+                      borderRadius: '50%', background: '#EF4444', color: '#fff', border: 'none',
+                      fontSize: '10px', cursor: 'pointer', lineHeight: 1,
+                    }}
+                  >
+                    ×
+                  </button>
                 </div>
               ))}
+              {form.sizes.length === 0 && (
+                <span style={{ color: '#666', fontSize: '12px', padding: '10px 0' }}>
+                  No sizes yet — pick a product type above, or add one.
+                </span>
+              )}
             </div>
           </div>
 
@@ -471,4 +726,38 @@ const modalStyles = {
   field: { flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' },
   input: { padding: '10px 12px', background: '#1A1A1A', border: '1px solid #333', borderRadius: '4px', color: '#F5F5F5', fontSize: '13px' },
   submitBtn: { padding: '14px', background: '#F5F5F5', color: '#0A0A0A', border: 'none', borderRadius: '6px', fontWeight: 800, fontSize: '14px', letterSpacing: '0.1em', cursor: 'pointer', marginTop: '8px' },
+};
+
+const hint = {
+  display: 'block',
+  color: '#666',
+  fontSize: '11px',
+  lineHeight: 1.5,
+  marginTop: '4px',
+};
+
+const sectionHead = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+};
+
+const addRowBtn = {
+  background: 'transparent',
+  border: '1px solid #333',
+  borderRadius: '4px',
+  color: '#F5C518',
+  fontSize: '11px',
+  fontWeight: 700,
+  padding: '4px 10px',
+  cursor: 'pointer',
+};
+
+const rowRemoveBtn = {
+  background: 'transparent',
+  border: '1px solid #333',
+  borderRadius: '4px',
+  color: '#EF4444',
+  cursor: 'pointer',
+  fontSize: '12px',
 };
