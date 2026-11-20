@@ -37,6 +37,7 @@ async function getLatestDrops() {
     name: p.name,
     segment: p.segment,
     images: p.images ?? [],
+    productType: p.productType,
     fitType: p.fitType,
     colors: p.colors ?? [],
     sizes: p.sizes ?? [],

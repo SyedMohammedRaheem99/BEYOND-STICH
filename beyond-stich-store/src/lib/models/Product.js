@@ -4,7 +4,13 @@ const SizeStockSchema = new mongoose.Schema({
   size: {
     type: String,
     required: true,
-    enum: ['S', 'M', 'L', 'XL', 'XXL'],
+    trim: true,
+    // Deliberately NOT an enum. It was ['S','M','L','XL','XXL'], which is a
+    // t-shirt's size run — so Mongoose rejected a pant sized '32' or a cap
+    // sized 'Free Size' outright. The valid sizes for a product come from
+    // its ProductType, which the admin controls; the schema only requires
+    // that a size is named.
+    maxlength: 20,
   },
   stock: {
     type: Number,
@@ -13,6 +19,41 @@ const SizeStockSchema = new mongoose.Schema({
     min: 0,
   },
 });
+
+/**
+ * One row of the product's specification table.
+ *
+ * Free-form label/value rather than fixed columns: a t-shirt lists GSM and
+ * neck type, a pant lists waist rise and closure, a cap lists neither.
+ * Hard-coding a field per attribute would mean a schema change for every
+ * new kind of product.
+ */
+const SpecSchema = new mongoose.Schema(
+  {
+    label: { type: String, required: true, trim: true, maxlength: 60 },
+    value: { type: String, required: true, trim: true, maxlength: 200 },
+  },
+  { _id: false }
+);
+
+/**
+ * A row of the size chart shown on the product page.
+ *
+ * `measurements` is a Map so each product type can name its own columns —
+ * chest/length/shoulder for a tee, waist/inseam for a pant — without the
+ * schema knowing what any of them mean.
+ */
+const SizeChartRowSchema = new mongoose.Schema(
+  {
+    size: { type: String, required: true, trim: true, maxlength: 20 },
+    measurements: {
+      type: Map,
+      of: String,
+      default: () => new Map(),
+    },
+  },
+  { _id: false }
+);
 
 const ProductSchema = new mongoose.Schema(
   {
@@ -59,18 +100,90 @@ const ProductSchema = new mongoose.Schema(
       type: [String],
       default: ['Black'],
     },
+    /**
+     * What kind of product this is — 'T-Shirt', 'Hoodie', 'Pants', 'Cap'…
+     *
+     * Free-form, matched by name against the ProductType collection, which
+     * supplies the default sizes, spec rows and size chart. A string rather
+     * than a reference so a product survives its type being renamed or
+     * removed, and so seed data needs no lookup.
+     */
+    productType: {
+      type: String,
+      default: 'T-Shirt',
+      trim: true,
+      index: true,
+    },
+
     description: {
       type: String,
       required: true,
     },
+
+    /**
+     * One or two lines for cards, search results and the meta description.
+     * Falls back to a truncated `description` when empty, so existing
+     * products need no backfill.
+     */
+    shortDescription: {
+      type: String,
+      default: '',
+      trim: true,
+      maxlength: 300,
+    },
+
+    /** Three to five scannable selling points. Most shoppers read only these. */
+    highlights: {
+      type: [String],
+      default: [],
+    },
+
+    /**
+     * The specification table. Entirely operator-defined — see SpecSchema.
+     */
+    specs: {
+      type: [SpecSchema],
+      default: [],
+    },
+
+    /**
+     * Per-product size chart. Empty means "use the chart from this
+     * product's ProductType", which is the normal case; filling it in
+     * covers the one-off whose measurements differ from the house pattern.
+     */
+    sizeChart: {
+      type: [SizeChartRowSchema],
+      default: [],
+    },
+
+    careInstructions: {
+      type: String,
+      default: '',
+      trim: true,
+      maxlength: 500,
+    },
+
+    /**
+     * Was enum ['Oversized','Super Oversized'] — a t-shirt vocabulary that
+     * a hoodie, a pant or a cap cannot satisfy. Now free text, and empty by
+     * default so nothing is claimed about a product that has not said.
+     */
     fitType: {
       type: String,
-      enum: ['Oversized', 'Super Oversized'],
-      default: 'Oversized',
+      default: '',
+      trim: true,
+      maxlength: 60,
     },
+
+    /**
+     * No default: '240 GSM Cotton' was asserted for every product whether
+     * or not it was true, and the admin form had no field to correct it.
+     */
     material: {
       type: String,
-      default: '240 GSM Cotton',
+      default: '',
+      trim: true,
+      maxlength: 200,
     },
     tags: {
       type: [String],

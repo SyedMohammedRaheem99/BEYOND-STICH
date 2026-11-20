@@ -25,7 +25,7 @@ export default async function SegmentWorldPage({ params }) {
     await connectDB();
     // Only the fields ProductCard renders — see the same note in shop/page.js.
     const docs = await Product.find({ isActive: true, segment: segmentData.name })
-      .select('name slug price mrp images segment fitType colors sizes tags averageRating reviewCount createdAt')
+      .select('name slug price mrp images segment productType fitType colors sizes tags averageRating reviewCount createdAt')
       .sort({ createdAt: -1 })
       .lean();
     products = docs.map((doc) => ({

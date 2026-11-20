@@ -85,7 +85,7 @@ export async function GET(request) {
     // limit it serialised the entire catalogue on every call.
     const cap = limit > 0 ? Math.min(limit, 100) : 48;
     const docs = await Product.find(filter)
-      .select('name slug price mrp images segment fitType colors sizes tags averageRating reviewCount featured createdAt')
+      .select('name slug price mrp images segment productType fitType colors sizes tags averageRating reviewCount featured createdAt')
       .sort(sortObj)
       .limit(cap)
       .lean();

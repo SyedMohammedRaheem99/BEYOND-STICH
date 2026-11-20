@@ -16,7 +16,7 @@ export default async function ShopPage() {
     // Only the fields ProductCard renders. Without this the full description,
     // material and viewCount of every product were serialised into the HTML.
     const docs = await Product.find({ isActive: true })
-      .select('name slug price mrp images segment fitType colors sizes tags averageRating reviewCount createdAt')
+      .select('name slug price mrp images segment productType fitType colors sizes tags averageRating reviewCount createdAt')
       .sort({ createdAt: -1 })
       .lean();
     products = docs.map((doc) => ({

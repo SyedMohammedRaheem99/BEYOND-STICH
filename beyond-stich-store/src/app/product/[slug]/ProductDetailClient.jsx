@@ -146,7 +146,12 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
                 <span className={styles.segmentBadge} style={{ color: accentColor }}>
                   {product.segment}
                 </span>
-                <span className={styles.fitType}>{product.fitType}</span>
+                {/* fitType no longer defaults to 'Oversized' — a hoodie or
+                    a cap has no such attribute — so it can legitimately be
+                    empty, and an unguarded render left a stray element. */}
+                {product.fitType && (
+                  <span className={styles.fitType}>{product.fitType}</span>
+                )}
               </div>
               <h1 className={styles.title}>{product.name}</h1>
               <div className={styles.priceRow}>

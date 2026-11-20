@@ -134,7 +134,11 @@ export default function ProductCard({ product, index = 0 }) {
             <span className={styles.segmentName} style={{ color: accentColor }}>
               {product.segment}
             </span>
-            <span className={styles.fitType}>{product.fitType}</span>
+            {/* Can be empty now that fitType is free text with no default
+                (a cap has no fit), so guard rather than render a blank. */}
+            {product.fitType && (
+              <span className={styles.fitType}>{product.fitType}</span>
+            )}
           </div>
           
           <h3 className={styles.productName}>{product.name}</h3>
