@@ -248,9 +248,12 @@ export default function CartDrawer() {
                   </motion.div>
                 ))
               )}
-            </div>
 
-            {/* Complete the fit (cross-sell) */}
+            {/* Complete the fit (cross-sell).
+                Inside .items, not beside it: as a sibling of the scrolling
+                list it was a ~540px block in the drawer's flex column, so
+                on a 360px screen it pushed the footer — and the CHECKOUT
+                button — 86px below the viewport with no way to reach it. */}
             {items.length > 0 && suggestions.length > 0 && (
               <div className={styles.crossSell}>
                 <h3 className={styles.crossSellTitle}>COMPLETE THE FIT</h3>
@@ -272,6 +275,7 @@ export default function CartDrawer() {
                 </div>
               </div>
             )}
+            </div>
 
             {/* Footer */}
             {items.length > 0 && (

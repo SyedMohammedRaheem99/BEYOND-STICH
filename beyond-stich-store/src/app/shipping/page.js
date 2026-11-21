@@ -21,8 +21,7 @@ export default function ShippingPage() {
 
       <h2>Charges</h2>
       <ul>
-        <li><strong>Free shipping</strong> on all orders above ₹999.</li>
-        <li>Flat <strong>₹79</strong> on orders below ₹999.</li>
+        <li><strong>Free shipping</strong> on every order, with no minimum.</li>
       </ul>
 
       <h2>Timelines</h2>

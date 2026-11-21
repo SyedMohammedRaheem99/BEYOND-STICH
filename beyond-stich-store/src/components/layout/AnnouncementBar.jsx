@@ -17,7 +17,7 @@ const MESSAGES = [
   // threshold no basket could actually sit below.
   '🎉 First order? Get 10% off above ₹949',
   '🎉 Get 25% off above ₹1999',
-  '🚚 FREE shipping on all orders over ₹999',
+  '🚚 FREE shipping on every order',
   '📦 Cash on Delivery available across India',
   '🔁 7-day easy returns & exchanges',
 ];

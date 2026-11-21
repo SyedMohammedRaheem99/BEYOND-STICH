@@ -207,8 +207,12 @@ export function getOrderStatusColor(status) {
 
 // Shipping
 export const SHIPPING = {
-  FREE_THRESHOLD: 999,  // ₹ — orders at or above this amount ship free
-  FLAT_RATE: 79,        // ₹ — flat fee for orders below threshold
+  // Shipping is free on every order. A zero threshold also hides the cart's
+  // "add ₹X more for free shipping" nudge, which is guarded by
+  // `subtotal < FREE_THRESHOLD` — leaving it at 999 with a zero rate would
+  // have promised a reward the customer already had.
+  FREE_THRESHOLD: 0,    // ₹ — orders at or above this amount ship free
+  FLAT_RATE: 0,         // ₹ — flat fee for orders below threshold
 };
 
 // Welcome offer tiers. These drive the cart nudge and the marketing copy, but

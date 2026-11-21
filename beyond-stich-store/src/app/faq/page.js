@@ -29,7 +29,7 @@ const FAQ_ITEMS = [
   {
     category: 'Orders & Shipping',
     question: 'Do you offer free shipping?',
-    answer: 'Yes — free shipping on all orders above ₹999. Below that, a flat ₹79 applies.',
+    answer: 'Yes — shipping is free on every order, with no minimum.',
   },
   {
     category: 'Returns',

@@ -81,6 +81,11 @@
 .items {
   flex: 1;
   overflow-y: auto;
+  /* A flex item will not shrink below its content without this — its
+     default min-height is auto — so a full bag plus the cross-sell row
+     pushed the footer (and the CHECKOUT button) past the bottom of the
+     viewport instead of scrolling inside this panel. */
+  min-height: 0;
   padding: var(--space-4) var(--space-6);
 }
 
@@ -239,14 +244,6 @@
   color: var(--color-error);
 }
 
-@media (max-width: 768px) {
-  /* The drawer stays 420px wide down to 480px, so three cross-sell columns
-     left ~100px each and product names rendered as "OVERSIZED G…". */
-  .crossSellRow {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
 @media (max-width: 480px) {
   .drawer {
     /* 100vw includes the scrollbar gutter, which pushed the drawer's right
@@ -265,7 +262,12 @@
 
 /* --- Footer --- */
 .footer {
-  padding: var(--space-6);
+  /* Never squeezed by the scrolling list above, and never pushed out of
+     view by it. */
+  flex-shrink: 0;
+  /* Clears the iOS home indicator, so the CHECKOUT button is not sitting
+     under the gesture bar. */
+  padding: var(--space-6) var(--space-6) calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--color-border);
   background: var(--color-bg-elevated);
 }
@@ -358,8 +360,22 @@
 
 .crossSellRow {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* auto-fit + minmax rather than a fixed column count: three 1fr columns
+     inside a 360px drawer gave each ~100px, and the 4:5 image plus its
+     name overflowed the drawer by 56px. This drops to two columns, then
+     one, entirely on available width — and a media query cannot be
+     defeated by declaration order the way the previous fix was (it sat
+     above this rule, so `repeat(3, 1fr)` simply won). */
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
   gap: var(--space-3);
+  /* A grid item's default min-width is auto — "at least as wide as my
+     content" — which is what let a long product name push the track wider
+     than its share. */
+  min-width: 0;
+}
+
+.crossSellRow > * {
+  min-width: 0;
 }
 
 .crossSellItem {

@@ -27,7 +27,7 @@ const SORT_OPTIONS = [
 // claim where it actually matters.
 const TRUST_ITEMS = [
   {
-    text: 'Free Shipping ₹999+',
+    text: 'Free Shipping',
     path: 'M1 3h15v13H1zM16 8h4l3 3v5h-7zM5.5 18.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18.5 18.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4z',
   },
   { text: 'Cash on Delivery', path: 'M2 6h20v12H2zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z' },
