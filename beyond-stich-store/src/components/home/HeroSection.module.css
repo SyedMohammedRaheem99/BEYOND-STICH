@@ -247,7 +247,9 @@
 .dot::after {
   content: '';
   position: absolute;
-  inset: -20px -4px;
+  /* -21px vertically gives a 44px tap target around the 2px bar; -20px
+     left it at 42, two short of the minimum. */
+  inset: -21px -4px;
 }
 
 .dot:hover {

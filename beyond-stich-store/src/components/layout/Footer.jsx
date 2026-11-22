@@ -48,9 +48,9 @@ export default function Footer() {
       {/* Newsletter Strip */}
       <div className={styles.newsletter}>
         <div className={`${styles.newsletterInner} container`}>
-          <h3 className={styles.newsletterTitle}>
+          <h2 className={styles.newsletterTitle}>
             GET DROPS BEFORE EVERYONE ELSE
-          </h3>
+          </h2>
           {subscribed ? (
             <p className={styles.newsletterSuccess} role="status">
               You&apos;re on the list. Watch your inbox for the next drop. ✓
@@ -115,7 +115,7 @@ export default function Footer() {
 
         {/* Segments Column */}
         <div className={styles.linksCol}>
-          <h4 className={styles.colTitle}>SEGMENTS</h4>
+          <h3 className={styles.colTitle}>SEGMENTS</h3>
           <nav className={styles.linksList}>
             {SEGMENTS.slice(0, 7).map((seg) => (
               <Link
@@ -129,7 +129,7 @@ export default function Footer() {
         </div>
 
         <div className={styles.linksCol}>
-          <h4 className={styles.colTitle}>MORE</h4>
+          <h3 className={styles.colTitle}>MORE</h3>
           <nav className={styles.linksList}>
             {SEGMENTS.slice(7).map((seg) => (
               <Link
@@ -144,7 +144,7 @@ export default function Footer() {
 
         {/* Help Column */}
         <div className={styles.linksCol}>
-          <h4 className={styles.colTitle}>HELP</h4>
+          <h3 className={styles.colTitle}>HELP</h3>
           <nav className={styles.linksList}>
             <Link href="/track">Track Order</Link>
             <Link href="/contact">Contact Us</Link>

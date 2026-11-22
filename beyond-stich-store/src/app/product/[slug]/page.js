@@ -7,6 +7,7 @@ import { DUMMY_PRODUCTS, DUMMY_REVIEWS } from '@/lib/dummyData';
 import ProductSchema from '@/components/seo/ProductSchema';
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema';
 import ProductDetailClient from './ProductDetailClient';
+import { serialise, serialiseProduct, serialiseProducts } from '@/lib/serialise';
 
 // Serve catalog pages from cache for 5 minutes. Without this every
 // visit blocks on a MongoDB round trip before any HTML ships.
@@ -20,7 +21,7 @@ async function getProduct(slug) {
   try {
     await connectDB();
     const doc = await Product.findOne({ slug, isActive: true }).lean();
-    return doc ? { ...doc, _id: doc._id.toString() } : null;
+    return serialiseProduct(doc);
   } catch {
     return DUMMY_PRODUCTS.find((p) => p.slug === slug) || null;
   }
@@ -36,7 +37,7 @@ async function getRelated(slug, segment) {
       .lean();
     // An empty result is a valid answer (no siblings in this segment yet) —
     // don't paper over it with seed products that aren't for sale.
-    return docs.map((d) => ({ ...d, _id: d._id.toString() }));
+    return serialiseProducts(docs);
   } catch {
     return DUMMY_PRODUCTS.filter((p) => p.segment === segment && p.slug !== slug).slice(0, 4);
   }
@@ -62,7 +63,7 @@ async function getReviews(slug) {
     const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
     for (const r of reviews) distribution[r.rating] = (distribution[r.rating] || 0) + 1;
     return {
-      reviews: reviews.map((r) => ({ ...r, _id: r._id.toString() })),
+      reviews: serialise(reviews),
       average,
       count,
       distribution,

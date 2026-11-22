@@ -213,8 +213,14 @@
   transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   text-decoration: none;
+  /* The wordmark renders ~34px tall, which is under the 44px touch
+     minimum — and this is the "go home" control, tapped constantly.
+     Padding grows the tappable box without changing the rendered mark. */
+  min-height: 44px;
+  padding: var(--space-1) var(--space-2);
   /* Absolutely centred, so it cannot see the hamburger or the action icons.
      On desktop there is ample room; the mobile rules below switch it out of
      centring entirely, because a centred wordmark physically cannot fit

@@ -144,6 +144,8 @@
 }
 
 .cta {
+  /* 142x39 — just under the minimum for the banner's only call to action. */
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   gap: 8px;

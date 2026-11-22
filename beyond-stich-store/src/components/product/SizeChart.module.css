@@ -40,8 +40,8 @@
 }
 
 .unitBtn {
-  /* 44px minimum touch target, as everywhere else. */
-  min-height: 36px;
+  /* Was 36px — the comment claimed 44 but the value did not match it. */
+  min-height: 44px;
   padding: var(--space-2) var(--space-4);
   font-family: var(--font-body);
   font-size: var(--text-2xs);

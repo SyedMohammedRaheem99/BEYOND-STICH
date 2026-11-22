@@ -8,6 +8,7 @@ import SocialProofBar from '@/components/home/SocialProofBar';
 import connectDB from '@/lib/mongodb';
 import Product from '@/lib/models/Product';
 import { DUMMY_PRODUCTS } from '@/lib/dummyData';
+import { serialiseProducts } from '@/lib/serialise';
 
 // Serve catalog pages from cache for 5 minutes. Without this every
 // visit blocks on a MongoDB round trip before any HTML ships.
@@ -23,7 +24,10 @@ async function getLatestDrops() {
   try {
     await connectDB();
     const docs = await Product.find({ isActive: true }).sort({ createdAt: -1 }).limit(6).lean();
-    if (docs.length > 0) products = docs.map(d => ({ ...d, _id: d._id.toString() }));
+    // serialiseProducts, not a hand-written _id conversion: createdAt and
+    // updatedAt are Dates, which React refuses to pass to a Client
+    // Component and which arrive as a different type on each side.
+    if (docs.length > 0) products = serialiseProducts(docs);
   } catch {}
   if (products.length === 0) products = DUMMY_PRODUCTS.slice(0, 6);
   // Projection mirrors the field list in /api/products, because LatestDrop

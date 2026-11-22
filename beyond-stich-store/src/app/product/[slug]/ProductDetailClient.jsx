@@ -179,7 +179,7 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
             {product.colors?.length > 0 && (
               <div className={styles.colorSection}>
                 <div className={styles.colorHeader}>
-                  <h3>COLOR</h3>
+                  <h2>COLOR</h2>
                   <span className={styles.colorName}>{selectedColor}</span>
                 </div>
                 <div className={styles.colorGrid}>
@@ -204,7 +204,7 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
             {/* Sizes */}
             <div className={styles.sizesSection} id="pdp-sizes">
               <div className={styles.sizesHeader}>
-                <h3>SELECT SIZE</h3>
+                <h2>SELECT SIZE</h2>
                 <button className={styles.sizeGuideBtn} onClick={() => setSizeGuideOpen(true)}>
                   SIZE GUIDE
                 </button>
@@ -386,7 +386,7 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
             <div className={styles.details}>
               {product.highlights?.length > 0 && (
                 <div className={styles.detailBlock}>
-                  <h4>HIGHLIGHTS</h4>
+                  <h2>HIGHLIGHTS</h2>
                   <ul className={styles.highlights}>
                     {product.highlights.map((h, i) => (
                       <li key={i}>{h}</li>
@@ -396,13 +396,13 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
               )}
 
               <div className={styles.detailBlock}>
-                <h4>THE DROP</h4>
+                <h2>THE DROP</h2>
                 <p>{product.description}</p>
               </div>
 
               {product.specs?.length > 0 && (
                 <div className={styles.detailBlock}>
-                  <h4>SPECIFICATIONS</h4>
+                  <h2>SPECIFICATIONS</h2>
                   {/* A definition list, not a table: it reads correctly to a
                       screen reader and reflows to one column on a phone
                       without horizontal scrolling. */}
@@ -419,20 +419,20 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
 
               {product.material && (
                 <div className={styles.detailBlock}>
-                  <h4>MATERIAL</h4>
+                  <h2>MATERIAL</h2>
                   <p>{product.material}</p>
                 </div>
               )}
 
               {product.careInstructions && (
                 <div className={styles.detailBlock}>
-                  <h4>CARE</h4>
+                  <h2>CARE</h2>
                   <p>{product.careInstructions}</p>
                 </div>
               )}
 
               <div className={styles.detailBlock}>
-                <h4>SHIPPING</h4>
+                <h2>SHIPPING</h2>
                 <p>
                   {/* Reflects the PIN code the customer actually checked,
                       rather than asserting a delivery window for everyone. */}

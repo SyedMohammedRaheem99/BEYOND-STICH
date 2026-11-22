@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import connectDB from '@/lib/mongodb';
 import Product from '@/lib/models/Product';
 import { DUMMY_PRODUCTS } from '@/lib/dummyData';
+import { serialiseProducts } from '@/lib/serialise';
 import ShopClient from './ShopClient';
 
 // Serve catalog pages from cache for 5 minutes. Without this every
@@ -19,10 +20,9 @@ export default async function ShopPage() {
       .select('name slug price mrp images segment productType fitType colors sizes tags averageRating reviewCount createdAt')
       .sort({ createdAt: -1 })
       .lean();
-    products = docs.map((doc) => ({
-      ...doc,
-      _id: doc._id.toString(),
-    }));
+    // createdAt is selected above and is a Date, which React will not pass
+    // to a Client Component — converting only _id left the warning in place.
+    products = serialiseProducts(docs);
   } catch {
     // Fallback to dummy data when DB is unavailable
     products = DUMMY_PRODUCTS.map((p) => ({

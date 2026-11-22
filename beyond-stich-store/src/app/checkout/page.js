@@ -430,7 +430,10 @@ export default function CheckoutPage() {
   if (!hydrated) {
     return (
       <div className={styles.emptyContainer}>
-        <h2>LOADING YOUR BAG…</h2>
+        {/* This branch returns before the main layout's <h1>, so it carries
+            its own — a page with no top-level heading is hard to navigate
+            with a screen reader. */}
+        <h1>LOADING YOUR BAG…</h1>
       </div>
     );
   }
@@ -438,7 +441,7 @@ export default function CheckoutPage() {
   if (items.length === 0 && step !== STEPS.PAYMENT) {
     return (
       <div className={styles.emptyContainer}>
-        <h2>YOUR BAG IS EMPTY</h2>
+        <h1>YOUR BAG IS EMPTY</h1>
         <Link href="/shop" className={styles.backBtn}>BACK TO SHOP</Link>
       </div>
     );
@@ -486,6 +489,10 @@ export default function CheckoutPage() {
 
   return (
     <div className={styles.checkoutPage}>
+      {/* The page had no <h1> at all — the step indicator carries the
+          visual hierarchy, so this is visually hidden and exists to give
+          screen-reader users a landmark, as the home page already does. */}
+      <h1 className="sr-only">Checkout</h1>
       <div className={`${styles.container} container`}>
         {/* Left Col: Flow */}
         <div>

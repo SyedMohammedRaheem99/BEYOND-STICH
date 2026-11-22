@@ -53,6 +53,11 @@
 }
 
 .resendBtn {
+  /* 96x34 — reached for when a code has not arrived, so it must be easy
+     to hit. */
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--accent);

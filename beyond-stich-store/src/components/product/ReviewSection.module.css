@@ -42,6 +42,8 @@
 }
 
 .writeRateBtn {
+  /* 153x35 — the control that turns a reader into a reviewer. */
+  min-height: 44px;
   font-family: var(--font-display);
   font-size: var(--text-sm);
   font-weight: 700;

@@ -1,5 +1,10 @@
 # Site Audit — Beyond Stich
 
+> **Status: all findings fixed.** Re-run after the fixes returns **3
+> findings, all of them the 404 page correctly returning 404.**
+> 149 → 3. Original report below, kept for the record.
+
+
 Automated sweep of **22 page templates × 3 widths** (360 / 768 / 1440), run
 against localhost on 2026-11-23 with `scripts/audit.mjs`.
 

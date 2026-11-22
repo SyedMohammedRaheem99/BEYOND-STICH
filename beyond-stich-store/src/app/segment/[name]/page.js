@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import connectDB from '@/lib/mongodb';
 import Product from '@/lib/models/Product';
 import { DUMMY_PRODUCTS } from '@/lib/dummyData';
+import { serialiseProducts } from '@/lib/serialise';
 import { SEGMENTS } from '@/lib/constants';
 import SegmentClient from './SegmentClient';
 
@@ -28,10 +29,9 @@ export default async function SegmentWorldPage({ params }) {
       .select('name slug price mrp images segment productType fitType colors sizes tags averageRating reviewCount createdAt')
       .sort({ createdAt: -1 })
       .lean();
-    products = docs.map((doc) => ({
-      ...doc,
-      _id: doc._id.toString(),
-    }));
+    // createdAt is selected above and is a Date, which React will not pass
+    // to a Client Component — converting only _id left the warning in place.
+    products = serialiseProducts(docs);
   } catch {
     // Fallback to dummy data filtered by segment
     products = DUMMY_PRODUCTS
