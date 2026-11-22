@@ -29,3 +29,6 @@ credentials.md
 # Never commit — this is the same mistake env.md made.
 DEPLOY.md
 VERCEL-ADD.md
+
+# Audit output — regenerate with scripts/audit.mjs
+.audit-report.json
