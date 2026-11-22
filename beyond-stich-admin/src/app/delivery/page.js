@@ -202,6 +202,7 @@ export default function AdminDelivery() {
         <button
           type="submit"
           style={{
+            minHeight: '44px',
             padding: '8px 16px', background: '#F5C518', color: '#0A0A0A', border: 'none',
             borderRadius: '4px', fontWeight: 800, fontSize: '12px', cursor: 'pointer',
           }}

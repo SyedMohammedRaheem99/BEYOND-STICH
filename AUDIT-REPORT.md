@@ -238,3 +238,72 @@ cover:
   change the product images
 
 Those need either a human or a different kind of test.
+
+---
+
+# Admin Panel Audit
+
+Same sweep across **10 admin screens × 3 widths**, behind a real login, with
+`beyond-stich-admin/scripts/audit-admin.mjs` (run it from the storefront —
+that is where Playwright is installed).
+
+```bash
+cd beyond-stich-store
+AUDIT_ADMIN_EMAIL=you@example.com AUDIT_ADMIN_PASSWORD=…   node scripts/audit-admin.mjs
+```
+
+**Result: 34 findings → 0.**
+
+## Every screen loads and renders real data
+
+| Screen | Rows |
+|---|---|
+| Overview | 5 |
+| Products | 35 |
+| Product types | 5 |
+| Orders | 15 |
+| Inventory | 35 |
+| Delivery | 3 |
+| Coupons | 5 |
+| Reviews | 1 |
+| Analytics | — (charts, no table) |
+| Users | 7 |
+
+No screen stuck loading, no failed request, no horizontal overflow at any
+width, no console errors, every screen has an `<h1>`, every control has an
+accessible name.
+
+## What was fixed
+
+All 34 were touch targets below 44px on mobile. Orders get checked from a
+phone far more often than anyone plans for.
+
+| Control | Was | Now |
+|---|---|---|
+| EDIT / DELETE / VIEW in tables | **25×13** | 44 |
+| LOGOUT (every screen) | 40 | 44 |
+| + ADD … (primary action, every screen) | 41 | 44 |
+| Filter dropdowns | 41 | 44 |
+| Analytics 7D / 30D / 90D | 26 | 44 |
+| Delivery CHECK | 32 | 44 |
+
+The table actions were the real problem: three buttons 13px tall in a dense
+row, one of which is DELETE — a mis-tap hit the neighbour. Most screens
+share `products/page.module.css`, so one change covered seven of them.
+
+## A bug found while setting this up
+
+Admin login returned **HTTP 500** — `querySrv ECONNREFUSED`. The DNS fix
+was present in the code but the running server held a cached connection
+promise from before it, and `connectDB()` never retries a cached failure.
+A restart cleared it, and the diagnostic confirmed `db: "connected"` once
+the resolver channel is rebuilt.
+
+Worth knowing: **if the admin ever returns 500 on login, restart it before
+assuming the credentials are wrong.**
+
+## Not covered
+
+Writing data. The audit logs in, looks, and logs out — it creates and
+modifies nothing. Creating a product, editing an order status and
+processing a refund still need a human, or a separate write-path test.

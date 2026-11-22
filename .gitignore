@@ -32,3 +32,6 @@ VERCEL-ADD.md
 
 # Audit output — regenerate with scripts/audit.mjs
 .audit-report.json
+
+# Admin audit output
+.audit-admin.json

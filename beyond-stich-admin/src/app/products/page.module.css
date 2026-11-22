@@ -22,6 +22,8 @@
 }
 
 .addBtn {
+  /* 41px — just under the minimum on the main action of every screen. */
+  min-height: 44px;
   padding: var(--space-3) var(--space-6);
   background: var(--color-text-primary);
   color: var(--color-bg);
@@ -58,6 +60,7 @@
 }
 
 .select {
+  min-height: 44px;
   padding: var(--space-2) var(--space-4);
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
@@ -144,6 +147,13 @@
 }
 
 .editBtn, .deleteBtn {
+  /* Were 13px tall in a dense row of three, so a mis-tap landed on the
+     neighbouring action — and one of those neighbours is DELETE. The text
+     stays 10px; only the hit area grows. */
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-2);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.1em;

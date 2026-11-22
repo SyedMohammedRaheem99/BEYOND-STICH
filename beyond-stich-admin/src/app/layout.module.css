@@ -90,6 +90,8 @@
 }
 
 .logoutBtn {
+  /* 40px, present on every screen. */
+  min-height: 44px;
   width: 100%;
   padding: var(--space-3);
   border: 1px solid var(--color-border);

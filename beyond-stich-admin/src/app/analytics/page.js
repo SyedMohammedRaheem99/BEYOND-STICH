@@ -267,6 +267,11 @@ const periodSelectorStyle = {
 };
 
 const periodBtnStyle = {
+  // Were 26px tall — the date-range switch is the control this screen is
+  // built around.
+  minHeight: '44px',
+  display: 'inline-flex',
+  alignItems: 'center',
   padding: '6px 14px',
   border: 'none',
   borderRadius: '4px',
