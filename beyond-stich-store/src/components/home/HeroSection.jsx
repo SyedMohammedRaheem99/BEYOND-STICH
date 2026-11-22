@@ -7,7 +7,11 @@ import Button from '@/components/ui/Button';
 import { HERO_SLIDES } from '@/lib/banners';
 import styles from './HeroSection.module.css';
 
-const AUTOPLAY_INTERVAL = 5000;
+// 6.75s rather than 5s: a shopper scrolling past needs long enough to
+// read the headline and register the offer before the slide moves. The
+// progress bar below is driven off this same value, so the two stay in
+// step.
+const AUTOPLAY_INTERVAL = 6750;
 
 const ArrowIcon = () => (
   <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

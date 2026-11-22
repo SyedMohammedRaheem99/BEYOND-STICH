@@ -33,7 +33,9 @@ const IMAGES = {
   },
 };
 
-const AUTOPLAY_INTERVAL = 4500;
+// 6s rather than 4.5s — same reasoning as the home hero, slightly
+// quicker since these slides carry less copy.
+const AUTOPLAY_INTERVAL = 6000;
 
 export default function ShopBanner() {
   const [current, setCurrent] = useState(0);
