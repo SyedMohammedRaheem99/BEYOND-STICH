@@ -1,7 +1,7 @@
 # Beyond Stich — Code Map
 
 **Purpose:** a navigation index so any future change goes straight to the right file
-and line without re-reading the codebase. Written 2026-11-18 against commit `cb130d8`.
+and line without re-reading the codebase. Written 2026-11-18 against commit `cb130d8`; updated 2026-11-23 (admin-managed home page, §16).
 
 **Companion docs (not duplicated here):**
 
@@ -105,7 +105,7 @@ changing a value.
 ### Commerce
 | Route | Files | Notes |
 |---|---|---|
-| `/` | `app/page.js` (78) | Server. `revalidate = 300`. `getLatestDrops()` queries DB direct (6 newest), falls back to dummy. Visually-hidden `<h1>` for SEO. Composes: `HeroSection` → `TrustBar` → `LatestDrop` → `SegmentGrid` → `OfferBanner` → `BrandManifesto` → `SocialProofBar` |
+| `/` | `app/page.js` (78) | Server. `revalidate = 300`. `getLatestDrops()` queries DB direct (6 newest), falls back to dummy. Visually-hidden `<h1>` for SEO. `Promise.all([getLatestDrops(), getHomeSections(), getBanners('home-hero')])`. Composes: `HeroSection` (DB banners, falls back to `HERO_SLIDES`) → `TrustBar` → `LatestDrop` → **`ProductSection` × N (admin-managed, §16)** → `SegmentGrid` → `OfferBanner` → `BrandManifesto` → `SocialProofBar` |
 | `/shop` | `page.js` (85) + `ShopClient.jsx` (250) + `page.module.css` (359) + `layout.js` | `ShopClient`: `SORT_OPTIONS` (L12), `TRUST_ITEMS` (L20), segment pills, search (`?q=`), client-side text filter, skeleton + `loadError`/retry states |
 | `/product/[slug]` | `page.js` (121) + `ProductDetailClient.jsx` (423) + `page.module.css` (700) + `layout.js` (57) | See §5 |
 | `/segment/[name]` | `page.js` (73) + `SegmentClient.jsx` (75) + `page.module.css` (182) + `layout.js` | Driven by `SEGMENTS` in constants |
@@ -267,6 +267,8 @@ registry with full body text) · `lib/dummyData.js` (seed fallback) · `lib/data
 | `User.js` | 77 | `name, email (unique), phone, passwordHash (select:false), image, provider ['credentials','google'], role ['customer','admin'], addresses[AddressSchema], wishlist[→Product], resetToken/resetTokenExpiry (select:false)` |
 | `Review.js` | 27 | `productSlug` (slug-keyed), `authorName`, `authorEmail`, `rating 1–5`, `title`, `body`, `images[≤5]`, **`verified`** (matched to a real order), **`approved`** (moderation gate) |
 | `Coupon.js` | 24 | `code (unique, uppercase)`, `type ['percent','flat','shipping']`, `value`, `minOrder`, `maxDiscount`, `active`, `usageLimit`, `usedCount`, `expiresAt`, **`firstOrderOnly`** |
+| `HomeSection.js` | 69 | **Admin-managed home page product strip.** `title, eyebrow, subtitle`, `source ['manual','tag','segment','newest']` + the one selector it uses (`productSlugs[]` / `tag` / `segment`), `limit (1–24)`, `layout ['grid','carousel']`, `linkLabel/linkHref`, `sortOrder`, `active`, `startsAt/endsAt`. `pre('validate')` rejects a source whose selector is missing |
+| `Banner.js` | 61 | **Admin-managed hero slide.** `placement ['home-hero','shop-hero']`, `desktopImage` (required), `mobileImage`, `badge/headline/subheadline`, `ctaLabel/ctaHref`, `code` (advertised coupon), `sortOrder`, `active`, `startsAt/endsAt` |
 | `Newsletter.js` | 18 | `email (unique)`, `subscribedAt`, `active` |
 | `StockNotification.js` | 25 | `productSlug + size + email` (compound unique), `notified` |
 
@@ -353,8 +355,10 @@ Dark inline-styled HTML templates.
 | `SizeGuideModal.jsx` | 113 | Focus-trapped modal |
 
 ### `home/`
-`HeroSection.jsx` (223 — carousel over `HERO_SLIDES`; `AUTOPLAY_INTERVAL = 5000`;
-pauses on hover/focus; **stops entirely under `useReducedMotion`**; touch swipe)
+`HeroSection.jsx` (249 — carousel over the `banners` prop (DB), **falling back to
+`HERO_SLIDES`** when none are live; `AUTOPLAY_INTERVAL = 6750`; pauses on
+hover/focus; **stops entirely under `useReducedMotion`**; touch swipe)
+· **`ProductSection.jsx` (55 — admin-managed product strip, §16)**
 · `TrustBar` (71) · `LatestDrop` (74 — the only `Section` + `Skeleton` consumer)
 · `SegmentGrid` (89 — tiles from `SEGMENTS`, **excludes `randoms`**, `getTileSize(i)`)
 · `OfferBanner` (99) · `ShopBanner` (163) · `BrandManifesto` (54) · `SocialProofBar`.
@@ -395,21 +399,34 @@ Runs on **:3001**. Tailwind 4 installed; pages mostly use CSS modules + inline s
 |---|---|---|
 | `src/middleware.js` | 50 | Edge guard on everything except `/login`, `/api/auth/*`, `/_next`. **`jwtVerify` via `jose`** (jsonwebtoken doesn't run on Edge). Requires `payload.role === 'admin'`; clears the cookie on failure. **Throws at startup if `JWT_SECRET` is unset — deliberate** |
 | `src/lib/auth.js` | 58 | `signToken` (7d) · `verifyToken` · `hashPassword` (bcrypt **cost 12**) · `comparePassword` · **`getAdminFromRequest`** (re-checks `role === 'admin'` — middleware alone is not enough for API routes). `TOKEN_NAME = 'bs_admin_token'` |
-| `src/app/AdminShell.jsx` | 90 | `ADMIN_NAV` L7–16 (8 items). Split from `layout.js` so `layout.js` stays a Server Component and can export `viewport` |
+| `src/app/AdminShell.jsx` | 90 | `ADMIN_NAV` L7–18 (10 items, incl. HOME PAGE + BANNERS). Split from `layout.js` so `layout.js` stays a Server Component and can export `viewport` |
 | `src/app/layout.js` + `layout.module.css` | — | Server shell |
 | `src/instrumentation.js` | — | Startup hook |
 
 **Pages:** `page.js` (136, overview) · `products/page.js` (474) · `orders/page.js`
 (521) · `inventory/page.js` (235) · `coupons/page.js` (286) · `reviews/page.js` (321)
-· `analytics/page.js` (299) · `users/page.js` (281) · `login/page.js` (216).
+· `analytics/page.js` (299) · `users/page.js` (281) · `login/page.js` (216) · **`homepage/page.js` (manage home page sections)** · **`banners/page.js` (manage hero slides, Cloudinary upload per breakpoint)**.
 
 **API** (`src/app/api/`): every route calls `getAdminFromRequest` first.
 `dashboard` (124) · `analytics` (110) · `products` + `[id]` (93/80) · `orders` +
 `[id]` (55/111) · `coupons` + `[id]` · `reviews/[id]` · `users` + `[id]` (64/60)
-· `auth/login` (84, rate-limited) · `auth/logout` · **`upload` (Cloudinary →
-`beyond-stich/products`, transformed to 800×1000 `crop:fill`, `quality:auto:good`)**.
+· `auth/login` (84, rate-limited) · `auth/logout` · `home-sections` + `[id]` · `banners` + `[id]`
+· **`upload`** — Cloudinary, shape chosen by the `purpose` form field:
+`product` (default) → `beyond-stich/products`, 800×1000 `crop:fill`;
+`banner-desktop` → `beyond-stich/banners`, w2400 **`crop:limit`**;
+`banner-mobile` → w1200 `crop:limit`. **`limit` never crops** — a wide hero run through the
+product preset would lose most of its composition.
 
-**Duplicated libs** (keep in sync with the store): `models/{Product,Order,User,Review,Coupon}.js`,
+`home-sections` and `banners` export `buildPayload()` + `validate()` for the `[id]`
+route to reuse. Both `[id]` PUTs special-case a bare `{active}` body (the list-view
+toggle) — running the full payload builder over it would blank every other field.
+`buildPayload` keeps **only** the selector the chosen `source` uses, so a leftover
+`tag` can't resurface later and pull in products nobody picked. `banners`' `validate()`
+is **async**: an advertised `code` is checked against the Coupon collection (exists,
+active, unexpired) because the announcement bar once promised `WELCOME20`, which was
+never in the database.
+
+**Duplicated libs** (keep in sync with the store): `models/{Product,Order,User,Review,Coupon,HomeSection,Banner}.js`,
 `mongodb.js`, `constants.js`, `email.js`, `rateLimit.js`, `store.js`, `dummyData.js`.
 
 ---
@@ -477,15 +494,43 @@ Admin additionally needs **`JWT_SECRET`**.
 | `ui/Input` (0 uses) and `ui/Badge` (0 uses); `Button` only 4 files, `Section` only 1 | §11 — most forms/buttons are still bespoke |
 | PDP delivery block: hardcoded inline styles, `#22C55E`, `11px`, `+3/+6` days | `ProductDetailClient.jsx` L277–312 |
 | Razorpay modal `theme.color: '#C6A14A'` doesn't match `--accent` | `checkout/page.js` ~L358 |
-| Pincode "delivery check" is a digit heuristic, not a real serviceability API | `ProductDetailClient.jsx` L70–85 |
 | `rateLimit` is per-instance only | `lib/rateLimit.js` |
-| Live Razorpay credentials sitting in `env.md` | repo root — **rotate** |
 | Admin libs duplicated rather than shared | `beyond-stich-admin/src/lib/` |
 | `/api/orders` POST still defaults `paymentMethod` to `'mock'` | `orders/route.js` L136 |
 
 ---
 
-## 16. Change recipes
+## 16. Admin-managed home page (sections + banners)
+
+Nothing on the home page hero or its product strips is hard-coded any more —
+all of it is database rows the owner edits in the admin panel.
+
+**Store side (read):** `src/lib/homeSections.js`
+- `getHomeSections()` → live `HomeSection` rows, each with its products resolved
+- `getBanners(placement)` → live `Banner` rows for that spot
+- `isLive()` applies the `startsAt`/`endsAt` window; `CARD_FIELDS` is the projection
+- manual picks are re-sorted back into the order the owner chose (Mongo returns
+  `$in` results in storage order, not argument order)
+- **both return `[]` on error and sections with 0 products are dropped** — a bad
+  row or a dead database must never take the home page down
+
+**Rendered by:** `components/home/ProductSection.jsx` (+ `.module.css`) — a server
+component that reuses `Section`, `Button` and `ProductCard`; `grid` or `carousel`
+per the row's `layout`.
+
+**Fallbacks:** with no banner rows the hero uses the `HERO_SLIDES` constant, so an
+empty collection looks exactly like it did before this feature existed. The admin
+refuses to switch off the last live slide for a placement, because that silently
+flips the storefront back to the built-ins and reads as a bug.
+
+**Admin side (write):** `/homepage` and `/banners` — see §12.
+
+**To add a strip to the home page:** tag the products, then Admin → HOME PAGE →
+ADD SECTION, source "By tag". No deploy needed; `/` revalidates every 300s.
+
+---
+
+## 17. Change recipes
 
 | Task | Touch |
 |---|---|
