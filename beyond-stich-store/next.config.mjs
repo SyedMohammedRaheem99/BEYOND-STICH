@@ -26,7 +26,15 @@ const nextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+            // `payment` and `accelerometer` are allowed for self and for
+            // Razorpay's checkout iframe: its UPI and card flows use the
+            // Payment Request API and the device orientation sensor, and
+            // the browser was refusing both ("Permissions policy
+            // violation: accelerometer is not allowed in this document").
+            value:
+              'camera=(), microphone=(), geolocation=(), interest-cohort=(), ' +
+              'payment=(self "https://api.razorpay.com" "https://checkout.razorpay.com"), ' +
+              'accelerometer=(self "https://api.razorpay.com" "https://checkout.razorpay.com")',
           },
         ],
       },
