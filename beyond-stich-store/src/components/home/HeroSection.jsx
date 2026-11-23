@@ -19,7 +19,29 @@ const ArrowIcon = () => (
   </svg>
 );
 
-export default function HeroSection() {
+/**
+ * `banners` comes from the Banner collection, managed in the admin. The
+ * HERO_SLIDES constant is kept as a fallback for a database outage and
+ * for the moment before any banner has been created — the front door
+ * must never open on an empty frame.
+ */
+export default function HeroSection({ banners = [] }) {
+  // Map the stored shape onto the one this component already renders, so
+  // the markup below is unchanged.
+  const slides = banners.length
+    ? banners.map((b) => ({
+        id: b._id,
+        desktop: b.desktopImage,
+        mobile: b.mobileImage || b.desktopImage,
+        badge: b.badge,
+        headline: b.headline,
+        subheadline: b.subheadline,
+        cta: { label: b.ctaLabel || 'SHOP NOW', href: b.ctaHref || '/shop' },
+        code: b.code,
+        theme: 'dark',
+      }))
+    : HERO_SLIDES;
+
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(1);
   const [paused, setPaused] = useState(false);
@@ -27,7 +49,7 @@ export default function HeroSection() {
   const touchStartRef = useRef(0);
   const reduceMotion = useReducedMotion();
 
-  const total = HERO_SLIDES.length;
+  const total = slides.length;
 
   const goTo = useCallback((index, dir) => {
     setDirection(dir);
@@ -69,7 +91,7 @@ export default function HeroSection() {
     }
   };
 
-  const slide = HERO_SLIDES[current];
+  const slide = slides[current];
 
   const slideVariants = {
     enter: (dir) => ({ x: dir > 0 ? '100%' : '-100%', opacity: 0 }),
@@ -200,7 +222,7 @@ export default function HeroSection() {
             </div>
 
             <div className={styles.dots}>
-              {HERO_SLIDES.map((s, i) => (
+              {slides.map((s, i) => (
                 <button
                   key={s.id}
                   className={`${styles.dot} ${i === current ? styles.dotActive : ''}`}

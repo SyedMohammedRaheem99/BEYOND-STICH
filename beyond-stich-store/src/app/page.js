@@ -5,6 +5,8 @@ import LatestDrop from '@/components/home/LatestDrop';
 import OfferBanner from '@/components/home/OfferBanner';
 import BrandManifesto from '@/components/home/BrandManifesto';
 import SocialProofBar from '@/components/home/SocialProofBar';
+import ProductSection from '@/components/home/ProductSection';
+import { getHomeSections, getBanners } from '@/lib/homeSections';
 import connectDB from '@/lib/mongodb';
 import Product from '@/lib/models/Product';
 import { DUMMY_PRODUCTS } from '@/lib/dummyData';
@@ -54,7 +56,15 @@ async function getLatestDrops() {
 }
 
 export default async function Home() {
-  const latestDrops = await getLatestDrops();
+  // Sections and banners are operator-defined, so the page composes
+  // whatever is configured rather than a fixed list. An empty result is
+  // handled by each component: the hero falls back to its built-in
+  // slides, and sections simply render nothing.
+  const [latestDrops, sections, heroBanners] = await Promise.all([
+    getLatestDrops(),
+    getHomeSections(),
+    getBanners('home-hero'),
+  ]);
 
   return (
     <>
@@ -71,9 +81,16 @@ export default async function Home() {
       }}>
         Beyond Stich — Premium Oversized Graphic Tees for Men | Bangalore, India
       </h1>
-      <HeroSection />
+      <HeroSection banners={heroBanners} />
       <TrustBar />
       <LatestDrop initialDrops={latestDrops} />
+
+      {/* Trending, and anything else configured in the admin. Rendered in
+          the operator's order, between the latest drop and the segment
+          grid. */}
+      {sections.map((section) => (
+        <ProductSection key={section._id} section={section} />
+      ))}
       <SegmentGrid />
       <OfferBanner />
       <BrandManifesto />

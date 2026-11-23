@@ -1,0 +1,60 @@
+/* Operator-defined product sections. Two layouts, chosen per section in
+   the admin. */
+
+.grid {
+  display: grid;
+  /* Identical to the /shop, /segment and Latest Drop grids, so the product
+     rhythm is the same wherever a customer meets a card. */
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  column-gap: var(--space-6);
+  row-gap: var(--space-12);
+}
+
+/* Horizontal scroll. Suits a long list on a phone, where a grid would
+   stack into a very tall column the customer has to scroll past. */
+.carousel {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(260px, 300px);
+  gap: var(--space-6);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  /* Each card snaps to the start, so a swipe lands on a card rather than
+     halfway between two. */
+  scroll-snap-type: x mandatory;
+  /* Room for the cards' hover lift, which would otherwise be clipped by
+     the scroll container. */
+  padding-bottom: var(--space-4);
+  /* The section is inside .container, but the row should be able to run to
+     the screen edge so the last card is not visually cut off mid-gutter.
+     Negative margin plus matching padding keeps the first card aligned
+     with the heading above it. */
+  margin-inline: calc(var(--container-padding) * -1);
+  padding-inline: var(--container-padding);
+  scrollbar-width: none;
+}
+
+.carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.carouselItem {
+  scroll-snap-align: start;
+  min-width: 0;
+}
+
+@media (max-width: 600px) {
+  .grid {
+    /* 300px leaves a single column on a 360px screen once the gutters are
+       taken off; 160px gives two, which is how a phone shopper expects to
+       browse a grid. */
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    column-gap: var(--space-3);
+    row-gap: var(--space-8);
+  }
+
+  .carousel {
+    grid-auto-columns: minmax(200px, 62vw);
+    gap: var(--space-3);
+  }
+}
