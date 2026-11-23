@@ -1,11 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useCartStore } from '@/lib/store';
+import {
+  trackBeginCheckout,
+  trackAddPaymentInfo,
+  trackPurchase,
+} from '@/lib/analytics';
 import styles from './page.module.css';
 import Image from 'next/image';
 
@@ -148,6 +153,16 @@ export default function CheckoutPage() {
   const shipping = coupon?.freeShipping ? 0 : getShipping();
   const total = Math.max(0, subtotal - couponDiscount) + shipping;
 
+  // The step ad platforms optimise against most heavily. Fired once the
+  // cart has hydrated, so the item list and value are real.
+  const checkoutTracked = useRef(false);
+  useEffect(() => {
+    if (!hydrated || items.length === 0 || checkoutTracked.current) return;
+    checkoutTracked.current = true;
+    trackBeginCheckout(items, total);
+  }, [hydrated, items, total]);
+
+
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: undefined });
@@ -262,6 +277,21 @@ export default function CheckoutPage() {
       paymentMethod,
     };
     try { sessionStorage.setItem(ORDER_KEY, JSON.stringify(order)); } catch {}
+
+    // Fired here rather than on the success page: that page can be
+    // refreshed or shared, which would count the same order twice. The
+    // server's figures are used so the revenue reported matches what was
+    // charged, and orderNumber lets both providers dedupe.
+    trackPurchase(
+      {
+        orderNumber: dbOrder.orderNumber,
+        total: dbOrder.total ?? total,
+        shipping: dbOrder.shipping ?? shipping,
+        couponCode: dbOrder.couponCode ?? coupon?.code,
+      },
+      items
+    );
+
     router.push(`/checkout/success?orderId=${dbOrder.orderNumber}`);
   };
 
@@ -274,6 +304,7 @@ export default function CheckoutPage() {
     setOrderError('');
 
     setStep(STEPS.PAYMENT);
+    trackAddPaymentInfo(total, paymentMethod);
     const orderPayload = buildOrderPayload();
 
     // COD: skip payment gateway entirely

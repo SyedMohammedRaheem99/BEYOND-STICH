@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import PasswordInput from '@/components/ui/PasswordInput';
+import { trackSignUp } from '@/lib/analytics';
 import styles from '../login/page.module.css';
 
 function RegisterForm() {
@@ -53,6 +54,8 @@ function RegisterForm() {
         setError(data.error || 'Failed to create account');
         return;
       }
+
+      trackSignUp('email');
 
       // Signing in straight away is no longer possible: the account starts
       // unverified, so the credentials provider would reject it. Send them

@@ -1,11 +1,17 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { discountPercent } from '@/lib/utils';
 import { getSegmentAccent, getColorHex, SIZE_LOW_STOCK_THRESHOLD, SHIPPING } from '@/lib/constants';
 import { useCartStore, useWishlistStore } from '@/lib/store';
+import {
+  trackViewItem,
+  trackAddToCart,
+  trackAddToWishlist,
+  trackDeliveryCheck,
+} from '@/lib/analytics';
 import ProductGallery from '@/components/product/ProductGallery';
 import ProductCard from '@/components/product/ProductCard';
 import ReviewSection from '@/components/product/ReviewSection';
@@ -39,9 +45,19 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
   const selectedSizeStock =
     product.sizes?.find((s) => s.size === selectedSize)?.stock ?? 0;
 
+  // Fired once per product view. A ref rather than an empty dep array so
+  // a client-side navigation between two products still reports both.
+  const viewedSlug = useRef(null);
+  useEffect(() => {
+    if (!product?.slug || viewedSlug.current === product.slug) return;
+    viewedSlug.current = product.slug;
+    trackViewItem(product);
+  }, [product]);
+
   const handleAddToCart = () => {
     if (!selectedSize || selectedSizeStock <= 0) return;
     addItem(product, selectedSize, selectedColor);
+    trackAddToCart(product, { size: selectedSize, color: selectedColor });
     setAdded(true);
     setTimeout(() => setAdded(false), 1600);
   };
@@ -87,6 +103,8 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
       const res = await fetch(`/api/delivery/check?pincode=${encodeURIComponent(pin)}`);
       const data = await res.json();
 
+      trackDeliveryCheck(pin, Boolean(data.serviceable));
+
       setDelivery(
         data.serviceable
           ? {
@@ -106,8 +124,12 @@ export default function ProductDetailClient({ product, relatedProducts, initialR
   };
 
   const handleWishlist = () => {
-    if (isWishlisted) removeFromWishlist(product._id);
-    else addToWishlist(product);
+    if (isWishlisted) {
+      removeFromWishlist(product._id);
+    } else {
+      addToWishlist(product);
+      trackAddToWishlist(product);
+    }
   };
 
   const fetchReviews = useCallback(async () => {

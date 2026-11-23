@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { SessionProvider } from 'next-auth/react';
 import { MotionConfig } from 'framer-motion';
 import Navbar from '@/components/layout/Navbar';
@@ -12,6 +12,7 @@ import AnnouncementBar from '@/components/layout/AnnouncementBar';
 import WhatsAppWidget from '@/components/ui/WhatsAppWidget';
 import CustomCursor from '@/components/ui/CustomCursor';
 import StoreHydration from '@/components/layout/StoreHydration';
+import PageViewTracker from '@/components/analytics/PageViewTracker';
 
 export default function ClientLayout({ children }) {
   useEffect(() => {
@@ -27,6 +28,10 @@ export default function ClientLayout({ children }) {
     <MotionConfig reducedMotion="user">
       <SessionProvider>
         <StoreHydration />
+        {/* useSearchParams needs a Suspense boundary in the App Router. */}
+        <Suspense fallback={null}>
+          <PageViewTracker />
+        </Suspense>
         <a href="#main-content" className="skip-link">
           Skip to content
         </a>

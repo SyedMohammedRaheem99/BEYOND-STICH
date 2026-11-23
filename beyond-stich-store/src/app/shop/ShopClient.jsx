@@ -7,6 +7,7 @@ import { SEGMENTS } from '@/lib/constants';
 import ProductCard from '@/components/product/ProductCard';
 import Skeleton from '@/components/ui/Skeleton';
 import ShopBanner from '@/components/home/ShopBanner';
+import { trackSearch } from '@/lib/analytics';
 import styles from './page.module.css';
 
 const SORT_OPTIONS = [
@@ -83,6 +84,15 @@ function ShopContent({ initialProducts }) {
       .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
   }, [activeSegment, sortBy, retryCount]);
+
+  // Debounced so a search is reported once the shopper stops typing,
+  // rather than once per keystroke.
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 3) return;
+    const t = setTimeout(() => trackSearch(q), 800);
+    return () => clearTimeout(t);
+  }, [query]);
 
   // Client-side text search filter
   const filteredProducts = (() => {

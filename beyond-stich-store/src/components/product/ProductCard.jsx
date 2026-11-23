@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useWishlistStore, useCartStore } from '@/lib/store';
 import { getSegmentAccent, getColorHex, LOW_STOCK_THRESHOLD } from '@/lib/constants';
 import { discountPercent } from '@/lib/utils';
+import { trackAddToWishlist } from '@/lib/analytics';
 import styles from './ProductCard.module.css';
 
 export default function ProductCard({ product, index = 0 }) {
@@ -35,6 +36,7 @@ export default function ProductCard({ product, index = 0 }) {
       removeFromWishlist(product._id);
     } else {
       addToWishlist(product);
+      trackAddToWishlist(product);
     }
   };
 

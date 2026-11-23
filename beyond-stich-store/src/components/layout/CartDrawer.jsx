@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useCartStore } from '@/lib/store';
 import { SHIPPING, WELCOME_TIERS } from '@/lib/constants';
 import useFocusTrap from '@/hooks/useFocusTrap';
+import { trackViewCart, trackRemoveFromCart } from '@/lib/analytics';
 import styles from './CartDrawer.module.css';
 
 export default function CartDrawer() {
@@ -45,6 +46,14 @@ export default function CartDrawer() {
       clearTimeout(focusTimer);
     };
   }, [isOpen, closeCart]);
+
+  // Opening the bag is a stronger intent signal than a page view, and it
+  // is the step immediately before checkout — so a drop-off here is worth
+  // being able to see.
+  useEffect(() => {
+    if (!isOpen || items.length === 0) return;
+    trackViewCart(items, getTotal());
+  }, [isOpen, items, getTotal]);
 
   // Cross-sell: fetch featured products not already in the bag.
   useEffect(() => {

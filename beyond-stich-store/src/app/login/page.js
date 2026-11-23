@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import PasswordInput from '@/components/ui/PasswordInput';
+import { trackLogin } from '@/lib/analytics';
 import styles from './page.module.css';
 
 export default function LoginPage() {
@@ -70,6 +71,7 @@ export default function LoginPage() {
         }
         setError('Invalid email or password');
       } else {
+        trackLogin('email');
         router.push(callbackUrl);
         router.refresh();
       }

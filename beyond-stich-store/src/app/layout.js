@@ -5,6 +5,7 @@ import ClientLayout from './ClientLayout';
 import OrganizationSchema from '@/components/seo/OrganizationSchema';
 import LocalBusinessSchema from '@/components/seo/LocalBusinessSchema';
 import WebSiteSchema from '@/components/seo/WebSiteSchema';
+import AnalyticsScripts from '@/components/analytics/AnalyticsScripts';
 
 // Self-hosted, optimized fonts. Exposed as CSS variables consumed by the
 // design tokens in globals.css (--font-display / --font-body). Using next/font
@@ -76,6 +77,8 @@ export default function RootLayout({ children }) {
         <OrganizationSchema />
         <LocalBusinessSchema />
         <WebSiteSchema />
+        {/* Renders nothing unless a measurement ID is configured. */}
+        <AnalyticsScripts />
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
         <ClientLayout>{children}</ClientLayout>
       </body>
