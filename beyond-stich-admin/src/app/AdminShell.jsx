@@ -9,6 +9,8 @@ const ADMIN_NAV = [
   { label: 'PRODUCTS', href: '/products', icon: '🏷️' },
   { label: 'TYPES', href: '/product-types', icon: '🏗️' },
   { label: 'ORDERS', href: '/orders', icon: '📦' },
+  { label: 'HOME PAGE', href: '/homepage', icon: '🏠' },
+  { label: 'BANNERS', href: '/banners', icon: '🖼️' },
   { label: 'INVENTORY', href: '/inventory', icon: '⚡' },
   { label: 'DELIVERY', href: '/delivery', icon: '🚚' },
   { label: 'COUPONS', href: '/coupons', icon: '🎟️' },
