@@ -106,7 +106,7 @@ changing a value.
 | Route | Files | Notes |
 |---|---|---|
 | `/` | `app/page.js` (78) | Server. `revalidate = 300`. `getLatestDrops()` queries DB direct (6 newest), falls back to dummy. Visually-hidden `<h1>` for SEO. `Promise.all([getLatestDrops(), getHomeSections(), getBanners('home-hero')])`. Composes: `HeroSection` (DB banners, falls back to `HERO_SLIDES`) → `TrustBar` → `LatestDrop` → **`ProductSection` × N (admin-managed, §16)** → `SegmentGrid` → `OfferBanner` → `BrandManifesto` → `SocialProofBar` |
-| `/shop` | `page.js` (85) + `ShopClient.jsx` (250) + `page.module.css` (359) + `layout.js` | `ShopClient`: `SORT_OPTIONS` (L12), `TRUST_ITEMS` (L20), segment pills, search (`?q=`), client-side text filter, skeleton + `loadError`/retry states |
+| `/shop` | `page.js` (91) + `ShopClient.jsx` (250) + `page.module.css` (359) + `layout.js` | Fetches `getBanners('shop-hero')` and threads it through `ShopClient` → `ShopBanner`. `ShopClient`: `SORT_OPTIONS` (L12), `TRUST_ITEMS` (L20), segment pills, search (`?q=`), client-side text filter, skeleton + `loadError`/retry states |
 | `/product/[slug]` | `page.js` (121) + `ProductDetailClient.jsx` (423) + `page.module.css` (700) + `layout.js` (57) | See §5 |
 | `/segment/[name]` | `page.js` (73) + `SegmentClient.jsx` (75) + `page.module.css` (182) + `layout.js` | Driven by `SEGMENTS` in constants |
 | `/checkout` | `page.js` (786) + `page.module.css` (738) + `layout.js` + `error.js` | See §6 |
@@ -268,7 +268,7 @@ registry with full body text) · `lib/dummyData.js` (seed fallback) · `lib/data
 | `Review.js` | 27 | `productSlug` (slug-keyed), `authorName`, `authorEmail`, `rating 1–5`, `title`, `body`, `images[≤5]`, **`verified`** (matched to a real order), **`approved`** (moderation gate) |
 | `Coupon.js` | 24 | `code (unique, uppercase)`, `type ['percent','flat','shipping']`, `value`, `minOrder`, `maxDiscount`, `active`, `usageLimit`, `usedCount`, `expiresAt`, **`firstOrderOnly`** |
 | `HomeSection.js` | 69 | **Admin-managed home page product strip.** `title, eyebrow, subtitle`, `source ['manual','tag','segment','newest']` + the one selector it uses (`productSlugs[]` / `tag` / `segment`), `limit (1–24)`, `layout ['grid','carousel']`, `linkLabel/linkHref`, `sortOrder`, `active`, `startsAt/endsAt`. `pre('validate')` rejects a source whose selector is missing |
-| `Banner.js` | 61 | **Admin-managed hero slide.** `placement ['home-hero','shop-hero']`, `desktopImage` (required), `mobileImage`, `badge/headline/subheadline`, `ctaLabel/ctaHref`, `code` (advertised coupon), `sortOrder`, `active`, `startsAt/endsAt` |
+| `Banner.js` | 61 | **Admin-managed hero slide.** `placement ['home-hero','shop-hero']`, `desktopImage` (required), `mobileImage`, `badge/headline/subheadline`, `ctaLabel/ctaHref`, `code` (advertised coupon), **`accent`** (6-digit hex, validated; shop banner overlay + CTA tint), `sortOrder`, `active`, `startsAt/endsAt` |
 | `Newsletter.js` | 18 | `email (unique)`, `subscribedAt`, `active` |
 | `StockNotification.js` | 25 | `productSlug + size + email` (compound unique), `notified` |
 
@@ -361,7 +361,7 @@ hover/focus; **stops entirely under `useReducedMotion`**; touch swipe)
 · **`ProductSection.jsx` (55 — admin-managed product strip, §16)**
 · `TrustBar` (71) · `LatestDrop` (74 — the only `Section` + `Skeleton` consumer)
 · `SegmentGrid` (89 — tiles from `SEGMENTS`, **excludes `randoms`**, `getTileSize(i)`)
-· `OfferBanner` (99) · `ShopBanner` (163) · `BrandManifesto` (54) · `SocialProofBar`.
+· `OfferBanner` (99) · `ShopBanner` (~175 — **shop promo carousel, reads the `banners` prop (DB `shop-hero`)**, falls back to `SHOP_BANNERS` + its local `IMAGES` map; `AUTOPLAY_INTERVAL = 6000`; uses each slide's `accent`) · `BrandManifesto` (54) · `SocialProofBar`.
 
 ### `ui/` primitives — **built but under-adopted (known debt)**
 | Primitive | Lines | Current consumers |
@@ -524,6 +524,22 @@ refuses to switch off the last live slide for a placement, because that silently
 flips the storefront back to the built-ins and reads as a bug.
 
 **Admin side (write):** `/homepage` and `/banners` — see §12.
+
+**Both placements are live:** `home-hero` → `HeroSection`, `shop-hero` →
+`ShopBanner`. Each falls back to its constant in `src/lib/banners.js`.
+
+**Seeding:** `scripts/seed-banners.mjs` (`--dry` to preview) writes the original
+`HERO_SLIDES` + `SHOP_BANNERS` into the collection verbatim, so the switch is
+invisible to a customer. `$setOnInsert` only — a re-run never overwrites an
+edited slide. It refuses to write if an image path is missing under `public/` or
+an advertised coupon does not exist / is off / has expired. **Already run:
+4 `home-hero` + 3 `shop-hero` rows.**
+
+Banner art seeded from constants stays as local `/banners/**.webp`; anything
+uploaded from the admin goes to Cloudinary (`beyond-stich/banners`).
+
+`SHOP_HERO_SLIDES` in `lib/banners.js` is **dead code** — imported nowhere since
+the separate shop hero band was removed.
 
 **To add a strip to the home page:** tag the products, then Admin → HOME PAGE →
 ADD SECTION, source "By tag". No deploy needed; `/` revalidates every 300s.
