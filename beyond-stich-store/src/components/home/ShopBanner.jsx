@@ -37,11 +37,33 @@ const IMAGES = {
 // quicker since these slides carry less copy.
 const AUTOPLAY_INTERVAL = 6000;
 
-export default function ShopBanner() {
+/**
+ * `banners` comes from the Banner collection (placement `shop-hero`),
+ * managed in the admin. SHOP_BANNERS + IMAGES above are kept as the
+ * fallback for a database outage and for the moment before any slide has
+ * been created — this carousel is the page's hero, so it must never
+ * render empty.
+ */
+export default function ShopBanner({ banners = [] }) {
+  // Map the stored shape onto the one this component already renders, so
+  // the markup below is unchanged. The constants keep their art in a
+  // separate IMAGES map keyed by id; a database row carries its own.
+  const slides = banners.length
+    ? banners.map((b) => ({
+        id: b._id,
+        headline: b.headline,
+        subheadline: b.subheadline,
+        cta: { label: b.ctaLabel || 'SHOP NOW', href: b.ctaHref || '/shop' },
+        accent: b.accent || 'var(--accent)',
+        desktop: b.desktopImage,
+        mobile: b.mobileImage || b.desktopImage,
+      }))
+    : SHOP_BANNERS.map((b) => ({ ...b, ...IMAGES[b.id] }));
+
   const [current, setCurrent] = useState(0);
   const timerRef = useRef(null);
   const touchStartRef = useRef(0);
-  const total = SHOP_BANNERS.length;
+  const total = slides.length;
 
   const next = useCallback(() => {
     setCurrent((prev) => (prev + 1) % total);
@@ -74,8 +96,9 @@ export default function ShopBanner() {
     }
   };
 
-  const banner = SHOP_BANNERS[current];
-  const bgImage = IMAGES[banner.id];
+  // A slide can disappear under us when the admin deletes one, so clamp
+  // rather than index past the end and crash on `banner.headline`.
+  const banner = slides[Math.min(current, total - 1)];
 
   return (
     <div
@@ -94,18 +117,16 @@ export default function ShopBanner() {
         >
           {/* Background image */}
           <div className={styles.bgWrap}>
-            {/* <picture> rather than a bare <img>: the browser picks the
+            {/* <picture> rather than next/image: the browser picks the
                 mobile crop and never downloads the desktop file on a phone.
                 The first slide is the page's LCP element, so it loads eagerly
                 with high priority — `loading="lazy"` on it delayed the largest
-                paint until after hydration. */}
-            {/* eslint-disable-next-line @next/next/no-img-element --
-                banner art is chosen at runtime from CMS-ish config; the
-                height is fixed in CSS so there is no layout shift. */}
+                paint until after hydration. Art is admin-managed and the
+                height is fixed in CSS, so there is no layout shift. */}
             <picture>
-              <source media="(max-width: 768px)" srcSet={bgImage.mobile} />
+              <source media="(max-width: 768px)" srcSet={banner.mobile} />
               <img
-                src={bgImage.desktop}
+                src={banner.desktop}
                 alt={banner.headline}
                 className={styles.bgImg}
                 loading={current === 0 ? 'eager' : 'lazy'}
@@ -187,7 +208,7 @@ export default function ShopBanner() {
 
       {/* Dots */}
       <div className={styles.dots}>
-        {SHOP_BANNERS.map((b, i) => (
+        {slides.map((b, i) => (
           <button
             key={b.id}
             className={`${styles.dot} ${i === current ? styles.dotActive : ''}`}

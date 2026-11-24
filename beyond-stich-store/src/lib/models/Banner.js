@@ -47,6 +47,22 @@ const BannerSchema = new mongoose.Schema(
      */
     code: { type: String, default: '', trim: true, uppercase: true, maxlength: 40 },
 
+    /**
+     * Accent colour, used by the shop banner for the overlay tint and the
+     * CTA. Hex validated so a typo cannot emit invalid CSS, which would
+     * silently fall back to the inherited colour and look like a bug.
+     * Blank means "use the brand accent from globals.css".
+     */
+    accent: {
+      type: String,
+      default: '',
+      trim: true,
+      validate: {
+        validator: (v) => !v || /^#[0-9a-fA-F]{6}$/.test(v),
+        message: 'Accent must be a 6-digit hex colour like #F5C518',
+      },
+    },
+
     sortOrder: { type: Number, default: 0 },
     active: { type: Boolean, default: true },
 

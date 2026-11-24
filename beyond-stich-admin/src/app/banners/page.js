@@ -20,6 +20,7 @@ const EMPTY = {
   ctaLabel: 'SHOP NOW',
   ctaHref: '/shop',
   code: '',
+  accent: '',
   sortOrder: 0,
   active: true,
   startsAt: '',
@@ -74,6 +75,7 @@ export default function AdminBanners() {
       ctaLabel: b.ctaLabel || '',
       ctaHref: b.ctaHref || '',
       code: b.code || '',
+      accent: b.accent || '',
       sortOrder: b.sortOrder ?? 0,
       active: b.active !== false,
       startsAt: toDateInput(b.startsAt),
@@ -347,6 +349,29 @@ export default function AdminBanners() {
               >
                 <input style={input} value={form.code} placeholder="WELCOME10"
                   onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))} />
+              </Field>
+
+              <Field
+                label="Accent colour (optional)"
+                hint="Tints the overlay and the button on the shop banner. Blank uses the brand gold."
+              >
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <input
+                    type="color"
+                    value={form.accent || '#C6A14A'}
+                    onChange={(e) => setForm((f) => ({ ...f, accent: e.target.value.toUpperCase() }))}
+                    style={{ width: '56px', minHeight: '44px', background: '#0F0F0F', border: '1px solid #333', borderRadius: '4px', cursor: 'pointer' }}
+                  />
+                  <input style={{ ...input, flex: 1 }} value={form.accent} placeholder="#F5C518"
+                    onChange={(e) => setForm((f) => ({ ...f, accent: e.target.value.toUpperCase() }))} />
+                  {form.accent && (
+                    <button onClick={() => setForm((f) => ({ ...f, accent: '' }))} style={{
+                      minHeight: '44px', padding: '8px 12px', background: 'transparent',
+                      border: '1px solid #333', borderRadius: '6px', color: '#888',
+                      fontSize: '11px', cursor: 'pointer',
+                    }}>CLEAR</button>
+                  )}
+                </div>
               </Field>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>

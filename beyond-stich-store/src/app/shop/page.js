@@ -3,6 +3,7 @@ import connectDB from '@/lib/mongodb';
 import Product from '@/lib/models/Product';
 import { DUMMY_PRODUCTS } from '@/lib/dummyData';
 import { serialiseProducts } from '@/lib/serialise';
+import { getBanners } from '@/lib/homeSections';
 import ShopClient from './ShopClient';
 
 // Serve catalog pages from cache for 5 minutes. Without this every
@@ -11,6 +12,11 @@ export const revalidate = 300;
 
 export default async function ShopPage() {
   let products = [];
+
+  // Admin-managed promo slides. getBanners() fails soft to [], and
+  // ShopBanner falls back to its built-in slides, so a database problem
+  // costs the editable copy but never the page.
+  const banners = await getBanners('shop-hero');
 
   try {
     await connectDB();
@@ -85,7 +91,7 @@ export default async function ShopPage() {
       </div>
 
       <Suspense fallback={null}>
-        <ShopClient initialProducts={products} />
+        <ShopClient initialProducts={products} banners={banners} />
       </Suspense>
     </>
   );

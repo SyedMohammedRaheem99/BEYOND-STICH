@@ -20,6 +20,7 @@ export function buildPayload(body) {
     ctaLabel: String(body.ctaLabel || '').trim().slice(0, 40),
     ctaHref: String(body.ctaHref || '/shop').trim().slice(0, 200),
     code: String(body.code || '').trim().toUpperCase().slice(0, 40),
+    accent: String(body.accent || '').trim(),
     sortOrder: Number.isFinite(Number(body.sortOrder)) ? Number(body.sortOrder) : 0,
     active: body.active !== false,
     startsAt: orNull(body.startsAt),
@@ -40,6 +41,9 @@ export async function validate(payload) {
   if (!payload.desktopImage) return 'A desktop image is required';
   if (!payload.headline) return 'A headline is required';
   if (payload.ctaLabel && !payload.ctaHref) return 'Add a destination for the button';
+  if (payload.accent && !/^#[0-9a-fA-F]{6}$/.test(payload.accent)) {
+    return 'Accent must be a 6-digit hex colour like #F5C518';
+  }
   if (payload.startsAt && payload.endsAt && payload.endsAt < payload.startsAt) {
     return 'End date must be after the start date';
   }

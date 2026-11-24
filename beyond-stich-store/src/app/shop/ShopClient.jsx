@@ -36,7 +36,7 @@ const TRUST_ITEMS = [
   { text: '240 GSM Premium', path: 'M12 2 4 7v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V7z' },
 ];
 
-function ShopContent({ initialProducts }) {
+function ShopContent({ initialProducts, banners }) {
   const searchParams = useSearchParams();
   const [activeSegment, setActiveSegment] = useState('ALL');
   const [sortBy, setSortBy] = useState('newest');
@@ -119,7 +119,7 @@ function ShopContent({ initialProducts }) {
            its copy stays inside the shared container so the headline lines up
            with the filters and product grid below. */}
       <div className={styles.heroSection}>
-        <ShopBanner />
+        <ShopBanner banners={banners} />
       </div>
 
       {/* ---- Catalogue: filter rail + grid ----
@@ -367,10 +367,10 @@ function ShopContent({ initialProducts }) {
   );
 }
 
-export default function ShopClient({ initialProducts }) {
+export default function ShopClient({ initialProducts, banners }) {
   return (
     <Suspense fallback={null}>
-      <ShopContent initialProducts={initialProducts} />
+      <ShopContent initialProducts={initialProducts} banners={banners} />
     </Suspense>
   );
 }
