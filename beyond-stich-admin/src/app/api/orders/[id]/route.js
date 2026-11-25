@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Order from '@/lib/models/Order';
+// Imported for its side effect: .populate('user') needs the User schema
+// registered on this mongoose instance. Without it every query here threw
+// MissingSchemaError and the orders page and dashboard returned 500.
+import '@/lib/models/User';
 import { getAdminFromRequest } from '@/lib/auth';
 import {
   sendShippingUpdate,
@@ -21,8 +25,12 @@ export async function GET(request, { params }) {
     const { id } = await params;
 
     const order = await Order.findById(id)
+      // No .populate('items.product'): order items deliberately store
+      // productSlug + name + image + segment inline, so an order still
+      // reads correctly after a product is renamed or deleted. Populating
+      // a path the schema does not have threw StrictPopulateError and made
+      // every order detail return 500.
       .populate('user', 'name email phone')
-      .populate('items.product', 'name slug segment images')
       .lean();
 
     if (!order) {

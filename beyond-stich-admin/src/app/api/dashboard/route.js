@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Order from '@/lib/models/Order';
+// Imported for its side effect: .populate('user') needs the User schema
+// registered on this mongoose instance. Without it every query here threw
+// MissingSchemaError and the orders page and dashboard returned 500.
+import '@/lib/models/User';
 import Product from '@/lib/models/Product';
 import { getAdminFromRequest } from '@/lib/auth';
 
