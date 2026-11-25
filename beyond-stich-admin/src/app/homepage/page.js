@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import styles from '../products/page.module.css';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import LoadState from '@/components/LoadState';
+import fetchJson from '@/lib/fetchJson';
 
 const SEGMENTS = ['GYM', 'COFFEE', 'MILLIONAIRE', 'MUSIC', 'GAMER', 'CARS', 'BIKE', 'SUMMER', 'FLORAL', 'SPORTS', 'VALENTINE', 'TYPOGRAPHY', 'RANDOMS'];
 
@@ -43,23 +45,27 @@ export default function AdminHomepage() {
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const [confirm, setConfirm] = useState(null);
+  const [loadError, setLoadError] = useState('');
 
   const fetchAll = useCallback(async () => {
+    setLoadError('');
     try {
-      const [secRes, prodRes] = await Promise.all([
-        fetch('/api/home-sections'),
-        fetch('/api/products'),
+      // fetchJson throws on a non-2xx, so an outage can no longer arrive
+      // here looking like "no sections configured".
+      const [secData, prodData] = await Promise.all([
+        fetchJson('/api/home-sections'),
+        fetchJson('/api/products'),
       ]);
-      if (secRes.ok) setSections((await secRes.json()).sections || []);
-      if (prodRes.ok) {
-        const list = (await prodRes.json()).products || [];
-        setProducts(list);
-        // Offer the tags that actually exist, so a section can't be built
-        // on a tag no product carries.
-        setTags([...new Set(list.flatMap((p) => p.tags || []))].sort());
-      }
+      setSections(secData.sections || []);
+      const list = prodData.products || [];
+      setProducts(list);
+      // Offer the tags that actually exist, so a section can't be built
+      // on a tag no product carries.
+      setTags([...new Set(list.flatMap((p) => p.tags || []))].sort());
     } catch (err) {
       console.error('Fetch homepage data error:', err);
+      setLoadError(err.message);
+      setSections([]);
     } finally {
       setLoading(false);
     }
@@ -203,8 +209,15 @@ export default function AdminHomepage() {
         <button className={styles.addBtn} onClick={openNew}>+ ADD SECTION</button>
       </div>
 
-      {loading ? (
-        <p style={{ color: '#666', padding: '40px', textAlign: 'center' }}>Loading…</p>
+      {loading || loadError || sections.length === 0 ? (
+        <LoadState
+          loading={loading}
+          error={loadError}
+          onRetry={fetchAll}
+          empty={sections.length === 0}
+          loadingText="Loading sections…"
+          emptyText="No sections yet. The home page shows its built-in blocks only."
+        />
       ) : (
         <div className={styles.tableWrap}>
           <table className={styles.table}>
@@ -219,7 +232,7 @@ export default function AdminHomepage() {
               </tr>
             </thead>
             <tbody>
-              {sections.length > 0 ? sections.map((s, i) => (
+              {sections.map((s, i) => (
                 <tr key={s._id} style={{ opacity: s.active ? 1 : 0.45 }}>
                   <td>
                     <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
@@ -256,13 +269,7 @@ export default function AdminHomepage() {
                     </div>
                   </td>
                 </tr>
-              )) : (
-                <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', color: '#666', padding: '40px' }}>
-                    No sections yet. The home page shows its built-in blocks only.
-                  </td>
-                </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>

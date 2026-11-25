@@ -3,12 +3,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import styles from './page.module.css';
+import LoadState from '@/components/LoadState';
+import fetchJson from '@/lib/fetchJson';
 
 const SEGMENTS = ['GYM', 'COFFEE', 'MILLIONAIRE', 'MUSIC', 'GAMER', 'CARS', 'BIKE', 'SUMMER', 'FLORAL', 'SPORTS', 'VALENTINE', 'TYPOGRAPHY', 'RANDOMS'];
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [segmentFilter, setSegmentFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -22,22 +25,24 @@ export default function AdminProducts() {
   // outdated query when a filter changes.
   const fetchProducts = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const params = new URLSearchParams();
       if (segmentFilter !== 'all') params.set('segment', segmentFilter);
       if (statusFilter !== 'all') params.set('status', statusFilter);
 
-      const res = await fetch(`/api/products?${params}`);
-      if (res.ok) {
-        const data = await res.json();
-        setProducts(data.products);
-        // Clearing here rather than in a second effect: the selection is
-        // only stale once new rows have actually arrived, and a separate
-        // effect setting state synchronously caused a cascading render.
-        setSelected(new Set());
-      }
+      // fetchJson throws on a non-2xx, so an outage can no longer
+      // arrive here looking like an empty list.
+      const data = await fetchJson(`/api/products?${params}`);
+      setProducts(data.products || []);
+      // Clearing here rather than in a second effect: the selection is
+      // only stale once new rows have actually arrived, and a separate
+      // effect setting state synchronously caused a cascading render.
+      setSelected(new Set());
     } catch (err) {
       console.error('Fetch products error:', err);
+      setLoadError(err.message);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -200,8 +205,15 @@ export default function AdminProducts() {
         </div>
       )}
 
-      {loading ? (
-        <p style={{ padding: '40px', color: '#666' }}>Loading products...</p>
+      {loading || loadError || products.length === 0 ? (
+        <LoadState
+          loading={loading}
+          error={loadError}
+          onRetry={fetchProducts}
+          empty={products.length === 0}
+          loadingText="Loading products…"
+          emptyText="No products yet. Add your first one above."
+        />
       ) : (
         <div className={styles.tableWrap}>
           <table className={styles.table}>

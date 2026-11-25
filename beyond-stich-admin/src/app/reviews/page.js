@@ -2,12 +2,15 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import styles from '../products/page.module.css';
+import LoadState from '@/components/LoadState';
+import fetchJson from '@/lib/fetchJson';
 
 const RATING_STARS = (n) => '★'.repeat(n) + '☆'.repeat(5 - n);
 
 export default function AdminReviews() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedReview, setSelectedReview] = useState(null);
@@ -18,18 +21,20 @@ export default function AdminReviews() {
   // stale closure holding the previous filter value.
     const fetchReviews = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const params = new URLSearchParams();
       if (statusFilter !== 'all') params.set('status', statusFilter);
       if (searchTerm) params.set('search', searchTerm);
 
-      const res = await fetch(`/api/reviews?${params}`);
-      if (res.ok) {
-        const data = await res.json();
-        setReviews(data.reviews);
-      }
+      // fetchJson throws on a non-2xx, so an outage can no longer
+      // arrive here looking like an empty list.
+      const data = await fetchJson(`/api/reviews?${params}`);
+      setReviews(data.reviews || []);
     } catch (err) {
       console.error('Fetch reviews error:', err);
+      setLoadError(err.message);
+      setReviews([]);
     } finally {
       setLoading(false);
     }
@@ -141,8 +146,15 @@ export default function AdminReviews() {
         </div>
       </div>
 
-      {loading ? (
-        <p style={{ padding: '40px', color: '#666' }}>Loading reviews...</p>
+      {loading || loadError || reviews.length === 0 ? (
+        <LoadState
+          loading={loading}
+          error={loadError}
+          onRetry={fetchReviews}
+          empty={reviews.length === 0}
+          loadingText="Loading reviews…"
+          emptyText="No reviews yet."
+        />
       ) : (
         <div className={styles.tableWrap}>
           <table className={styles.table}>

@@ -2,10 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import styles from '../products/page.module.css';
+import LoadState from '@/components/LoadState';
+import fetchJson from '@/lib/fetchJson';
 
 export default function AdminCoupons() {
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editCoupon, setEditCoupon] = useState(null);
 
@@ -15,14 +18,16 @@ export default function AdminCoupons() {
   // stale closure holding the previous filter value.
     const fetchCoupons = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
-      const res = await fetch('/api/coupons');
-      if (res.ok) {
-        const data = await res.json();
-        setCoupons(data.coupons);
-      }
+      // fetchJson throws on a non-2xx, so an outage can no longer
+      // arrive here looking like an empty list.
+      const data = await fetchJson('/api/coupons');
+      setCoupons(data.coupons || []);
     } catch (err) {
       console.error('Fetch coupons error:', err);
+      setLoadError(err.message);
+      setCoupons([]);
     } finally {
       setLoading(false);
     }
@@ -109,8 +114,15 @@ export default function AdminCoupons() {
         </button>
       </header>
 
-      {loading ? (
-        <p style={{ padding: '40px', color: '#666' }}>Loading coupons...</p>
+      {loading || loadError || coupons.length === 0 ? (
+        <LoadState
+          loading={loading}
+          error={loadError}
+          onRetry={fetchCoupons}
+          empty={coupons.length === 0}
+          loadingText="Loading coupons…"
+          emptyText="No coupons yet. Create one above."
+        />
       ) : (
         <div className={styles.tableWrap}>
           <table className={styles.table}>
@@ -126,7 +138,7 @@ export default function AdminCoupons() {
               </tr>
             </thead>
             <tbody>
-              {coupons.length > 0 ? coupons.map((c) => (
+              {coupons.map((c) => (
                 <tr key={c._id}>
                   <td style={{ fontFamily: 'var(--font-display)', fontWeight: 'bold', letterSpacing: '0.05em' }}>{c.code}</td>
                   <td>{describeValue(c)}</td>
@@ -150,11 +162,7 @@ export default function AdminCoupons() {
                     </div>
                   </td>
                 </tr>
-              )) : (
-                <tr><td colSpan={7} style={{ textAlign: 'center', color: '#666', padding: '40px' }}>
-                  No coupons yet. Click &quot;+ ADD COUPON&quot; to create your first code.
-                </td></tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>

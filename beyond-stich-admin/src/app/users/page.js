@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import styles from '../products/page.module.css';
+import LoadState from '@/components/LoadState';
+import fetchJson from '@/lib/fetchJson';
 
 const ROLE_COLORS = {
   admin: { border: '#F5C518', color: '#F5C518' },
@@ -11,6 +13,7 @@ const ROLE_COLORS = {
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState(null);
@@ -21,18 +24,20 @@ export default function AdminUsers() {
   // stale closure holding the previous filter value.
     const fetchUsers = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const params = new URLSearchParams();
       if (roleFilter !== 'all') params.set('role', roleFilter);
       if (searchTerm) params.set('search', searchTerm);
 
-      const res = await fetch(`/api/users?${params}`);
-      if (res.ok) {
-        const data = await res.json();
-        setUsers(data.users);
-      }
+      // fetchJson throws on a non-2xx, so an outage can no longer
+      // arrive here looking like an empty list.
+      const data = await fetchJson(`/api/users?${params}`);
+      setUsers(data.users || []);
     } catch (err) {
       console.error('Fetch users error:', err);
+      setLoadError(err.message);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -129,8 +134,15 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      {loading ? (
-        <p style={{ padding: '40px', color: '#666' }}>Loading users...</p>
+      {loading || loadError || users.length === 0 ? (
+        <LoadState
+          loading={loading}
+          error={loadError}
+          onRetry={fetchUsers}
+          empty={users.length === 0}
+          loadingText="Loading customers…"
+          emptyText="No customers yet."
+        />
       ) : (
         <div className={styles.tableWrap}>
           <table className={styles.table}>

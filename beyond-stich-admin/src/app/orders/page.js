@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import styles from '../products/page.module.css';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import LoadState from '@/components/LoadState';
+import fetchJson from '@/lib/fetchJson';
 import {
   allowedNext,
   nextStatus as getNextStatus,
@@ -39,6 +41,7 @@ export default function AdminOrders() {
   // { title, message, effects, danger, confirmLabel, run }
   const [confirm, setConfirm] = useState(null);
   const [confirmBusy, setConfirmBusy] = useState(false);
+  const [loadError, setLoadError] = useState('');
 
   // Declared before the effect that schedules it, and memoised on the
   // filters it reads. Previously it was a plain function defined *after* the
@@ -46,18 +49,20 @@ export default function AdminOrders() {
   // later change to statusFilter/searchTerm re-ran a stale closure.
   const fetchOrders = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const params = new URLSearchParams();
       if (statusFilter !== 'all') params.set('status', statusFilter);
       if (searchTerm) params.set('search', searchTerm);
 
-      const res = await fetch(`/api/orders?${params}`);
-      if (res.ok) {
-        const data = await res.json();
-        setOrders(data.orders);
-      }
+      // fetchJson throws on a non-2xx, so a 500 can no longer land here
+      // looking like an empty order list.
+      const data = await fetchJson(`/api/orders?${params}`);
+      setOrders(data.orders || []);
     } catch (err) {
       console.error('Fetch orders error:', err);
+      setLoadError(err.message);
+      setOrders([]);
     } finally {
       setLoading(false);
     }
@@ -332,8 +337,19 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      {loading ? (
-        <p style={{ padding: '40px', color: '#666' }}>Loading orders...</p>
+      {loading || loadError || orders.length === 0 ? (
+        <LoadState
+          loading={loading}
+          error={loadError}
+          onRetry={fetchOrders}
+          empty={orders.length === 0}
+          loadingText="Loading orders…"
+          emptyText={
+            statusFilter !== 'all' || searchTerm
+              ? 'No orders match this filter.'
+              : 'No orders yet. They appear here as customers place them.'
+          }
+        />
       ) : (
         <div className={styles.tableWrap}>
           <table className={styles.table}>
@@ -348,7 +364,7 @@ export default function AdminOrders() {
               </tr>
             </thead>
             <tbody>
-              {filteredOrders.length > 0 ? filteredOrders.map(order => {
+              {filteredOrders.map(order => {
                 const sc = STATUS_COLORS[order.orderStatus] || STATUS_COLORS.placed;
                 const nextStatus = getNextStatus(order.orderStatus);
 
@@ -393,11 +409,7 @@ export default function AdminOrders() {
                     </td>
                   </tr>
                 );
-              }) : (
-                <tr><td colSpan={6} style={{ textAlign: 'center', color: '#666', padding: '40px' }}>
-                  No orders found. Orders will appear here when customers place them.
-                </td></tr>
-              )}
+              })}
             </tbody>
           </table>
         </div>

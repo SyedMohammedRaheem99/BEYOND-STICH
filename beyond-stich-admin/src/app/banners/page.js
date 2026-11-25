@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import styles from '../products/page.module.css';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import LoadState from '@/components/LoadState';
+import fetchJson from '@/lib/fetchJson';
 
 const PLACEMENTS = [
   { value: 'home-hero', label: 'Home page hero', hint: 'The big carousel at the top of the home page.' },
@@ -38,13 +40,19 @@ export default function AdminBanners() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState('');
   const [confirm, setConfirm] = useState(null);
+  const [loadError, setLoadError] = useState('');
 
   const fetchBanners = useCallback(async () => {
+    setLoadError('');
     try {
-      const res = await fetch('/api/banners');
-      if (res.ok) setBanners((await res.json()).banners || []);
+      // fetchJson throws on a non-2xx, so an outage can no longer arrive
+      // here looking like "no slides configured".
+      const data = await fetchJson('/api/banners');
+      setBanners(data.banners || []);
     } catch (err) {
       console.error('Fetch banners error:', err);
+      setLoadError(err.message);
+      setBanners([]);
     } finally {
       setLoading(false);
     }
@@ -217,12 +225,15 @@ export default function AdminBanners() {
         ))}
       </div>
 
-      {loading ? (
-        <p style={{ color: '#666', padding: '40px', textAlign: 'center' }}>Loading…</p>
-      ) : shown.length === 0 ? (
-        <p style={{ color: '#666', padding: '40px', textAlign: 'center' }}>
-          No slides here yet — the site shows its built-in banners.
-        </p>
+      {loading || loadError || shown.length === 0 ? (
+        <LoadState
+          loading={loading}
+          error={loadError}
+          onRetry={fetchBanners}
+          empty={shown.length === 0}
+          loadingText="Loading slides…"
+          emptyText="No slides here yet — the site shows its built-in banners."
+        />
       ) : (
         <div style={{ display: 'grid', gap: '14px' }}>
           {shown.map((b, i) => (
