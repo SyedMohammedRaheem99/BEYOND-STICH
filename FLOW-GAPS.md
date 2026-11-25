@@ -80,18 +80,19 @@ seven show the error and a retry; healthy, all seven show their real rows.
 
 **Severity: medium — this was a product decision, and you made it.**
 
-Current behaviour, confirmed:
-- Browsing: no account needed ✅
-- Add to cart: no account needed ✅
-- Checkout: **no account needed** — the session is used only to pre-fill the
-  address and show "Have an account? Sign in"
-- `POST /api/orders`: deliberately accepts a null `user` and records the email
+Behaviour **before** this change:
+- Browsing: no account needed
+- Add to cart: no account needed
+- Checkout: **no account needed** — the session only pre-filled the address
+- `POST /api/orders`: accepted a null `user` and recorded the email
 
-So guest checkout works as designed. It is not an accident, and those 16 guest
-orders are real orders that were paid for and emailed.
+So guest checkout worked as designed. It was not an accident, and those 16
+guest orders are real orders that were paid for and emailed.
 
-**Your preferred approach — add to cart freely, require login at checkout —
-is the right call, and I agree with it.** Reasons:
+Behaviour **now**: browse and add to cart stay open; checkout requires an
+account.
+
+Reasons this is the right split:
 
 - Add-to-cart is where you capture interest; a wall there costs you carts.
 - Checkout is where an account genuinely helps *the customer*: order history,
@@ -121,14 +122,14 @@ create no order.
 Checkout also handles a session lapsing mid-flow — all three order calls route
 a 401 to sign-in and back, rather than stranding the customer on an error.
 
-**One caution worth your decision:** requiring login *does* cost conversions,
-and India's D2C norm is guest checkout with an optional account. The honest
-trade is "fewer abandoned carts" vs "every order attached to a real, verified
-email". Your call — the OTP verification you added makes the account path more
-trustworthy than most, which argues for your approach.
+**The trade you accepted:** requiring login does cost some conversions, and
+India's D2C norm is guest checkout with an optional account. You chose every
+order being attached to a verified email over fewer abandoned carts. Worth
+re-reading the numbers after a few weeks live — if abandonment at the sign-in
+step is high, G3 is reversible without touching anything else.
 
-**What must not break:** existing guest orders are claimed by email after OTP
-verification. Keep that, or those 16 orders become orphaned.
+**Still intact:** the 16 existing guest orders are claimed by email after OTP
+verification. That path was not changed, so they are not orphaned.
 
 ---
 
