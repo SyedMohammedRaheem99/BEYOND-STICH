@@ -45,7 +45,7 @@ items.
 
 ---
 
-## G2 — A failed request renders as "no data" everywhere in the admin
+## G2 — A failed request renders as "no data" everywhere in the admin — FIXED
 
 **Severity: high. This is why G1 stayed hidden.**
 
@@ -65,15 +65,20 @@ them has an error state. The store app does this correctly (`/shop`,
 `/checkout`, `/account/orders` all have `loadError` + retry), so this is an
 admin-only gap.
 
-**Not yet fixed.** Recommended next, because it protects every future change:
-if a fetch fails, say so and offer a retry. Empty and broken must not look the
-same.
+**Fixed** (`c5fd1d9`). Two shared pieces rather than seven copies:
+`lib/fetchJson.js` throws on a non-2xx carrying the server's own message, and
+`components/LoadState.jsx` renders loading / error / empty, says plainly that a
+failure is not an empty list, shows the real reason and offers a retry.
+
+Applied to orders, products, users, reviews, coupons, homepage and banners.
+Verified in a browser both ways: with every `/api/**` call forced to 500 all
+seven show the error and a retry; healthy, all seven show their real rows.
 
 ---
 
-## G3 — Checkout has no login requirement
+## G3 — Checkout has no login requirement — FIXED (login now required)
 
-**Severity: medium — this is a product decision, not a bug.**
+**Severity: medium — this was a product decision, and you made it.**
 
 Current behaviour, confirmed:
 - Browsing: no account needed ✅
@@ -94,16 +99,27 @@ is the right call, and I agree with it.** Reasons:
 - It closes a real support problem: a guest who mistypes their email gets no
   confirmation and has no way to find their order.
 
-**It is cheap to implement**, because there is exactly **one** route into
-checkout — the cart drawer's `href="/checkout"` (there is no `/cart` page and
-no "Buy now" button anywhere). So the gate needs:
+**Implemented** (`f931d84`), all three layers:
 
-1. The cart drawer's button → `/login?callbackUrl=/checkout` when signed out.
-   `callbackUrl` is already honoured by the login page, so they land back in
-   checkout after signing in.
-2. `/checkout` itself redirects signed-out visitors (someone can type the URL).
-3. `POST /api/orders` rejects an unauthenticated request — the real
-   enforcement, since the first two are only UI.
+1. The cart drawer sends signed-out customers to
+   `/login?callbackUrl=%2Fcheckout` and says the cart is saved.
+2. `/checkout` redirects if unauthenticated — but **not** while the session
+   status is still `loading`, which would bounce a signed-in customer.
+3. `/api/orders` **and** `/api/razorpay/order` return 401 `AUTH_REQUIRED`.
+   This is the real enforcement; both are reachable directly.
+
+Ordering matters in two places. In `/api/orders` the auth check runs *before*
+address and serviceability validation, so an unauthenticated request is told to
+sign in rather than told its PIN code is wrong. In `/api/razorpay/order` it runs
+*before* the gateway order exists — starting a payment for an order
+`/api/orders` would then refuse means taking money that must be refunded.
+
+`/api/razorpay/verify` is deliberately **not** gated: it runs after money has
+been taken, so refusing a lapsed session there would charge the customer and
+create no order.
+
+Checkout also handles a session lapsing mid-flow — all three order calls route
+a 401 to sign-in and back, rather than stranding the customer on an error.
 
 **One caution worth your decision:** requiring login *does* cost conversions,
 and India's D2C norm is guest checkout with an optional account. The honest
@@ -113,6 +129,34 @@ trustworthy than most, which argues for your approach.
 
 **What must not break:** existing guest orders are claimed by email after OTP
 verification. Keep that, or those 16 orders become orphaned.
+
+---
+
+## G5 — Duplicate delivery zone silently disables COD for all of Bengaluru
+
+**Severity: high. This is your data, not a code bug — so it is yours to fix.**
+
+The `deliveryzones` collection holds three rows, two of which cover the
+identical range:
+
+| Name | Range | COD |
+|---|---|---|
+| Bengaluru City | 560001–560999 | **true** |
+| bengalor whitefield | 560001–560999 | **false** |
+| Bengaluru Rural & Ring Towns | 561001–562999 | true |
+
+The second row overlaps the first exactly, and it wins — so **every Bengaluru
+PIN code refuses Cash on Delivery**: *"Cash on delivery is not available for
+this PIN code."* Found while testing a COD order to 560001.
+
+Bengaluru is your primary market and COD is how much of it pays, so this is
+worth checking before launch. Fix in **Admin → Delivery**: either delete the
+"bengalor whitefield" row, or narrow it to the PIN codes it is actually meant
+to cover. Not touched — I will not edit your delivery rules.
+
+Worth considering separately: the admin lets you create an overlapping range at
+all, and which row wins is incidental rather than chosen. Making it refuse an
+overlap on save would stop this recurring.
 
 ---
 
@@ -150,8 +194,16 @@ your decision, not mine.
 
 ---
 
-## Suggested order of work
+## State of play
 
-1. **G2** — admin error states. Cheap, and stops the next outage hiding.
-2. **G3** — the login gate, if you confirm you want it.
-3. **G4** — delete the ₹1 test orders after production payment is confirmed.
+| | Gap | Status |
+|---|---|---|
+| G1 | Admin orders + dashboard 500 on every request | **Fixed** `77d7c3d` |
+| G2 | Failed request renders as "no data" | **Fixed** `c5fd1d9` |
+| G3 | Checkout had no login requirement | **Fixed** `f931d84` |
+| G5 | Duplicate zone disables COD across Bengaluru | **Yours** — Admin → Delivery |
+| G4 | ₹1 test orders in live data | **Yours** — after production payment is confirmed |
+
+Also confirmed while testing G3: the server re-priced a tampered ₹1 line back
+to ₹1,199 before saving. The protection described in §4 of ARCHITECTURE.md
+works.
