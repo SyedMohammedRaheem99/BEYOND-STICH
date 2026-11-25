@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { SEGMENTS } from '@/lib/constants';
+import { getSegments } from '@/lib/segments';
 import styles from './page.module.css';
 
 export const metadata = {
@@ -37,7 +37,11 @@ const LOCAL_SCHEMA = {
   },
 };
 
-export default function BangalorePage() {
+export default async function BangalorePage() {
+  // From the collection so this page lists the same worlds as the rest
+  // of the site rather than a snapshot of them.
+  const segments = (await getSegments()).map((s) => ({ ...s, id: s.slug || s.id }));
+
   return (
     <>
       <script
@@ -139,7 +143,7 @@ export default function BangalorePage() {
           <section className={styles.section}>
             <h2 className={styles.h2}>Explore Our Segments</h2>
             <div className={styles.segmentGrid}>
-              {SEGMENTS.map((seg) => (
+              {segments.map((seg) => (
                 <Link
                   key={seg.id}
                   href={`/segment/${seg.id}`}

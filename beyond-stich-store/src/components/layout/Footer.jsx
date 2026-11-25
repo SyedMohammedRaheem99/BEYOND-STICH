@@ -5,7 +5,20 @@ import Link from 'next/link';
 import { BRAND, SEGMENTS } from '@/lib/constants';
 import styles from './Footer.module.css';
 
-export default function Footer() {
+/**
+ * `segments` comes from the Segment collection via the root layout. The
+ * SEGMENTS constant stays as the fallback for a database outage — a navbar
+ * with no way to browse is worse than a stale one.
+ *
+ * A database row keys on `slug`; the constant keys on `id`. Normalised here
+ * so the markup below does not care which it got.
+ */
+export default function Footer({ segments = [] }) {
+  const segmentList = (segments.length ? segments : SEGMENTS).map((s) => ({
+    ...s,
+    id: s.slug || s.id,
+  }));
+
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
   const [subError, setSubError] = useState('');
@@ -117,7 +130,7 @@ export default function Footer() {
         <div className={styles.linksCol}>
           <h3 className={styles.colTitle}>SEGMENTS</h3>
           <nav className={styles.linksList}>
-            {SEGMENTS.slice(0, 7).map((seg) => (
+            {segmentList.slice(0, 7).map((seg) => (
               <Link
                 key={seg.id}
                 href={`/segment/${seg.id}`}

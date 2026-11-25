@@ -1,11 +1,10 @@
-import { SEGMENTS, BRAND, SEGMENT_IMAGES } from '@/lib/constants';
+import { BRAND, SEGMENT_IMAGES } from '@/lib/constants';
+import { getSegment } from '@/lib/segments';
 
 export async function generateMetadata({ params }) {
   const { name } = await params;
 
-  const segment = SEGMENTS.find(
-    (s) => s.id.toLowerCase() === name.toLowerCase()
-  );
+  const segment = await getSegment(name);
 
   if (!segment) {
     return { title: `Collection Not Found | ${BRAND.name}` };
@@ -15,7 +14,7 @@ export async function generateMetadata({ params }) {
   const description = `${segment.description} Shop the ${segment.name} collection at ${BRAND.name}. ${BRAND.description}`;
   const image = SEGMENT_IMAGES[segment.name] || '/banners/og/og-default.jpg';
 
-  const canonical = `${BRAND.url}/segment/${segment.id}`;
+  const canonical = `${BRAND.url}/segment/${segment.slug || segment.id}`;
 
   return {
     title,

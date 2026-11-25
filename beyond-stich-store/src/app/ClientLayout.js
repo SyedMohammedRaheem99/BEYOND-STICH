@@ -14,7 +14,7 @@ import CustomCursor from '@/components/ui/CustomCursor';
 import StoreHydration from '@/components/layout/StoreHydration';
 import PageViewTracker from '@/components/analytics/PageViewTracker';
 
-export default function ClientLayout({ children }) {
+export default function ClientLayout({ children, segments = [] }) {
   useEffect(() => {
     document.documentElement.classList.add('js-loaded');
   }, []);
@@ -40,7 +40,7 @@ export default function ClientLayout({ children }) {
             CustomCursor.jsx for why the previous version was removed. */}
         <CustomCursor />
         <AnnouncementBar />
-        <Navbar />
+        <Navbar segments={segments} />
         <CartDrawer />
         <main
           id="main-content"
@@ -49,7 +49,7 @@ export default function ClientLayout({ children }) {
         >
           {children}
         </main>
-        <Footer />
+        <Footer segments={segments} />
         <WhatsAppWidget />
         <BottomTabBar />
       </SessionProvider>

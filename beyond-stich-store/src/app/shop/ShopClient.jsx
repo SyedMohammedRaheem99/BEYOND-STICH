@@ -36,7 +36,14 @@ const TRUST_ITEMS = [
   { text: '240 GSM Premium', path: 'M12 2 4 7v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V7z' },
 ];
 
-function ShopContent({ initialProducts, banners }) {
+function ShopContent({ initialProducts, banners, segments = [] }) {
+  // Filter pills from the collection, so a world added in the admin is
+  // filterable at once. Falls back to the constant on a DB outage.
+  const segmentList = (segments.length ? segments : SEGMENTS).map((s) => ({
+    ...s,
+    id: s.slug || s.id,
+  }));
+
   const searchParams = useSearchParams();
   const [activeSegment, setActiveSegment] = useState('ALL');
   const [sortBy, setSortBy] = useState('newest');
@@ -172,7 +179,7 @@ function ShopContent({ initialProducts, banners }) {
                   <span className={styles.railCount}>{segmentCounts.ALL ?? 0}</span>
                 </button>
               </li>
-              {SEGMENTS.map((segment) => (
+              {segmentList.map((segment) => (
                 <li key={segment.id}>
                   <button
                     className={`${styles.railItem} ${activeSegment === segment.name ? styles.railItemActive : ''} ${!segmentCounts[segment.name] ? styles.railItemEmpty : ''}`}
@@ -342,7 +349,7 @@ function ShopContent({ initialProducts, banners }) {
                     <span className={styles.railCount}>{segmentCounts.ALL ?? 0}</span>
                   </button>
                 </li>
-                {SEGMENTS.map((segment) => (
+                {segmentList.map((segment) => (
                   <li key={segment.id}>
                     <button
                       className={`${styles.railItem} ${activeSegment === segment.name ? styles.railItemActive : ''} ${!segmentCounts[segment.name] ? styles.railItemEmpty : ''}`}
@@ -367,10 +374,10 @@ function ShopContent({ initialProducts, banners }) {
   );
 }
 
-export default function ShopClient({ initialProducts, banners }) {
+export default function ShopClient({ initialProducts, banners, segments }) {
   return (
     <Suspense fallback={null}>
-      <ShopContent initialProducts={initialProducts} banners={banners} />
+      <ShopContent initialProducts={initialProducts} banners={banners} segments={segments} />
     </Suspense>
   );
 }

@@ -7,6 +7,7 @@ import BrandManifesto from '@/components/home/BrandManifesto';
 import SocialProofBar from '@/components/home/SocialProofBar';
 import ProductSection from '@/components/home/ProductSection';
 import { getHomeSections, getBanners } from '@/lib/homeSections';
+import { getGridSegments } from '@/lib/segments';
 import connectDB from '@/lib/mongodb';
 import Product from '@/lib/models/Product';
 import { DUMMY_PRODUCTS } from '@/lib/dummyData';
@@ -60,10 +61,11 @@ export default async function Home() {
   // whatever is configured rather than a fixed list. An empty result is
   // handled by each component: the hero falls back to its built-in
   // slides, and sections simply render nothing.
-  const [latestDrops, sections, heroBanners] = await Promise.all([
+  const [latestDrops, sections, heroBanners, gridSegments] = await Promise.all([
     getLatestDrops(),
     getHomeSections(),
     getBanners('home-hero'),
+    getGridSegments(),
   ]);
 
   return (
@@ -91,10 +93,10 @@ export default async function Home() {
       {sections.map((section) => (
         <ProductSection key={section._id} section={section} />
       ))}
-      <SegmentGrid />
+      <SegmentGrid segments={gridSegments} />
       <OfferBanner />
       <BrandManifesto />
-      <SocialProofBar />
+      <SocialProofBar segmentCount={gridSegments.length} />
     </>
   );
 }

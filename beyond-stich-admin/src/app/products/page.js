@@ -6,12 +6,17 @@ import styles from './page.module.css';
 import LoadState from '@/components/LoadState';
 import fetchJson from '@/lib/fetchJson';
 
-const SEGMENTS = ['GYM', 'COFFEE', 'MILLIONAIRE', 'MUSIC', 'GAMER', 'CARS', 'BIKE', 'SUMMER', 'FLORAL', 'SPORTS', 'VALENTINE', 'TYPOGRAPHY', 'RANDOMS'];
+// Segments are a collection now, fetched below. The fallback list only
+// covers the moment before that request lands, or a failure — picking the
+// wrong world for a product is worse than a brief empty dropdown, but an
+// empty dropdown with no explanation is worse still.
+const FALLBACK_SEGMENTS = ['GYM', 'COFFEE', 'MILLIONAIRE', 'MUSIC', 'GAMER', 'CARS', 'BIKE', 'SUMMER', 'FLORAL', 'SPORTS', 'VALENTINE', 'TYPOGRAPHY', 'RANDOMS'];
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [segmentNames, setSegmentNames] = useState(FALLBACK_SEGMENTS);
   const [searchTerm, setSearchTerm] = useState('');
   const [segmentFilter, setSegmentFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -47,6 +52,21 @@ export default function AdminProducts() {
       setLoading(false);
     }
   }, [segmentFilter, statusFilter]);
+
+  // Live segment list, so a world added in Segments appears here at once.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await fetchJson('/api/segments');
+        const names = (data.segments || []).filter((x) => x.active !== false).map((x) => x.name);
+        if (!cancelled && names.length) setSegmentNames(names);
+      } catch {
+        // Keep the fallback; the page's own error state covers real outages.
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -181,7 +201,7 @@ export default function AdminProducts() {
         <div className={styles.filters}>
           <select className={styles.select} value={segmentFilter} onChange={e => setSegmentFilter(e.target.value)}>
             <option value="all">All Segments</option>
-            {SEGMENTS.map(s => <option key={s} value={s}>{s}</option>)}
+            {segmentNames.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
           <select className={styles.select} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
             <option value="all">All Status</option>
@@ -501,7 +521,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
             <div style={modalStyles.field}>
               <label>Segment *</label>
               <select value={form.segment} onChange={e => handleChange('segment', e.target.value)} style={modalStyles.input}>
-                {SEGMENTS.map(s => <option key={s} value={s}>{s}</option>)}
+                {segmentNames.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
           </div>

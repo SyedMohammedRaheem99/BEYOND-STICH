@@ -6,7 +6,11 @@ import ConfirmDialog from '@/components/ConfirmDialog';
 import LoadState from '@/components/LoadState';
 import fetchJson from '@/lib/fetchJson';
 
-const SEGMENTS = ['GYM', 'COFFEE', 'MILLIONAIRE', 'MUSIC', 'GAMER', 'CARS', 'BIKE', 'SUMMER', 'FLORAL', 'SPORTS', 'VALENTINE', 'TYPOGRAPHY', 'RANDOMS'];
+// Segments are a collection now, fetched below. The fallback list only
+// covers the moment before that request lands, or a failure — picking the
+// wrong world for a product is worse than a brief empty dropdown, but an
+// empty dropdown with no explanation is worse still.
+const FALLBACK_SEGMENTS = ['GYM', 'COFFEE', 'MILLIONAIRE', 'MUSIC', 'GAMER', 'CARS', 'BIKE', 'SUMMER', 'FLORAL', 'SPORTS', 'VALENTINE', 'TYPOGRAPHY', 'RANDOMS'];
 
 const SOURCES = [
   { value: 'tag', label: 'By tag', hint: 'Tag a product and it appears here. Stock stays automatic — the safest choice.' },
@@ -46,6 +50,7 @@ export default function AdminHomepage() {
   const [saving, setSaving] = useState(false);
   const [confirm, setConfirm] = useState(null);
   const [loadError, setLoadError] = useState('');
+  const [segmentNames, setSegmentNames] = useState(FALLBACK_SEGMENTS);
 
   const fetchAll = useCallback(async () => {
     setLoadError('');
@@ -69,6 +74,21 @@ export default function AdminHomepage() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // Live segment list, so a world added in Segments appears here at once.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await fetchJson('/api/segments');
+        const names = (data.segments || []).filter((x) => x.active !== false).map((x) => x.name);
+        if (!cancelled && names.length) setSegmentNames(names);
+      } catch {
+        // Keep the fallback; the page's own error state covers real outages.
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -329,7 +349,7 @@ export default function AdminHomepage() {
                 <Field label="Segment">
                   <select style={input} value={form.segment}
                     onChange={(e) => setForm((f) => ({ ...f, segment: e.target.value }))}>
-                    {SEGMENTS.map((s) => <option key={s} value={s}>{s}</option>)}
+                    {segmentNames.map((s) => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </Field>
               )}

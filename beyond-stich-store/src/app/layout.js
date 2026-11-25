@@ -2,6 +2,7 @@ import './globals.css';
 import { Barlow_Condensed, Space_Grotesk } from 'next/font/google';
 import Script from 'next/script';
 import ClientLayout from './ClientLayout';
+import { getSegments } from '@/lib/segments';
 import OrganizationSchema from '@/components/seo/OrganizationSchema';
 import LocalBusinessSchema from '@/components/seo/LocalBusinessSchema';
 import WebSiteSchema from '@/components/seo/WebSiteSchema';
@@ -67,7 +68,12 @@ export const metadata = {
   },
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  // Fetched once here so the navbar, mega-menu and footer all read the
+  // same live list. getSegments() falls back to the built-in constants on
+  // failure, because navigation vanishing is worse than it being stale.
+  const segments = await getSegments();
+
   return (
     <html lang="en-IN" className={`${fontDisplay.variable} ${fontBody.variable}`}>
       <body>
@@ -80,7 +86,7 @@ export default function RootLayout({ children }) {
         {/* Renders nothing unless a measurement ID is configured. */}
         <AnalyticsScripts />
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
-        <ClientLayout>{children}</ClientLayout>
+        <ClientLayout segments={segments}>{children}</ClientLayout>
       </body>
     </html>
   );

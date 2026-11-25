@@ -4,6 +4,7 @@ import Product from '@/lib/models/Product';
 import { DUMMY_PRODUCTS } from '@/lib/dummyData';
 import { serialiseProducts } from '@/lib/serialise';
 import { getBanners } from '@/lib/homeSections';
+import { getSegments } from '@/lib/segments';
 import ShopClient from './ShopClient';
 
 // Serve catalog pages from cache for 5 minutes. Without this every
@@ -16,7 +17,10 @@ export default async function ShopPage() {
   // Admin-managed promo slides. getBanners() fails soft to [], and
   // ShopBanner falls back to its built-in slides, so a database problem
   // costs the editable copy but never the page.
-  const banners = await getBanners('shop-hero');
+  const [banners, segments] = await Promise.all([
+    getBanners('shop-hero'),
+    getSegments(),
+  ]);
 
   try {
     await connectDB();
@@ -91,7 +95,7 @@ export default async function ShopPage() {
       </div>
 
       <Suspense fallback={null}>
-        <ShopClient initialProducts={products} banners={banners} />
+        <ShopClient initialProducts={products} banners={banners} segments={segments} />
       </Suspense>
     </>
   );

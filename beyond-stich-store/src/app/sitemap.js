@@ -1,7 +1,7 @@
 import connectDB from '@/lib/mongodb';
 import Product from '@/lib/models/Product';
 import { DUMMY_PRODUCTS } from '@/lib/dummyData';
-import { SEGMENTS } from '@/lib/constants';
+import { getSegments } from '@/lib/segments';
 import { getAllPosts } from '@/lib/blog';
 
 export default async function sitemap() {
@@ -31,8 +31,11 @@ export default async function sitemap() {
   }));
 
   // Segment routes
-  const segmentRoutes = SEGMENTS.map((s) => ({
-    url: `${baseUrl}/segment/${s.name.toLowerCase()}`,
+  // From the collection, so a world added in the admin is submitted to
+  // search engines without a deploy.
+  const segments = await getSegments();
+  const segmentRoutes = segments.map((s) => ({
+    url: `${baseUrl}/segment/${s.slug || s.name.toLowerCase()}`,
     lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: 0.8,

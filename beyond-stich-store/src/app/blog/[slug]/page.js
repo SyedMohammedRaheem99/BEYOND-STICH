@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getPostBySlug, getAllPosts, BLOG_CATEGORIES } from '@/lib/blog';
-import { SEGMENTS } from '@/lib/constants';
+import { getSegments } from '@/lib/segments';
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema';
 import styles from './page.module.css';
 
@@ -74,8 +74,11 @@ export default async function BlogPostPage({ params }) {
 
   const cat = BLOG_CATEGORIES[post.category] || { label: post.category, color: '#888' };
 
+  // Posts link worlds by slug; resolved from the collection so a renamed or
+  // newly added world still links correctly.
+  const allSegments = await getSegments();
   const linkedSegmentData = (post.linkedSegments || [])
-    .map(id => SEGMENTS.find(s => s.id === id))
+    .map((id) => allSegments.find((s) => (s.slug || s.id) === id))
     .filter(Boolean);
 
   // These guides are the store's top-of-funnel content, but carried no

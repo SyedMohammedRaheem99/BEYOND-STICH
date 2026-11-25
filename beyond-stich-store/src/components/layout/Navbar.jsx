@@ -10,7 +10,20 @@ import { SEGMENTS } from '@/lib/constants';
 import useFocusTrap from '@/hooks/useFocusTrap';
 import styles from './Navbar.module.css';
 
-export default function Navbar() {
+/**
+ * `segments` comes from the Segment collection via the root layout. The
+ * SEGMENTS constant stays as the fallback for a database outage — a navbar
+ * with no way to browse is worse than a stale one.
+ *
+ * A database row keys on `slug`; the constant keys on `id`. Normalised here
+ * so the markup below does not care which it got.
+ */
+export default function Navbar({ segments = [] }) {
+  const segmentList = (segments.length ? segments : SEGMENTS).map((s) => ({
+    ...s,
+    id: s.slug || s.id,
+  }));
+
   const router = useRouter();
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
@@ -130,7 +143,7 @@ export default function Navbar() {
                       transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                     >
                       <div className={styles.megaGrid}>
-                        {SEGMENTS.map((seg) => (
+                        {segmentList.map((seg) => (
                           <Link
                             key={seg.id}
                             href={`/segment/${seg.id}`}
@@ -352,7 +365,7 @@ export default function Navbar() {
                 >
                   ALL DROPS
                 </Link>
-                {SEGMENTS.map((seg) => (
+                {segmentList.map((seg) => (
                   <Link
                     key={seg.id}
                     href={`/segment/${seg.id}`}

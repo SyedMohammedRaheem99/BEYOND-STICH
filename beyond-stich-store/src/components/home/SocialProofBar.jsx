@@ -5,14 +5,15 @@ import { motion, useInView } from 'framer-motion';
 import { SEGMENTS } from '@/lib/constants';
 import styles from './SocialProofBar.module.css';
 
-export default function SocialProofBar() {
+export default function SocialProofBar({ segmentCount }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-50px' });
 
   // Honest, verifiable product facts — no fabricated sales/rating numbers.
   const metrics = [
     { value: '240', label: 'GSM HEAVYWEIGHT' },
-    { value: String(SEGMENTS.length), label: 'SEGMENT WORLDS' },
+    // Real count from the collection; falls back to the constant.
+    { value: String(segmentCount || SEGMENTS.length), label: 'SEGMENT WORLDS' },
     { value: '100%', label: 'COMBED COTTON' },
     { value: '2', label: 'OVERSIZED FITS' },
   ];

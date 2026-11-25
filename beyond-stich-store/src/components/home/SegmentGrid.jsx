@@ -7,7 +7,22 @@ import { motion, useInView } from 'framer-motion';
 import { SEGMENTS, getSegmentImage } from '@/lib/constants';
 import styles from './SegmentGrid.module.css';
 
-export default function SegmentGrid() {
+/**
+ * `segments` comes from the Segment collection via the home page. The
+ * SEGMENTS constant remains the fallback for a database outage.
+ *
+ * The old `filter(s => s.id !== 'randoms')` is gone: which worlds appear on
+ * the grid is now the `showInGrid` field, so hiding one is an admin toggle
+ * rather than a code change.
+ */
+export default function SegmentGrid({ segments = [] }) {
+  const source = segments.length
+    ? segments
+    : SEGMENTS.filter((s) => s.id !== 'randoms');
+
+  // A database row keys on `slug`; the constant keys on `id`.
+  const tiles = source.map((s) => ({ ...s, id: s.slug || s.id }));
+
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
@@ -24,7 +39,7 @@ export default function SegmentGrid() {
         </motion.p>
 
         <div className={styles.grid}>
-          {SEGMENTS.filter(s => s.id !== 'randoms').map((segment, i) => (
+          {tiles.map((segment, i) => (
             <motion.div
               key={segment.id}
               className={`${styles.tile} ${getTileSize(i)}`}

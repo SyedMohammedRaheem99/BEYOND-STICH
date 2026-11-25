@@ -68,14 +68,19 @@ const ProductSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
     },
+    /**
+     * Segment name, matching Segment.name in the segments collection.
+     *
+     * Deliberately NOT an enum: the list was a fixed 13 here, so adding a
+     * world in the admin would have failed validation on every product save.
+     * Validity is checked against the live collection in the admin's product
+     * routes instead, which is the only place a segment is assigned.
+     */
     segment: {
       type: String,
       required: [true, 'Segment is required'],
-      enum: [
-        'GYM', 'COFFEE', 'MILLIONAIRE', 'MUSIC', 'GAMER',
-        'CARS', 'BIKE', 'SUMMER', 'FLORAL', 'SPORTS',
-        'VALENTINE', 'TYPOGRAPHY', 'RANDOMS',
-      ],
+      uppercase: true,
+      trim: true,
     },
     price: {
       type: Number,

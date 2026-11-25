@@ -8,6 +8,7 @@ const ADMIN_NAV = [
   { label: 'OVERVIEW', href: '/', icon: '📊' },
   { label: 'PRODUCTS', href: '/products', icon: '🏷️' },
   { label: 'TYPES', href: '/product-types', icon: '🏗️' },
+  { label: 'SEGMENTS', href: '/segments', icon: '🌐' },
   { label: 'ORDERS', href: '/orders', icon: '📦' },
   { label: 'HOME PAGE', href: '/homepage', icon: '🏠' },
   { label: 'BANNERS', href: '/banners', icon: '🖼️' },

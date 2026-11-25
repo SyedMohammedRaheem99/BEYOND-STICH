@@ -3,7 +3,7 @@ import connectDB from '@/lib/mongodb';
 import Product from '@/lib/models/Product';
 import { DUMMY_PRODUCTS } from '@/lib/dummyData';
 import { serialiseProducts } from '@/lib/serialise';
-import { SEGMENTS } from '@/lib/constants';
+import { getSegment } from '@/lib/segments';
 import SegmentClient from './SegmentClient';
 
 // Serve catalog pages from cache for 5 minutes. Without this every
@@ -12,9 +12,10 @@ export const revalidate = 300;
 
 export default async function SegmentWorldPage({ params }) {
   const { name } = await params;
-  const segmentName = name?.toUpperCase();
 
-  const segmentData = SEGMENTS.find((s) => s.name === segmentName);
+  // Resolved from the segments collection by slug or name, so a world added
+  // in the admin gets a working page immediately rather than a 404.
+  const segmentData = await getSegment(name);
 
   if (!segmentData) {
     notFound();
