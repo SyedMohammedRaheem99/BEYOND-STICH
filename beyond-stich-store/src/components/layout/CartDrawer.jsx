@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCartStore } from '@/lib/store';
@@ -11,6 +12,12 @@ import { trackViewCart, trackRemoveFromCart } from '@/lib/analytics';
 import styles from './CartDrawer.module.css';
 
 export default function CartDrawer() {
+  // Placing an order requires an account (enforced in /api/orders). Sending
+  // a signed-out customer to /checkout only to be bounced from there wastes
+  // a step, so the button goes straight to sign-in and carries them back.
+  const { status } = useSession();
+  const signedOut = status === 'unauthenticated';
+
   const {
     items,
     isOpen,
@@ -305,12 +312,21 @@ export default function CartDrawer() {
                   <span className={styles.totalAmount}>₹{total}</span>
                 </div>
                 <Link
-                  href="/checkout"
+                  href={signedOut ? '/login?callbackUrl=%2Fcheckout' : '/checkout'}
                   className={styles.checkoutBtn}
                   onClick={closeCart}
                 >
-                  CHECKOUT — ₹{total}
+                  {signedOut ? `SIGN IN TO CHECKOUT — ₹${total}` : `CHECKOUT — ₹${total}`}
                 </Link>
+                {signedOut && (
+                  /* Says why before they click, so signing in reads as part
+                     of checkout rather than an obstacle in front of it. The
+                     cart itself is untouched by signing in. */
+                  <p className={styles.authNote}>
+                    Your cart is saved. Signing in keeps your order history,
+                    tracking and saved addresses.
+                  </p>
+                )}
               </div>
             )}
           </motion.div>

@@ -37,6 +37,26 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Too many items in one order' }, { status: 400 });
     }
 
+    // Checkout requires an account, and this must be refused BEFORE a
+    // gateway order exists — the same reasoning as the serviceability check
+    // below. Letting an unauthenticated request start a payment would mean
+    // taking money for an order /api/orders will then refuse to create.
+    let sessionUserId = null;
+    try {
+      const session = await getServerSession(authOptions);
+      if (session?.user?.id) sessionUserId = session.user.id;
+    } catch {
+      // Fall through to the 401 rather than treating a failed session
+      // lookup as a guest checkout.
+    }
+
+    if (!sessionUserId) {
+      return NextResponse.json(
+        { error: 'Please sign in to place your order.', code: 'AUTH_REQUIRED' },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
 
     // Check serviceability BEFORE creating the gateway order. Letting a
@@ -101,19 +121,13 @@ export async function POST(request) {
     // money is taken and no order exists. Razorpay's own `notes` field is far
     // too small to hold a cart.
     try {
-      let userId = null;
-      try {
-        const session = await getServerSession(authOptions);
-        if (session?.user?.id) userId = session.user.id;
-      } catch {}
-
       await PendingOrder.create({
         razorpayOrderId: order.id,
         items,
         shippingAddress: shippingAddress || null,
         email,
         couponCode,
-        user: userId,
+        user: sessionUserId,
       });
     } catch (err) {
       // Don't block checkout: the browser path still works, this only costs

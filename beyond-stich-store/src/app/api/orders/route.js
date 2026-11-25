@@ -70,6 +70,30 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Too many items in one order' }, { status: 400 });
     }
 
+    // Checkout requires an account. This is the real enforcement — the cart
+    // drawer and the /checkout page both gate on the session too, but both
+    // run in the browser and this endpoint is reachable directly.
+    //
+    // Why require it at all: a guest who mistypes their email gets no
+    // confirmation and has no way to find their order, and the order is
+    // attached to nothing. Signing in means a verified, reachable address
+    // plus order history, tracking and saved addresses.
+    let userId = null;
+    try {
+      const session = await getServerSession(authOptions);
+      if (session?.user?.id) userId = session.user.id;
+    } catch {
+      // Fall through to the 401 below rather than treating a session
+      // lookup failure as a guest checkout.
+    }
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Please sign in to place your order.', code: 'AUTH_REQUIRED' },
+        { status: 401 }
+      );
+    }
+
     // Server-side address validation. The checkout page validates too, but the
     // API is reachable directly — and an unreachable phone or a malformed
     // pincode means a COD parcel that can't be delivered and can't be traced
@@ -94,13 +118,6 @@ export async function POST(request) {
     if (deliveryError) {
       return NextResponse.json({ error: deliveryError }, { status: 400 });
     }
-
-    // Attach user if logged in
-    let userId = null;
-    try {
-      const session = await getServerSession(authOptions);
-      if (session?.user?.id) userId = session.user.id;
-    } catch {}
 
     // Re-price and stock-check every line against the database (see
     // src/lib/orderIntegrity.js). The client sends prices, but a tampered

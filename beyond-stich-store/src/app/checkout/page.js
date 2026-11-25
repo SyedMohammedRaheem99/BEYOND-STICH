@@ -81,6 +81,18 @@ export default function CheckoutPage() {
   // checkout never read it, so curated addresses were ignored.
   const [savedAddresses, setSavedAddresses] = useState([]);
 
+  // Placing an order requires an account (enforced in /api/orders and
+  // /api/razorpay/order). The cart drawer already routes a signed-out
+  // customer to sign-in, but this page is reachable by typing the URL or
+  // from an old link, so send them to sign-in and bring them back here.
+  // `status === 'loading'` must not redirect: the session is simply not
+  // resolved yet, and bouncing a signed-in customer would be a real bug.
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.replace('/login?callbackUrl=%2Fcheckout');
+    }
+  }, [status, router]);
+
   // Restore a previously used address (nicer for returning customers).
   useEffect(() => {
     try {
@@ -305,6 +317,19 @@ export default function CheckoutPage() {
 
     setStep(STEPS.PAYMENT);
     trackAddPaymentInfo(total, paymentMethod);
+    // A session can lapse between loading this page and submitting it (cookie
+    // expiry, signed out in another tab). The API answers 401 with
+    // code AUTH_REQUIRED; showing that as a plain error would leave the
+    // customer stuck on a page with no way forward, so send them to sign in
+    // and return them here with the cart intact.
+    const handleAuthLapse = (res, data) => {
+      if (res.status === 401 || data?.code === 'AUTH_REQUIRED') {
+        router.push('/login?callbackUrl=%2Fcheckout');
+        return true;
+      }
+      return false;
+    };
+
     const orderPayload = buildOrderPayload();
 
     // COD: skip payment gateway entirely
@@ -318,6 +343,8 @@ export default function CheckoutPage() {
         const data = await res.json();
         if (res.ok && data.order) {
           saveOrderAndRedirect(data.order);
+        } else if (handleAuthLapse(res, data)) {
+          return;
         } else {
           setOrderError(data.error || 'Could not place your order. Please try again.');
           setStep(STEPS.SUMMARY);
@@ -354,6 +381,10 @@ export default function CheckoutPage() {
       });
       const rzpOrderData = await rzpOrderRes.json();
 
+      if (handleAuthLapse(rzpOrderRes, rzpOrderData)) {
+        return;
+      }
+
       if (!rzpOrderData.success) {
         throw new Error(rzpOrderData.error || 'Could not initiate payment.');
       }
@@ -370,6 +401,8 @@ export default function CheckoutPage() {
         const data = await res.json();
         if (res.ok && data.order) {
           saveOrderAndRedirect(data.order);
+        } else if (handleAuthLapse(res, data)) {
+          return;
         } else {
           setOrderError(data.error || 'Could not place your order. Please try again.');
           setStep(STEPS.SUMMARY);
