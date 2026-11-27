@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import PasswordInput from '@/components/ui/PasswordInput';
 import { trackSignUp } from '@/lib/analytics';
+import { resolveAfterSignIn } from '@/lib/authRedirect';
 import styles from '../login/page.module.css';
 
 function RegisterForm() {
@@ -13,7 +14,7 @@ function RegisterForm() {
   // Registering from a "sign in" link mid-checkout used to land the customer
   // on /account instead of back where they were.
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/account';
+  const callbackUrl = resolveAfterSignIn(searchParams.get('callbackUrl'));
 
   const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [error, setError] = useState('');

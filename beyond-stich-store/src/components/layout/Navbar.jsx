@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '@/lib/store';
 import { SEGMENTS } from '@/lib/constants';
 import useFocusTrap from '@/hooks/useFocusTrap';
+import { signInHref } from '@/lib/authRedirect';
 import styles from './Navbar.module.css';
 
 /**
@@ -225,7 +226,9 @@ export default function Navbar({ segments = [] }) {
             </Link>
 
             <Link
-              href={session ? '/account' : '/login'}
+              // Signed out: carry the current page through so signing in
+              // returns them to it instead of the dashboard.
+              href={session ? '/account' : signInHref(pathname)}
               className={`${styles.actionBtn} ${styles.hideOnMobile}`}
               aria-label={session ? `Account — ${session.user?.name}` : 'Sign in'}
             >

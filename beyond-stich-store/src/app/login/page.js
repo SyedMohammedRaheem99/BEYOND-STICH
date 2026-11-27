@@ -7,12 +7,16 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import PasswordInput from '@/components/ui/PasswordInput';
 import { trackLogin } from '@/lib/analytics';
+import { resolveAfterSignIn } from '@/lib/authRedirect';
 import styles from './page.module.css';
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/account';
+  // Back to wherever they were, not the dashboard. resolveAfterSignIn also
+  // rejects off-site and auth-page targets, so a crafted ?callbackUrl= cannot
+  // bounce someone elsewhere the moment they authenticate.
+  const callbackUrl = resolveAfterSignIn(searchParams.get('callbackUrl'));
   const registered = searchParams.get('registered');
   // Set by /verify-email once the code is accepted.
   const justVerified = searchParams.get('verified');

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useCartStore } from '@/lib/store';
+import { signInHref } from '@/lib/authRedirect';
 import styles from './BottomTabBar.module.css';
 
 // The mobile top bar was carrying the hamburger, a two-line stacked logo,
@@ -86,7 +87,7 @@ export default function BottomTabBar() {
       </button>
 
       <Link
-        href={session ? '/account' : '/login'}
+        href={session ? '/account' : signInHref(pathname)}
         className={`${styles.tab} ${isAccount ? styles.active : ''}`}
         aria-current={isAccount ? 'page' : undefined}
       >
