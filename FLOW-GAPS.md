@@ -133,6 +133,53 @@ verification. That path was not changed, so they are not orphaned.
 
 ---
 
+## G6 — Verification codes were never reaching customers — FIXED
+
+**Severity: critical. Nobody could register on the live site.**
+
+Found while checking whether the OTP flow worked. The `emaillogs` collection
+told the real story — every verification code was logging as **failed**:
+
+```
+553 5.7.1 <orders@beyondstich.com>: Sender address rejected:
+not owned by user hello@beyondstich.com
+```
+
+`EMAIL_FROM` is set correctly in `.env.local` but was **never added to
+Vercel**, so production fell back to a hardcoded
+`Beyond Stich <orders@beyondstich.com>` — a mailbox that does not exist. SMTP
+authenticates as `hello@beyondstich.com`, and Hostinger refuses to send from
+an address the authenticated user does not own.
+
+The effect compounded with the new checkout login gate: no code means no
+verification, no verification means no sign-in, and no sign-in means no order.
+Registration was completely blocked on the live site. Two real customer
+addresses are in the failed log, plus the owner's own password-reset attempts.
+
+**Fixed** by deriving the fallback from `SMTP_USER` instead of hardcoding it.
+The authenticated mailbox is the only address the server is guaranteed to
+accept, so a missing `EMAIL_FROM` can never again produce a rejected sender.
+Applied to both apps.
+
+Verified by reproducing production exactly — `EMAIL_FROM` unset — and sending
+through the real Hostinger SMTP: the From resolved to
+`Beyond Stich <hello@beyondstich.com>` and the server answered
+`250 2.0.0 OK` instead of 553.
+
+**The OTP logic itself was never broken.** Tested end to end: a wrong code is
+rejected and burns an attempt (4 left), the correct code verifies and claims
+matching guest orders, a verified customer signs in with password alone with
+no second OTP, an unverified one is sent to `/verify-email` rather than shown
+a misleading "wrong password", and forgot-password uses a hashed one-hour
+reset link, not a code. Only delivery was failing.
+
+**Also in the log, unrelated:** three password-reset sends failed with
+"Connection timeout" and "Greeting never received" on 2026-11-25. Those are
+transient SMTP connectivity, not sender rejection, and worth watching rather
+than fixing blind.
+
+---
+
 ## G5 — Duplicate delivery zone silently disables COD for all of Bengaluru
 
 **Severity: high. This is your data, not a code bug — so it is yours to fix.**

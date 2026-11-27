@@ -17,7 +17,21 @@ import nodemailer from 'nodemailer';
  * failure must never block a status update.
  */
 
-const FROM = process.env.EMAIL_FROM || 'Beyond Stich <hello@beyondstich.com>';
+/**
+ * The From address.
+ *
+ * The fallback is derived from SMTP_USER rather than hardcoded, because the
+ * authenticated mailbox is the ONLY address the server is guaranteed to
+ * accept. A literal default silently broke production: EMAIL_FROM was never
+ * added to Vercel, so every send fell back to orders@beyondstich.com while
+ * SMTP authenticated as hello@beyondstich.com, and Hostinger refused the lot
+ * with "553 Sender address rejected: not owned by user". Verification codes
+ * stopped arriving, which with the checkout login gate meant nobody could
+ * register or order at all.
+ */
+const FROM =
+  process.env.EMAIL_FROM ||
+  (process.env.SMTP_USER ? `Beyond Stich <${process.env.SMTP_USER}>` : '');
 const REPLY_TO = process.env.EMAIL_REPLY_TO || FROM;
 
 let cached = null;
