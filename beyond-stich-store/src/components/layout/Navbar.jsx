@@ -105,6 +105,18 @@ export default function Navbar({ segments = [] }) {
             <nav className={styles.desktopNav} aria-label="Primary">
               {/* Nothing in the nav indicated which page you were on — SHOP
                   looked identical whether you were on /shop or /about. */}
+              {/* The logo already links home, but that is a convention people
+                  have to know. A named link is the obvious way back, and it
+                  gives the nav an active state on the home page too — without
+                  it, no nav item was ever marked current on /. */}
+              <Link
+                href="/"
+                className={`${styles.navLink} ${pathname === '/' ? styles.navLinkActive : ''}`}
+                aria-current={pathname === '/' ? 'page' : undefined}
+              >
+                HOME
+              </Link>
+
               <Link
                 href="/shop"
                 className={`${styles.navLink} ${pathname === '/shop' ? styles.navLinkActive : ''}`}
@@ -343,6 +355,13 @@ export default function Navbar({ segments = [] }) {
                   rows (~720px down), so "where is my order" — the main query
                   for a COD store — needed a full scroll to reach. */}
               <nav className={styles.sideMenuSecondary} aria-label="Account and help">
+                <Link
+                  href="/"
+                  onClick={() => setMobileMenuOpen(false)}
+                  aria-current={pathname === '/' ? 'page' : undefined}
+                >
+                  HOME
+                </Link>
                 <Link href="/track" onClick={() => setMobileMenuOpen(false)}>
                   TRACK ORDER
                 </Link>
