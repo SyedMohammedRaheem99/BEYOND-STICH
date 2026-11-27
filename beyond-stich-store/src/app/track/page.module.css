@@ -162,7 +162,7 @@
 .stepDone .dot {
   background: var(--color-success);
   border-color: var(--color-success);
-  color: var(--success-ink);
+  color: #0A0A0A;
 }
 
 .stepActive .dot {

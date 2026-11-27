@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '@/lib/store';
 import { SEGMENTS } from '@/lib/constants';
 import useFocusTrap from '@/hooks/useFocusTrap';
-import ThemeToggle from './ThemeToggle';
 import styles from './Navbar.module.css';
 
 /**
@@ -202,7 +201,6 @@ export default function Navbar({ segments = [] }) {
 
           {/* Right — Actions */}
           <div className={styles.actions}>
-            <ThemeToggle />
             <button
               className={styles.actionBtn}
               onClick={() => setSearchOpen(!searchOpen)}
