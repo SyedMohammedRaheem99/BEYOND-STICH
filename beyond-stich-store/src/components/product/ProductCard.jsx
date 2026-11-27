@@ -133,7 +133,7 @@ export default function ProductCard({ product, index = 0 }) {
 
         <div className={styles.info}>
           <div className={styles.segmentLine}>
-            <span className={styles.segmentName} style={{ color: accentColor }}>
+            <span className={styles.segmentName} style={{ '--seg-accent': accentColor }}>
               {product.segment}
             </span>
             {/* Can be empty now that fitType is free text with no default

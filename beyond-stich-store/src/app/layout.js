@@ -76,6 +76,17 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="en-IN" className={`${fontDisplay.variable} ${fontBody.variable}`}>
+      <head>
+        {/* Applies the saved theme before first paint. In an effect this
+            would paint dark, then flip to light — the flash the toggle
+            exists to avoid. Deliberately not reading prefers-color-scheme:
+            dark is the default for everyone until they choose otherwise. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{if(localStorage.getItem('bs-theme')==='light'){document.documentElement.setAttribute('data-theme','light')}}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body>
         <noscript>
           <style>{`* { opacity: 1 !important; transform: none !important; }`}</style>

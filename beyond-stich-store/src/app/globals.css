@@ -197,7 +197,75 @@
   --z-toast: 9000;         /* scroll progress bar, transient UI */
   --z-fullscreen: 10000;   /* PDP image zoom overlay — above every other layer */
   --z-cursor: 99999;       /* custom cursor, page loader — always on top */
+
+  /* Overlay roles, so components stop hardcoding rgba(255,255,255,…) —
+     which is invisible on a light background. See the light block below. */
+  --overlay-raise: rgba(255, 255, 255, 0.06);
+  --overlay-raise-strong: rgba(255, 255, 255, 0.12);
+  --overlay-scrim: rgba(0, 0, 0, 0.72);
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  /* Text on a --color-success fill. Black on the bright dark-mode green;
+     white once that green darkens for light mode. */
+  --success-ink: #0A0A0A;
+
+  color-scheme: dark;
 }
+
+/* --- Light theme ---------------------------------------------------------
+   Opt-in only. Dark stays the default for every visitor — the brand is built
+   on it — and this applies solely when someone flips the toggle, which sets
+   data-theme="light" on <html>. The device's own light/dark setting is
+   deliberately NOT followed: most phones default to light, so honouring it
+   would change the first impression for the majority of visitors.
+
+   Every pairing below is measured, not estimated — run
+   `node scripts/check-contrast.mjs`. The dark palette already learned this
+   the hard way: a grey that passed on the page background failed on cards,
+   so the floor is AA (4.5:1) on EVERY surface token, not just --color-bg.
+
+   The accent darkens from #F5C518 to #7A5F15. Brand yellow is 1.9:1 on white
+   and unreadable as text or as a fill; this is the same hue carrying the same
+   "act" meaning at 6.04:1 on white and 5.06:1 on the darkest light surface.
+   Segment accents are intentionally untouched: they are hairlines, small
+   labels and tiles, never body text or CTAs.
+   ------------------------------------------------------------------------- */
+:root[data-theme='light'] {
+  --color-bg: #FFFFFF;
+  --color-bg-secondary: #F7F7F5;
+  --color-bg-card: #FFFFFF;
+  --color-bg-elevated: #F2F2EF;
+  --color-surface: #EBEBE7;
+  --color-border: #DEDEDA;
+  --color-border-hover: #C9C9C3;
+
+  --color-text-primary: #121212;   /* 18.73 on bg, 15.67 on surface */
+  --color-text-secondary: #52525B; /* 7.73 on bg, 6.47 on surface */
+  --color-text-muted: #5F5F68;     /* 6.32 on bg, 5.29 on surface */
+  --color-text-accent: #000000;
+
+  --color-success: #126B33;        /* 6.61 on bg, 5.53 on surface */
+  --color-error: #B91C1C;          /* 6.47 on bg, 5.41 on surface */
+  --color-error-bg: rgba(185, 28, 28, 0.08);
+  --color-error-border: rgba(185, 28, 28, 0.35);
+
+  --accent: #7A5F15;               /* 6.04 on bg, 5.06 on surface */
+  --accent-ink: #FFFFFF;           /* 6.04 on the accent fill */
+  --accent-soft: rgba(122, 95, 21, 0.10);
+  --accent-line: rgba(122, 95, 21, 0.28);
+
+  /* Overlays flip meaning between themes: a white scrim lifts a surface on
+     dark and washes it out on light, so the roles swap rather than the
+     values being reused. Components reference these instead of hardcoding
+     rgba(255,255,255,…), which only ever worked on dark. */
+  --overlay-raise: rgba(0, 0, 0, 0.04);
+  --overlay-raise-strong: rgba(0, 0, 0, 0.08);
+  --overlay-scrim: rgba(0, 0, 0, 0.45);
+  --shadow-color: rgba(0, 0, 0, 0.12);
+  --success-ink: #FFFFFF;        /* 6.61 on the light-mode success fill */
+
+  color-scheme: light;
+}
+
 
 /* Reserve room for the fixed bottom tab bar (BottomTabBar) so page content
    and the footer don't render underneath it. Desktop has no tab bar, so no

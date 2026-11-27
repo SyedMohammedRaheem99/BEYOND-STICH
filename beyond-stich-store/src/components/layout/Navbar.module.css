@@ -282,7 +282,19 @@
 
 .actionBtn:hover,
 .cartBtn:hover {
-  background: rgba(255, 255, 255, 0.06);
+  /* Token, not rgba(255,255,255,…): a white scrim is invisible on a light
+     background. --overlay-raise carries the "lift this surface" role and
+     flips to a dark tint in light mode. */
+  background: var(--overlay-raise);
+}
+
+/* The icon must paint above the hover fill. Both are on the same element, so
+   without a stacking context the SVG could render behind the background —
+   the reported "icon goes below the hover circle" bug. */
+.actionBtn svg,
+.cartBtn svg {
+  position: relative;
+  z-index: 1;
 }
 
 .cartBadge {
